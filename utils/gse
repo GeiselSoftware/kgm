@@ -1,3 +1,117 @@
 #!/usr/bin/python3
 
-print("Hello, world!")
+import argparse
+from rdflib import Graph
+from SPARQLWrapper import SPARQLWrapper, JSON
+from SPARQLWrapper import POST, BASIC
+
+fuseki_url = "http://localhost:3030/alice-bob"
+
+def do_select(args):
+    print("args:", args)
+
+    # SPARQL query to run
+    query = """
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    
+    select ?g (count(*) as ?count) { 
+     { bind(rdf:nil as ?g) ?s ?p ?o }
+    union 
+     { graph ?g {?s ?p ?o} }
+    } 
+    group by ?g
+    """
+
+    fuseki_query_url = f"{fuseki_url}/query"
+    sparql = SPARQLWrapper(fuseki_query_url)
+
+    # Set the query and the return format
+    sparql.setQuery(query)
+    sparql.setReturnFormat(JSON)
+
+    # Run the query and get the results
+    results = sparql.query().convert()
+    #print(results)
+
+    # Process the results
+    for result in results["results"]["bindings"]:
+        print(result)
+
+def do_insert(args):
+    turtle_file_path = args.ttl_file
+    graph_uri = args.graph
+        
+    # Load the Turtle data into an RDFLib graph
+    g = Graph()
+    g.parse(turtle_file_path, format="turtle")
+    print(f"loaded {len(g)} triples")
+    
+    # Serialize the graph to a string in N-Triples format
+    ntriples_data = g.serialize(format="nt")#.decode("utf-8")
+    print(ntriples_data)
+    
+    # SPARQL update query to insert the data
+    update_query = f"""
+    INSERT DATA {{
+    GRAPH <{graph_uri}> {{
+    {ntriples_data}
+    }}
+    }}
+    """
+    
+    # Create a SPARQLWrapper instance
+    fuseki_update_url = f"{fuseki_url}/update"
+    sparql = SPARQLWrapper(fuseki_update_url)
+    #sparql.setHTTPAuth(BASIC)
+    #sparql.setCredentials("username", "password")  # Replace with your Fuseki credentials if necessary
+    
+    # Set the query and the request method
+    sparql.setQuery(update_query)
+    sparql.setMethod(POST)
+    
+    # Execute the query
+    response = sparql.query()
+    
+    # Check the response status
+    if response.response.status == 200:
+        print("Data successfully inserted.")
+    else:
+        print(f"Failed to insert data. Status code: {response.response.status}")
+        print(response.response.read().decode("utf-8"))
+
+def do_config_show(args):
+    print("do_config_show:", args)
+
+def do_config_set(args):
+    print("do_config_set:", args)
+        
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Command processor example")
+    subparsers = parser.add_subparsers(title="subcommands") #, description="valid subcommands") #, help="sub-command help")
+
+    parser_config = subparsers.add_parser("config", help = "configure graph store explorer")
+    config_subparsers = parser_config.add_subparsers()
+    parser_config_show = config_subparsers.add_parser("show", help = "shows current config")
+    parser_config_show.set_defaults(func = do_config_show)    
+    parser_config_set = config_subparsers.add_parser("set", help = "set specified config_value")
+    parser_config_set.add_argument("--key", required = True, help = "key")
+    parser_config_set.add_argument("--value", required = True, help = "value")
+    parser_config_set.set_defaults(func = do_config_set)
+    
+    parser_ls = subparsers.add_parser("ls", help = "provides list of available graphs")
+    parser_ls.set_defaults(func = do_select)
+
+    parser_insert = subparsers.add_parser("insert", help = "inserts ttl file to specified graph")    
+    parser_insert.add_argument("--graph", type=str, required = True, help = "destination graph URI")
+    parser_insert.add_argument("--ttl-file", type=str, required = True, help = "data file")
+    parser_insert.set_defaults(func = do_insert)
+
+    #do_select()
+    #do_insert("../examples/alice-bob/data.ttl", "http://example.com/graph/#t1")
+
+    args = parser.parse_args()
+    if 'func' in args:
+        args.func(args)
+    else:
+        parser.print_help()
+        

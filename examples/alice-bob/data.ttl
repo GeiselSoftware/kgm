@@ -1,5 +1,11 @@
-:alice rdf:type :Human .
-:bob rdf:type :Human .
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX : <http://example.com/#>
+
+:alice rdf:type :Human; rdf:type foaf:Person .
+:bob rdf:type :Human; rdf:type foaf:Person .
+:alice foaf:name "Alice" .
+:bob foaf:name "Bob" .
 :alice foaf:friendOf :bob .
 :bob foaf:friendOf :alice .
 
