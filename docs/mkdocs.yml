@@ -2,10 +2,10 @@
 
 site_name: shacled
 site_description: shacled - SHACL editor etc
-#site_url: https://michaelcurrin.github.io/mkdocs-quickstart/
+#site_url: https://GeiselSoftware.github.io/shacled/
 
 repo_url: https://github.com/GeiselSoftware/shacled
-edit_uri: edit/master/docs/docs
+edit_uri: edit/main/docs/docs
 
 ### Build settings ###
 
@@ -14,3 +14,9 @@ theme: readthedocs
 nav:
   - Home: index.md
   - About MkDocs: about-mkdocs.md
+
+markdown_extensions:
+  - toc:
+      permalink: True
+      baselevel: 2
+      separator: "_"

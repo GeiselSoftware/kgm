@@ -1,0 +1,7 @@
+:alice rdf:type :Human .
+:bob rdf:type :Human .
+:alice foaf:friendOf :bob .
+:bob foaf:friendOf :alice .
+
+:amy rdf:type :Dog .
+:amy :ownedBy :alice .

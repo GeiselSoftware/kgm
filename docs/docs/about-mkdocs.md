@@ -1,5 +1,6 @@
 # About MkDocs
 
+This whole site was built using [mkdocs-quickstart](https://github.com/MichaelCurrin/mkdocs-quickstart) repo as starting point.
 
 ## What is MkDocs?
 
