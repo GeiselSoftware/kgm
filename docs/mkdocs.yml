@@ -1,0 +1,16 @@
+### Site metadata ###
+
+site_name: shacled
+site_description: shacled - SHACL editor etc
+#site_url: https://michaelcurrin.github.io/mkdocs-quickstart/
+
+repo_url: https://github.com/GeiselSoftware/shacled
+edit_uri: edit/master/docs/docs
+
+### Build settings ###
+
+theme: readthedocs
+
+nav:
+  - Home: index.md
+  - About MkDocs: about-mkdocs.md
