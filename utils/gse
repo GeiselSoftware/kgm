@@ -1,84 +1,70 @@
 #!/usr/bin/python3
-
+import ipdb
 import argparse
-from rdflib import Graph
-from SPARQLWrapper import SPARQLWrapper, JSON
-from SPARQLWrapper import POST, BASIC
+from sparql_utils import rq_select, rq_insert_graph, to_rdfw, gse_prefix
+import pandas as pd
+import rdflib
+import uuid
 
-fuseki_url = "http://localhost:3030/alice-bob"
+"""
+will create and setup root graph
+"""
+def do_init(args):
+    g = rdflib.Graph()
+    ipdb.set_trace()
+    g.add((rdflib.URIRef("gse:root"), rdflib.RDF.type, rdflib.URIRef("gse:RootGraph")))
+    g.add((rdflib.URIRef("gse:root"), rdflib.URIRef("gse:path"), rdflib.Literal("/")))
+    rq_insert_graph(g, None)
 
-def do_select(args):
+def create_uri(rdfs_class):
+    uri_s = rdfs_class + "##" + str(uuid.uuid4())
+    return rdflib.URIRef(uri_s)
+    
+def do_insert_graph(args):
+    turtle_file_path = args.ttl_file
+    gse_path = args.gse_path
+    ipdb.set_trace()
+    graph_uri = create_uri("gse:Graph")
+        
+    # Load the Turtle data into an RDFLib graph
+    descr_g = rdflib.Graph()
+    descr_g.add((rdflib.URIRef("gse:root"), rdflib.URIRef("gse:has"), graph_uri))
+    descr_g.add((rdflib.URIRef("gse:root"), rdflib.URIRef("gse:path"), rdflib.Literal(gse_path)))
+    rq_insert_graph(descr_g, None)
+
+    g = rdflib.Graph()
+    g.parse(turtle_file_path, format="turtle")
+    rq_insert_graph(g, graph_uri)
+
+def do_ls_gse_graphs(args):
+    print("args:", args)
+
+    query = """
+    #PREFIX gse: <%gse_prefix%>
+    PREFIX gse: <gse:>
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    select ?g ?g_path { gse:root gse:has ?g; gse:path ?g_path } 
+    """.replace("%gse_prefix%", gse_prefix)
+    #print(query)
+    
+    res = rq_select(query)
+    print(pd.DataFrame.from_dict(res['results']['bindings']).map(to_rdfw))
+    
+def do_ls_all_graphs(args):
     print("args:", args)
 
     # SPARQL query to run
     query = """
-    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-    
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>    
     select ?g (count(*) as ?count) { 
-     { bind(rdf:nil as ?g) ?s ?p ?o }
-    union 
-     { graph ?g {?s ?p ?o} }
+     { bind(rdf:nil as ?g) ?s ?p ?o } union { graph ?g {?s ?p ?o} }
     } 
     group by ?g
     """
 
-    fuseki_query_url = f"{fuseki_url}/query"
-    sparql = SPARQLWrapper(fuseki_query_url)
-
-    # Set the query and the return format
-    sparql.setQuery(query)
-    sparql.setReturnFormat(JSON)
-
-    # Run the query and get the results
-    results = sparql.query().convert()
-    #print(results)
-
-    # Process the results
-    for result in results["results"]["bindings"]:
-        print(result)
-
-def do_insert(args):
-    turtle_file_path = args.ttl_file
-    graph_uri = args.graph
-        
-    # Load the Turtle data into an RDFLib graph
-    g = Graph()
-    g.parse(turtle_file_path, format="turtle")
-    print(f"loaded {len(g)} triples")
+    res = rq_select(query)
+    print(pd.DataFrame.from_dict(res['results']['bindings']).map(to_rdfw))
     
-    # Serialize the graph to a string in N-Triples format
-    ntriples_data = g.serialize(format="nt")#.decode("utf-8")
-    print(ntriples_data)
-    
-    # SPARQL update query to insert the data
-    update_query = f"""
-    INSERT DATA {{
-    GRAPH <{graph_uri}> {{
-    {ntriples_data}
-    }}
-    }}
-    """
-    
-    # Create a SPARQLWrapper instance
-    fuseki_update_url = f"{fuseki_url}/update"
-    sparql = SPARQLWrapper(fuseki_update_url)
-    #sparql.setHTTPAuth(BASIC)
-    #sparql.setCredentials("username", "password")  # Replace with your Fuseki credentials if necessary
-    
-    # Set the query and the request method
-    sparql.setQuery(update_query)
-    sparql.setMethod(POST)
-    
-    # Execute the query
-    response = sparql.query()
-    
-    # Check the response status
-    if response.response.status == 200:
-        print("Data successfully inserted.")
-    else:
-        print(f"Failed to insert data. Status code: {response.response.status}")
-        print(response.response.read().decode("utf-8"))
-
 def do_config_show(args):
     print("do_config_show:", args)
 
@@ -97,14 +83,20 @@ if __name__ == "__main__":
     parser_config_set.add_argument("--key", required = True, help = "key")
     parser_config_set.add_argument("--value", required = True, help = "value")
     parser_config_set.set_defaults(func = do_config_set)
-    
-    parser_ls = subparsers.add_parser("ls", help = "provides list of available graphs")
-    parser_ls.set_defaults(func = do_select)
 
+    parser_init = subparsers.add_parser("create-root", help = "creates root graph")
+    parser_init.set_defaults(func = do_init)
+    
+    parser_ls_graphs = subparsers.add_parser("ls-graphs", help = "provides list of all graphs")
+    parser_ls_graphs.set_defaults(func = do_ls_all_graphs)
+
+    parser_ls = subparsers.add_parser("ls", help = "provides list of all gse graphs")
+    parser_ls.set_defaults(func = do_ls_gse_graphs)    
+    
     parser_insert = subparsers.add_parser("insert", help = "inserts ttl file to specified graph")    
-    parser_insert.add_argument("--graph", type=str, required = True, help = "destination graph URI")
+    parser_insert.add_argument("--gse-path", type=str, required = True, help = "destination gse graph path")
     parser_insert.add_argument("--ttl-file", type=str, required = True, help = "data file")
-    parser_insert.set_defaults(func = do_insert)
+    parser_insert.set_defaults(func = do_insert_graph)
 
     #do_select()
     #do_insert("../examples/alice-bob/data.ttl", "http://example.com/graph/#t1")
