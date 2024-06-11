@@ -14,9 +14,12 @@ theme: readthedocs
 nav:
   - Home: index.md
   - About MkDocs: about-mkdocs.md
+  - Addendum: addendum.md
 
 markdown_extensions:
   - toc:
       permalink: True
       baselevel: 2
       separator: "_"
+
+  

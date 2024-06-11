@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-import ipdb
+#import ipdb
 import argparse
 from sparql_utils import rq_select, rq_insert_graph, to_rdfw, gse_prefix
 import pandas as pd
@@ -11,7 +11,7 @@ will create and setup root graph
 """
 def do_init(args):
     g = rdflib.Graph()
-    ipdb.set_trace()
+    #ipdb.set_trace()
     g.add((rdflib.URIRef("gse:root"), rdflib.RDF.type, rdflib.URIRef("gse:RootGraph")))
     g.add((rdflib.URIRef("gse:root"), rdflib.URIRef("gse:path"), rdflib.Literal("/")))
     rq_insert_graph(g, None)
@@ -29,13 +29,18 @@ def do_insert_graph(args):
     # Load the Turtle data into an RDFLib graph
     descr_g = rdflib.Graph()
     descr_g.add((rdflib.URIRef("gse:root"), rdflib.URIRef("gse:has"), graph_uri))
-    descr_g.add((rdflib.URIRef("gse:root"), rdflib.URIRef("gse:path"), rdflib.Literal(gse_path)))
+    descr_g.add((graph_uri, rdflib.URIRef("gse:path"), rdflib.Literal(gse_path)))
     rq_insert_graph(descr_g, None)
 
     g = rdflib.Graph()
     g.parse(turtle_file_path, format="turtle")
     rq_insert_graph(g, graph_uri)
 
+def do_remove_gse_graph(args):
+    query = """
+    """
+    raise Exception("not implemented")
+    
 def do_ls_gse_graphs(args):
     print("args:", args)
 
@@ -43,12 +48,12 @@ def do_ls_gse_graphs(args):
     #PREFIX gse: <%gse_prefix%>
     PREFIX gse: <gse:>
     PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-    select ?g ?g_path { gse:root gse:has ?g; gse:path ?g_path } 
+    select ?gse_path ?graph_uri { gse:root gse:has ?graph_uri. ?graph_uri gse:path ?gse_path } 
     """.replace("%gse_prefix%", gse_prefix)
     #print(query)
     
     res = rq_select(query)
-    print(pd.DataFrame.from_dict(res['results']['bindings']).map(to_rdfw))
+    print(pd.DataFrame.from_dict(res['results']['bindings']).map(to_rdfw).to_string(index = False))
     
 def do_ls_all_graphs(args):
     print("args:", args)
@@ -98,6 +103,10 @@ if __name__ == "__main__":
     parser_insert.add_argument("--ttl-file", type=str, required = True, help = "data file")
     parser_insert.set_defaults(func = do_insert_graph)
 
+    parser_remove = subparsers.add_parser("remove", help = "remote gse graph")
+    parser_remove.add_argument("--gse-path", type=str, required = True, help = "gse graph to remove")
+    parser_remove.set_defaults(func = do_remove_gse_graph)
+    
     #do_select()
     #do_insert("../examples/alice-bob/data.ttl", "http://example.com/graph/#t1")
 
