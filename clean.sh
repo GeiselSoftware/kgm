@@ -6,4 +6,5 @@ find . -type d | xargs -i -n1 sh -c "cd \{}; rm -rf CMakeCache.txt CMakeFiles cm
 rm -rf imgui.ini
 
 rm -rf build-*
+rm -rf build
 
