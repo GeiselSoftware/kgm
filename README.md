@@ -1,4 +1,5 @@
 # shacled
+We do need better name for this project
 SHACL editor
 
 to build desktop version:
