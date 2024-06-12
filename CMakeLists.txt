@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.12)
 
 project(shacled)
 
+set(NLOHMANN_ROOT_DIR $ENV{HOME}/local/cloned/json)
 set(IMGUI_ROOT_DIR $ENV{HOME}/local/cloned/imgui)
 set(IMGUI_NODE_EDITOR_ROOT_DIR $ENV{HOME}/local/cloned/imgui-node-editor)
 
@@ -20,6 +21,6 @@ endif()
 
 add_subdirectory(external)
 
-include_directories(. ${IMGUI_ROOT_DIR}/backends ${IMGUI_ROOT_DIR} ${IMGUI_NODE_EDITOR_ROOT_DIR} $ENV{HOME}/local/cloned/json/include)
+include_directories(. ${IMGUI_ROOT_DIR}/backends ${IMGUI_ROOT_DIR} ${IMGUI_NODE_EDITOR_ROOT_DIR} ${NLOHMANN_ROOT_DIR}/include)
 add_subdirectory(libs)
 add_subdirectory(apps)

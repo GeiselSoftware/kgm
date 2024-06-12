@@ -2,6 +2,13 @@
 We do need better name for this project
 SHACL editor
 
+# Ubuntu 22.04
+
+```
+git clone --depth 1 https://github.com/nlohmann/json.git
+sudo apt install emscripten # for wasm build
+```
+
 to build desktop version:
 
 ```
