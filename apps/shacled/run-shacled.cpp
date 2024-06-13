@@ -4,8 +4,7 @@
 #include <lib-apploops/loop-runner.h>
 #include "node-manager.h"
 #include "rdfsclass-node.h"
-#include "http-utils.h"
-#include "fuseki-utils.h" // for test call
+#include <lib-utils/http-utils.h>
 
 namespace ed = ax::NodeEditor;
 
@@ -58,7 +57,8 @@ struct Example: public LoopStep
       
       if (ImGui::Button("add new class")) {
 	cout << "add new class pressed" << endl;
-	node_manager.nodes.push_back(node_manager.create_RDFSClassNode());
+	auto new_class_uri = create_classURI(URIRef{"test"});
+	node_manager.nodes.set(new_class_uri, make_shared<RDFSClassNode>(new_class_uri));
       }
 
       if (ImGui::Button("dump shacl")) {
@@ -74,8 +74,8 @@ struct Example: public LoopStep
       
       if (ImGui::Button("load test json")) {
 	this->http_req_in_progress = true;
-	string rq = "select ?s ?p ?o { ?s ?p ?o }";	
-	HTTPPostRequest req{"h1", 3030, "/ds/", toUrlEncodedForm(map<string, string>{{"query", rq}})};
+	string rq = R"(prefix gse: <gse:> select ?s ?p ?o { ?g gse:path "/test-json" . graph ?g { ?s ?p ?o } })";
+	HTTPPostRequest req{"metis", 3030, "/alice-bob/", toUrlEncodedForm(map<string, string>{{"query", rq}})};
 	this->http_request_handler.send_http_request(req);
       }
       

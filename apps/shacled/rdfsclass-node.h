@@ -7,6 +7,7 @@
 
 #include "node.h"
 
+class URIRef;
 struct RDFSClassMember {
   bool checkbox_value = false;
   std::string member_name, member_type;
@@ -18,7 +19,7 @@ struct RDFSClassMember {
 class RDFSClassNode : public Node
 {
 public:
-  explicit RDFSClassNode();
+  explicit RDFSClassNode(const URIRef& class_uri);
   
   bool is_editable = true;
   
@@ -30,10 +31,5 @@ public:
   ed::PinId node_bottom_pin;
   
   
-  void make_frame() override;
-};
-
-class RDFNode : public Node
-{
   void make_frame() override;
 };

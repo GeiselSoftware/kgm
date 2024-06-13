@@ -1,11 +1,12 @@
 // -*- c++ -*-
 #pragma once
 
+#include <memory>
 #include <imgui_node_editor.h>
 
 namespace ed = ax::NodeEditor;
 
-class Node
+class Node : public std::enable_shared_from_this<Node>
 {
 public:
   static int last_node_id;
@@ -14,6 +15,7 @@ public:
   ed::NodeId ID;
 
   explicit Node(int new_node_id);
+  std::shared_ptr<Node> get_ptr() { return shared_from_this(); }
   
   virtual ~Node() = 0;
   virtual void make_frame() = 0;

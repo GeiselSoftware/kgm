@@ -4,15 +4,16 @@
 #include <vector>
 #include <memory>
 
+#include <lib-utils/fuseki-utils.h>
+#include <lib-utils/dict.h>
+
 class Node;
 class Link;
 class NodeManager
 {
 public:  
-  std::vector<std::shared_ptr<Node>> nodes;
+  Dict<URIRef, std::shared_ptr<Node>> nodes;
   std::vector<Link> links;
-
-  std::shared_ptr<Node> create_RDFSClassNode();
   
 public:  
   void make_frame();
@@ -20,3 +21,4 @@ public:
   void do_dump_shacl();
   void load_json(const char* rq_result);
 };
+

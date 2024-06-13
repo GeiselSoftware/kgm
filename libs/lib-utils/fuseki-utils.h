@@ -12,9 +12,21 @@ struct URIRef {
   std::string uri;
 };
 
+namespace std {
+  template <> struct less<URIRef>
+  {
+    bool operator() (const URIRef& l, const URIRef& r) const { return l.uri < r.uri; }
+  };
+}
+
+URIRef create_URI(const URIRef& class_uri);
+URIRef create_classURI(const URIRef& prefix);
+
 struct Literal {
-  std::string literal;
+  std::string literal;  
 };
+
+std::string get_display_value(const std::variant<URIRef, Literal>& l);
 
 inline std::ostream& operator<<(std::ostream& out, const URIRef& obj) { out << "<" << obj.uri << ">"; return out; }
 inline std::ostream& operator<<(std::ostream& out, const std::variant<URIRef, Literal> obj) {

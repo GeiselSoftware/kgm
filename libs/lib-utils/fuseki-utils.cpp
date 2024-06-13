@@ -20,6 +20,7 @@
 using namespace std;
 
 #include "fuseki-utils.h"
+#include "uuid.h"
 
 RDFSPO rdf_parse_binding(const nlohmann::json& binding)
 {
@@ -51,3 +52,23 @@ RDFSPO rdf_parse_binding(const nlohmann::json& binding)
 
   return {s, p, o};
 }
+
+URIRef create_classURI(const URIRef& prefix)
+{
+  return URIRef{prefix.uri + "#" + generate_uuid_v4()};
+}
+
+std::string get_display_value(const std::variant<URIRef, Literal>& l)
+{
+  string ret;
+  if (auto vv = get_if<URIRef>(&l)) {
+    ret = vv->uri;
+  } else if (auto vv = get_if<Literal>(&l)) {
+    ret = vv->literal;
+  } else {
+    throw runtime_error("get_display_value failed");
+  }
+  return ret;
+}
+
+

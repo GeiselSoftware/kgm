@@ -4,18 +4,13 @@
 using namespace std;
 
 #include <nlohmann/json.hpp>
-
-#include "fuseki-utils.h"
-
-shared_ptr<Node> NodeManager::create_RDFSClassNode()
-{
-  return make_shared<RDFSClassNode>();
-}
+#include <lib-utils/fuseki-utils.h>
+#include "data-node.h"
 
 void NodeManager::do_dump_shacl()
 {
   cout << "SHACL" << endl;
-  for (auto n: this->nodes) {
+  for (auto [_, n]: this->nodes) {
     if (auto node = dynamic_pointer_cast<RDFSClassNode>(n); node) {
       cout << "rdfs class " << node->uri << " " << node->label << endl;
       for (auto& m: node->members) {
@@ -39,13 +34,27 @@ void NodeManager::load_json(const char* rq_result)
   for (auto& b: j["results"]["bindings"]) {
     auto [s, p, o] = rdf_parse_binding(b);
     cout << "load_json: " << s << " " << p << " " << o << endl;
+
+    if (p.uri == "http://www.w3.org/1999/02/22-rdf-syntax-ns#type") {
+      if (!nodes.has_key(s)) {
+	auto new_node = make_shared<DataNode>();
+	new_node->uri = s.uri;
+	nodes.set(URIRef{new_node->uri}, new_node->get_ptr());
+      }
+    } else if (p.uri == "gse:name") {
+      auto n = nodes.get(s);
+      if (auto nn = dynamic_pointer_cast<DataNode>(n); nn) {
+	nn->members.push_back(DataNodeMember{p.uri, get_display_value(o)});
+      }
+    }
+
   }
 }
 
 void NodeManager::make_frame()
 {
   // show all nodes
-  for (auto node: this->nodes) {
+  for (auto [_, node]: this->nodes) {
     node->make_frame();
   }
 
