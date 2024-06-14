@@ -13,7 +13,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED   YES)
 
 if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
   set(CMAKE_EXECUTABLE_SUFFIX ".html")
-  set(CMAKE_CXX_FLAGS "-O2")
+  set(CMAKE_CXX_FLAGS "-fsanitize=undefined -O2")
   set(CMAKE_EXE_LINKER_FLAGS "-s FETCH=1 -s USE_WEBGL2 -s USE_GLFW=3 -s FULL_ES3=1 -s WASM=1")
 else ()
   set(CMAKE_EXECUTABLE_SUFFIX ".tsk")
