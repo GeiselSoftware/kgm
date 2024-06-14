@@ -15,6 +15,16 @@ using namespace std;
 
 struct Example: public LoopStep
 {
+  string fuseki_hostname;
+  int fuseki_port;
+  string fuseki_ds;
+
+  explicit Example(const string& fuseki_hostname, int fuseki_port, const string& fuseki_ds) {
+    this->fuseki_hostname = fuseki_hostname;
+    this->fuseki_port = fuseki_port;
+    this->fuseki_ds = fuseki_ds;
+  }
+  
   NodeManager node_manager;
   ed::EditorContext* m_Editor = 0;
 
@@ -75,14 +85,14 @@ struct Example: public LoopStep
       if (ImGui::Button("load test json")) {
 	this->http_req_in_progress = true;
 	string rq = R"(prefix gse: <gse:> select ?s ?p ?o { ?g gse:path "/test-json" . graph ?g { ?s ?p ?o } })";
-	HTTPPostRequest req{"metis", 3030, "/alice-bob/", toUrlEncodedForm(map<string, string>{{"query", rq}})};
+	HTTPPostRequest req{this->fuseki_hostname, this->fuseki_port, this->fuseki_ds, toUrlEncodedForm(map<string, string>{{"query", rq}})};
 	this->http_request_handler.send_http_request(req);
       }
       
       string raw_response;
       if (this->http_request_handler.get_response_non_blocking(&raw_response) == true) {
 	if (raw_response.size() > 0) {
-	  //cout << raw_response << endl;
+	  cout << raw_response << endl;
 	  node_manager.load_json(raw_response.c_str());
 	}
 	this->http_req_in_progress = false;
@@ -118,10 +128,48 @@ struct Example: public LoopStep
 
 };
 
+std::vector<std::string> string_split(std::string str, char splitter = '=')
+{
+  std::vector<std::string> result;
+  std::string current = ""; 
+  for (int i = 0; i < str.size(); i++) {
+    if (str[i] == splitter) {
+      if (current != "") {
+	result.push_back(current);
+	current = "";
+      } 
+      continue;
+    }
+    current += str[i];
+  }
+
+  if (current.size() != 0) {
+    result.push_back(current);
+  }
+
+  return result;
+}
 
 int main(int argc, char** argv)
 {
-  Example e;  
+  cout << "main args:" << endl;
+  for (int i = 0; i < argc; i++) {
+    cout << i << " " << argv[i] << endl;
+  }
+  cout << "--------------------" << endl;
+
+#ifdef __EMSCRIPTEN__
+  if (argc != 4) {
+    cout << "error" << endl;
+    cout << "example: http://h1:8000/apps/shacled/run-shacled.html?fuseki-server=h1&fuseki-port=3030&fuseki-ds=/ds/" << endl;
+    exit(2);
+  }
+    
+  Example e(string_split(argv[1])[1], stoi(string_split(argv[2])[1]), string_split(argv[3])[1]);
+#else  
+  Example e("h1", 3030, "/ds/");
+#endif
+  
   LoopRunner lr(&e);
 
   if (init(&lr) != 0) return 1;
