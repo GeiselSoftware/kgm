@@ -11,3 +11,6 @@ gse predicates:
 - gse:path
 - gse:graph-uri
 
+## Appendix B: SHACL notes
+
+Example of SHACL definitions: https://github.com/pyjanitor-devs/pyjviz/blob/main/rdflog.shacl.ttl
