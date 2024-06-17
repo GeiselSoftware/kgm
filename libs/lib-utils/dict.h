@@ -28,7 +28,8 @@ public:
 
   std::shared_ptr<V> get(const K&);
   //std::shared_ptr<V> get(const K&) const;
-
+  template <class DV> std::shared_ptr<DV> get(const K&);
+  
   std::vector<K> keys() const;
   
   typename decltype(m)::iterator begin() { return this->m.begin(); }
@@ -70,5 +71,14 @@ inline std::shared_ptr<V> Dict<K, std::shared_ptr<V>>::get(const K& key)
 {
   auto it = this->m.find(key);
   return it == this->m.end() ? std::shared_ptr<V>() : (*it).second;
+}
+
+template <class K, class V>
+template <class DV>
+inline std::shared_ptr<DV> Dict<K, std::shared_ptr<V>>::get(const K& key)
+{
+  auto it = this->m.find(key);
+  auto ret = it == this->m.end() ? std::shared_ptr<V>() : (*it).second;
+  return std::dynamic_pointer_cast<DV>(ret);  
 }
 
