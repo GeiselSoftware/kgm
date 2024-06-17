@@ -15,6 +15,7 @@
 @prefix dcterms: <http://purl.org/dc/terms/> .
 @prefix gr: <http://purl.org/goodrelations/v1#> .
 @prefix wdrs: <http://www.w3.org/2007/05/powder-s#> .
+@prefix rel: <http://purl.org/vocab/relationship/> .
 
 <>
 a foaf:Document ;
