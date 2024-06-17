@@ -11,6 +11,7 @@ namespace ed = ax::NodeEditor;
 #include <iostream>
 #include <sstream>
 #include <thread>
+#include <fmt/format.h>
 using namespace std;
 
 struct Example: public LoopStep
@@ -65,31 +66,64 @@ struct Example: public LoopStep
 	node_manager.do_dump_shacl();
       }
 
-      bool button_disabled = false;
-      if (this->http_req_in_progress) {
-	button_disabled = true;
-	ImGui::BeginDisabled(true);
-      }
-      
-      if (ImGui::Button("load test json")) {
-	this->http_req_in_progress = true;
-	//string rq = R"(prefix gse: <gse:> select ?s ?p ?o { ?g gse:path "/alice-bob/simple" . graph ?g { ?s ?p ?o } })";
-	string rq = R"(prefix gse: <gse:> select ?s ?p ?o { ?g gse:path "/alice-bob/KUI" . graph ?g { ?s ?p ?o } })";
-	HTTPPostRequest req{this->fuseki_url, toUrlEncodedForm(map<string, string>{{"query", rq}})};
-	this->http_request_handler.send_http_request(req);
-      }
-      
-      string raw_response;
-      if (this->http_request_handler.get_response_non_blocking(&raw_response) == true) {
-	if (raw_response.size() > 0) {
-	  cout << raw_response << endl;
-	  node_manager.load_json(raw_response.c_str());
-	}
-	this->http_req_in_progress = false;
-      }
+      { // list of gse graphs
+	ImGui::Text("gse graphs");
+	vector<string> items = { "/alice-bob/simple", "/alice-bob/KUI" };
+        static int item_current_idx = 0; // Here we store our selection data as an index.
+        if (ImGui::BeginListBox("##gse-graphs")) {
+	  for (int n = 0; n < items.size(); n++) {
+	    const bool is_selected = (item_current_idx == n);
+	    if (ImGui::Selectable(items[n].c_str(), is_selected)) {
+	      item_current_idx = n;
+	      cout << "selected: " << items[item_current_idx] << endl;
+	    }
 
-      if (button_disabled) {
-	ImGui::EndDisabled();
+	    // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+	    if (is_selected) {
+	      ImGui::SetItemDefaultFocus();
+	    }
+	  }
+	  ImGui::EndListBox();
+        }
+
+	constexpr auto rq_fmt = R"(prefix gse: <gse:> select ?s ?p ?o {{ ?g gse:path "{}" . graph ?g {{ ?s ?p ?o }} }})";
+	if (ImGui::Button("refresh")) {
+	      auto rq = fmt::format(rq_fmt, items[item_current_idx]);
+	      cout << "rq: " << rq << endl;	  
+	}
+	
+	ImGui::SameLine();
+
+	{
+	  if (true) { // load test json
+	    bool button_disabled = false;
+	    if (this->http_req_in_progress) {
+	      button_disabled = true;
+	      ImGui::BeginDisabled(true);
+	    }
+	    
+	    if (ImGui::Button("load")) {
+	      this->http_req_in_progress = true;
+	      string rq = fmt::format(rq_fmt, items[item_current_idx]);
+	      cout << "sending rq: " << rq << endl;
+	      HTTPPostRequest req{this->fuseki_url, toUrlEncodedForm(map<string, string>{{"query", rq}})};
+	      this->http_request_handler.send_http_request(req);
+	    }
+	    
+	    string raw_response;
+	    if (this->http_request_handler.get_response_non_blocking(&raw_response) == true) {
+	      if (raw_response.size() > 0) {
+		cout << raw_response << endl;
+		node_manager.load_json(raw_response.c_str());
+	      }
+	      this->http_req_in_progress = false;
+	    }
+	    
+	    if (button_disabled) {
+	      ImGui::EndDisabled();
+	    }
+	  }	  
+	}
       }
       
       ImGui::End();
