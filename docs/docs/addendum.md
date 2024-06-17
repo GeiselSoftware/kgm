@@ -29,3 +29,8 @@ mydata:g1 gse:shacl-graph mydata:g2 .
 ## Appendix B: SHACL notes
 
 Example of SHACL definitions: [https://github.com/pyjanitor-devs/pyjviz/blob/main/rdflog.shacl.ttl](https://github.com/pyjanitor-devs/pyjviz/blob/main/rdflog.shacl.ttl)
+
+TopQuandrant SHACL implementation: https://github.com/TopQuadrant/shacl
+Validate script located at `src/main/command/`, file `shaclvalidate.sh`
+Use binary distrib from https://repo1.maven.org/maven2/org/topbraid/shacl/
+
