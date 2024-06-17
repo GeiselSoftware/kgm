@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/bin/env python
 #import ipdb
 import argparse
 from sparql_utils import rq_select, rq_insert_graph, to_rdfw, gse_prefix
@@ -23,7 +23,7 @@ def create_uri(rdfs_class):
 def do_insert_graph(args):
     turtle_file_path = args.ttl_file
     gse_path = args.gse_path
-    ipdb.set_trace()
+    #ipdb.set_trace()
     graph_uri = create_uri("gse:Graph")
         
     # Load the Turtle data into an RDFLib graph

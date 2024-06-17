@@ -5,9 +5,27 @@
 #include <iostream>
 #include <sstream>
 #include <iomanip>
+#include <regex>
 using namespace std;
 
 #include "http-utils.h"
+
+URLComponents parse_url(const std::string& url) {
+  URLComponents components;
+  std::regex urlRegex(R"(^(https?)://([^:/]+)(?::(\d+))?(.*)$)");
+  std::smatch urlMatchResult;
+
+  if (std::regex_match(url, urlMatchResult, urlRegex)) {
+    components.protocol = urlMatchResult[1];
+    components.hostname = urlMatchResult[2];
+    components.port = urlMatchResult[3].str().empty() ? (components.protocol == "https" ? "443" : "80") : urlMatchResult[3].str();
+    components.path = urlMatchResult[4].str().empty() ? "/" : urlMatchResult[4].str();
+  } else {
+    throw std::invalid_argument("Invalid URL format");
+  }
+
+  return components;
+}
 
 std::string urlEncode(const std::string &value)
 {
@@ -86,10 +104,8 @@ void HTTPRawRequestHandler::send_http_request(const HTTPPostRequest& req)
   attr.onsuccess = HTTPRawRequestHandler::on_success;
   attr.onerror = HTTPRawRequestHandler::on_error;
   attr.userData = this;
-  string url = "http://" + req.host + ":" + to_string(req.port) + req.target;
-  //string url = "http://h1:3030/ds/";
   this->request_in_progress = true;
-  emscripten_fetch(&attr, url.c_str());
+  emscripten_fetch(&attr, req.url.c_str());
 }
 
 bool HTTPRawRequestHandler::get_response_non_blocking(std::string* raw_response)
@@ -192,11 +208,16 @@ void HTTPRawRequestHandler::start()
   this->http_req_thread = std::thread([this]() {
     while (true) {
       auto req_o = this->request_q.get();
-      if (req_o.host == "") {
+      if (req_o.url == "") {
 	cout << "exiting http req thread" << endl;
 	break;
       }
-      this->send_post_request__(req_o.host, req_o.port, req_o.target, req_o.body);
+      URLComponents url = parse_url(req_o.url);
+      if (url.protocol != "http") {
+	cout << "only http urls are supported" << endl;
+	throw runtime_error("only http urls are supported");
+      }
+      this->send_post_request__(url.hostname, stoi(url.port), url.path, req_o.body);
     }
   });
 }

@@ -13,8 +13,8 @@ theme: readthedocs
 
 nav:
   - Home: index.md
-  - About MkDocs: about-mkdocs.md
   - Addendum: addendum.md
+  - About MkDocs: about-mkdocs.md
 
 markdown_extensions:
   - toc:

@@ -33,43 +33,49 @@ If you want to shorten the statement you can use *prefix* defined on top of RDF/
 
 ## Graph store explorer (gse)
 
-**gse** is command-line utility to facilitate the tasks which could be described as 'graph store exploration'. E.g.
+### Installation
 
 ```
-> gse ls
+python3 -m venv ~/venv/gse
+source ~/venv/gse/bin/activate
+cd shacled/utils
 
-  gse_path                                         graph_uri
-/test-json <gse:Graph##eba477e9-005c-4eb3-b506-1a48a75726da>
 ```
 
-The result shows graphs known to gse. For each such graph you will see gse path and graph URI. Graph URI can be used in subsequent SPARQL queries.
+### Usage
+
+**gse** is command-line utility to facilitate the tasks which could be described as 'graph store exploration'.
 
 Given .ttl file it is possible to upload the content into GDB using `gse insert` command. This operation allow to specify **gse path** to resulting graph in GDB.
 
-
-### gse: prefix
-
-**gse:** is prefix introduced for GSE users. It defines set of RDF predicates used to specify how certain RDF graph is stored in GDB server:
 ```
-@prefix mydata: <mydata:> .
-@prefix gse: <http://www.geisel-software.com/gse#> .
-
-mydata:g1 rdf:type gse:PlainGraph .
-mydata:g1 gse:path "/G1" .
-mydata:g1 gse:graph-uri <...> .
-mydata:g2 rdf:type gse:SHACLGraph .
-mydata:g2 gse:graph-uri <...> .
-mydata:g1 gse:shacl-graph mydata:g2 .
+> ./gse insert --gse-path /alice-bob/simple --ttl-file ../examples/alice-bob/simple/data.ttl
+... tbc
+> ./gse ls
+         gse_path                                         graph_uri
+/alice-bob/simple <gse:Graph##03027263-2242-454b-8d4d-7aaecb9990ae>
 ```
 
 ## Fuseki
 
 [Apache Jena Fuseki](https://jena.apache.org/documentation/fuseki2/) is open-source RDF/SPARQL server.
 
-### Useful commands
+### Fuseki server install and operation
+
+Use archive apache-jena-fuseki-5.0.0. Unpack that to location `FUSEKI_HOME`.
+
+To create run database server use command:
 
 ```
-./fuseki # will start fuseki server in background
-ls -ltr run/logs
-less run/logs/stderrout.log
+cd $FUSEKI_HOME
+./fuseki-server --update --loc=run/databases /gse
+```
+
+At this point you should be able to access fuseki server via webbrowers at port 3030. You should find single dataset /gse.
+
+Logging destination: $FUSEKI_HOME/run/logs/stderrout.log
+To observe http requests modify file ${FUSEKI_HOME}/webapp/log4j2.properties. You need to set property `logger.fuseki-request.level`:
+
+```
+logger.fuseki-request.level                  = DEBUG
 ```

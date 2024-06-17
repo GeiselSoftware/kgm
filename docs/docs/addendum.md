@@ -11,6 +11,21 @@ gse predicates:
 - gse:path
 - gse:graph-uri
 
+### gse: prefix
+
+**gse:** is prefix introduced for GSE users. It defines set of RDF predicates used to specify how certain RDF graph is stored in GDB server:
+```
+@prefix mydata: <mydata:> .
+@prefix gse: <http://www.geisel-software.com/gse#> .
+
+mydata:g1 rdf:type gse:PlainGraph .
+mydata:g1 gse:path "/G1" .
+mydata:g1 gse:graph-uri <...> .
+mydata:g2 rdf:type gse:SHACLGraph .
+mydata:g2 gse:graph-uri <...> .
+mydata:g1 gse:shacl-graph mydata:g2 .
+```
+
 ## Appendix B: SHACL notes
 
-Example of SHACL definitions: https://github.com/pyjanitor-devs/pyjviz/blob/main/rdflog.shacl.ttl
+Example of SHACL definitions: [https://github.com/pyjanitor-devs/pyjviz/blob/main/rdflog.shacl.ttl](https://github.com/pyjanitor-devs/pyjviz/blob/main/rdflog.shacl.ttl)

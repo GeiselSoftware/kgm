@@ -3,7 +3,7 @@ from SPARQLWrapper import SPARQLWrapper, JSON
 from SPARQLWrapper import POST, BASIC
 
 gse_prefix = "https://www.geisel-software.com/RDFPrefix/#"
-fuseki_url = "http://localhost:3030/alice-bob"
+fuseki_url = "http://localhost:3030/gse"
 
 class uri:
     def __init__(self, s):

@@ -5,11 +5,19 @@
 #include <utility>
 #include <map>
 
+struct URLComponents {
+  std::string protocol;
+  std::string hostname;
+  std::string port;
+  std::string path;
+};
+
+URLComponents parse_url(const std::string& url);
+
 struct HTTPPostRequest
 {
-  std::string host;
-  int port;
-  std::string target, body;
+  std::string url;
+  std::string body;
 };
 
 std::string urlEncode(const std::string& value);
