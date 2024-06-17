@@ -34,18 +34,20 @@ void NodeManager::load_json(const char* rq_result)
   for (auto& b: j["results"]["bindings"]) {
     auto [s, p, o] = rdf_parse_binding(b);
     cout << "load_json: " << s << " " << p << " " << o << endl;
-
     if (p.uri == "http://www.w3.org/1999/02/22-rdf-syntax-ns#type") {
       if (!nodes.has_key(s)) {
 	auto new_node = make_shared<DataNode>();
 	new_node->uri = s.uri;
-	nodes.set(URIRef{new_node->uri}, new_node->get_ptr());
+	nodes.set(URIRef{new_node->uri}, new_node->get_ptr());	
       }
-    } else if (p.uri == "gse:name") {
-      auto n = nodes.get(s);
-      if (auto nn = dynamic_pointer_cast<DataNode>(n); nn) {
-	nn->members.push_back(DataNodeMember{p.uri, get_display_value(o)});
-      }
+      auto n = nodes.get<DataNode>(s);
+      n->rdfs_classes.push_back(get_display_value(o));
+    } else if (p.uri == "gse:node_vis_color") {
+      auto n = nodes.get<DataNode>(s);
+      n->node_vis_color = get_display_value(o);
+    } else { // if (p.uri == "simple:name") {
+      auto n = nodes.get<DataNode>(s);
+      n->members.push_back(DataNodeMember{p.uri, get_display_value(o)});
     }
 
   }

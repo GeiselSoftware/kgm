@@ -73,7 +73,8 @@ struct Example: public LoopStep
       
       if (ImGui::Button("load test json")) {
 	this->http_req_in_progress = true;
-	string rq = R"(prefix gse: <gse:> select ?s ?p ?o { ?g gse:path "/alice-bob/simple" . graph ?g { ?s ?p ?o } })";
+	//string rq = R"(prefix gse: <gse:> select ?s ?p ?o { ?g gse:path "/alice-bob/simple" . graph ?g { ?s ?p ?o } })";
+	string rq = R"(prefix gse: <gse:> select ?s ?p ?o { ?g gse:path "/alice-bob/KUI" . graph ?g { ?s ?p ?o } })";
 	HTTPPostRequest req{this->fuseki_url, toUrlEncodedForm(map<string, string>{{"query", rq}})};
 	this->http_request_handler.send_http_request(req);
       }
@@ -148,12 +149,12 @@ int main(int argc, char** argv)
   }
   cout << "--------------------" << endl;
 
-  string fuseki_url = "http://localhost:3030/gse/";
+  string fuseki_url = "http://metis:3030/gse/";
   
 #ifdef __EMSCRIPTEN__
   if (argc != 3) {
     cout << "error" << endl;
-    cout << "example: http://h1:8000/apps/shacled/run-shacled.html?fuseki-host=h1&fuseki-port=3030" << endl;
+    cout << "example: http://h1:8000/apps/shacled/run-shacled.html?fuseki-host=metis&fuseki-port=3030" << endl;
     exit(2);
   } else {
     string fuseki_host = string_split(argv[1], '=')[1];
