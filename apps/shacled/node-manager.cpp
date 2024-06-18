@@ -1,11 +1,13 @@
 #include "node-manager.h"
 #include "rdfsclass-node.h"
 #include <iostream>
-using namespace std;
 
+#include <fmt/format.h>
 #include <nlohmann/json.hpp>
 #include <lib-utils/fuseki-utils.h>
 #include "data-node.h"
+
+using namespace std;
 
 void NodeManager::do_dump_shacl()
 {
@@ -21,19 +23,35 @@ void NodeManager::do_dump_shacl()
     }
   }
 
-  for (auto& link: this->links) {
-    cout << "link: " << link.ID.Get() << endl;
+  for (auto link: this->links) {
+    cout << "link: " << link->ID.Get() << endl;
   }
 
   cout << "----" << endl;
 }
 
-void NodeManager::load_json(const char* rq_result)
+void NodeManager::start_load_graph(const string& gse_path, const string& fuseki_server_url)
 {
-  auto j = nlohmann::json::parse(rq_result);
+  constexpr auto rq_fmt = R"(prefix gse: <gse:> select ?s ?p ?o {{ ?g gse:path "{}" . graph ?g {{ ?s ?p ?o }} }})";
+  string rq = fmt::format(rq_fmt, gse_path);
+  cout << "sending rq: " << rq << endl;
+  HTTPPostRequest req{fuseki_server_url, toUrlEncodedForm(map<string, string>{{"query", rq}})};
+  this->http_request_handler.send_http_request(req);
+  this->in_progress_load_graph_f = true;
+}
+
+bool NodeManager::finish_load_graph()
+{
+  string raw_response;
+  if (this->http_request_handler.get_response_non_blocking(&raw_response) == false) {
+    return false;
+  }
+
+  cout << raw_response << endl;
+  auto j = nlohmann::json::parse(raw_response);
   for (auto& b: j["results"]["bindings"]) {
     auto [s, p, o] = rdf_parse_binding(b);
-    cout << "load_json: " << s << " " << p << " " << o << endl;
+    cout << "finish_load_graph: " << s << " " << p << " " << o << endl;
     if (p.uri == "http://www.w3.org/1999/02/22-rdf-syntax-ns#type") {
       if (!nodes.has_key(s)) {
 	auto new_node = make_shared<DataNode>();
@@ -49,8 +67,10 @@ void NodeManager::load_json(const char* rq_result)
       auto n = nodes.get<DataNode>(s);
       n->members.push_back(DataNodeMember{p.uri, get_display_value(o)});
     }
-
   }
+
+  this->in_progress_load_graph_f = false;
+  return true;
 }
 
 void NodeManager::make_frame()
@@ -61,8 +81,8 @@ void NodeManager::make_frame()
   }
 
   // show all links
-  for (auto& link: this->links) {
-    ed::Link(link.ID, link.StartPinID, link.EndPinID);
+  for (auto link: this->links) {
+    ed::Link(link->ID, link->StartPinID, link->EndPinID);
   }
 
   // Handle creation action, returns true if editor want to create new object (node or link)
@@ -85,11 +105,12 @@ void NodeManager::make_frame()
 	// ed::AcceptNewItem() return true when user release mouse button.
 	if (ed::AcceptNewItem()) {
 	  // Since we accepted new link, lets add one to our list of links.
-	  this->links.push_back({ ed::LinkId(Node::get_next_id()), inputPinId, outputPinId });
+	  this->links.push_back(make_shared<Link>(ed::LinkId(Node::get_next_id()), inputPinId, outputPinId));
 		  
 	  // Draw new link.
-	  cout << "new link: " << this->links.back().ID.Get() << " " << this->links.back().StartPinID.Get() << "->" << this->links.back().EndPinID.Get() << endl;
-	  ed::Link(this->links.back().ID, this->links.back().StartPinID, this->links.back().EndPinID);
+	  auto back_link = this->links.back();
+	  cout << "new link: " << back_link->ID.Get() << " " << back_link->StartPinID.Get() << "->" << back_link->EndPinID.Get() << endl;
+	  ed::Link(back_link->ID, back_link->StartPinID, back_link->EndPinID);
 	}
 		
 	// You may choose to reject connection between these nodes
@@ -109,7 +130,7 @@ void NodeManager::make_frame()
       if (ed::AcceptDeletedItem()) {
 	// Then remove link from your data.
 	for (auto it = this->links.begin(); it != this->links.end(); ++it) {
-	  if ((*it).ID == deletedLinkId) {
+	  if ((*it)->ID == deletedLinkId) {
 	    this->links.erase(it);
 	    break;
 	  }

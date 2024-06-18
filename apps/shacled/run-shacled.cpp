@@ -3,34 +3,28 @@
 
 #include <lib-apploops/loop-runner.h>
 #include "node-manager.h"
-#include "rdfsclass-node.h"
-#include <lib-utils/http-utils.h>
 
 namespace ed = ax::NodeEditor;
 
 #include <iostream>
 #include <sstream>
 #include <thread>
-#include <fmt/format.h>
 using namespace std;
 
 struct Example: public LoopStep
 {
-  string fuseki_url;
+  string fuseki_server_url;
 
-  explicit Example(const string& fuseki_url) {
-    this->fuseki_url = fuseki_url;
+  explicit Example(const string& fuseki_server_url) {
+    this->fuseki_server_url = fuseki_server_url;
   }
   
   NodeManager node_manager;
   ed::EditorContext* m_Editor = 0;
 
-  HTTPRawRequestHandler http_request_handler;
-  bool http_req_in_progress = false;
-  
   void before_loop_starts() override {
 #ifndef __EMSCRIPTEN__
-    this->http_request_handler.start(); // start http handler thread
+    this->node_manager.http_request_handler.start(); // start http handler thread
 #endif
     
     ed::Config config;
@@ -54,13 +48,15 @@ struct Example: public LoopStep
       ImGui::Begin("Left Window", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);	
       ImGui::Text("FPS: %.2f (%.2gms)", io.Framerate, io.Framerate ? 1000.0f / io.Framerate : 0.0f);
       ImGui::Separator();	
-      
+
+#if 0
       if (ImGui::Button("add new class")) {
 	cout << "add new class pressed" << endl;
 	auto new_class_uri = create_classURI(URIRef{"test"});
 	node_manager.nodes.set(new_class_uri, make_shared<RDFSClassNode>(new_class_uri));
       }
-
+#endif
+      
       if (ImGui::Button("dump shacl")) {
 	cout << "dump shacl" << endl;
 	node_manager.do_dump_shacl();
@@ -68,7 +64,7 @@ struct Example: public LoopStep
 
       { // list of gse graphs
 	ImGui::Text("gse graphs");
-	vector<string> items = { "/alice-bob/simple", "/alice-bob/KUI" };
+	vector<string> items = { "/alice-bob/simple", "/alice-bob/simple-shacl", "/alice-bob/KUI" };
         static int item_current_idx = 0; // Here we store our selection data as an index.
         if (ImGui::BeginListBox("##gse-graphs")) {
 	  for (int n = 0; n < items.size(); n++) {
@@ -86,43 +82,33 @@ struct Example: public LoopStep
 	  ImGui::EndListBox();
         }
 
-	constexpr auto rq_fmt = R"(prefix gse: <gse:> select ?s ?p ?o {{ ?g gse:path "{}" . graph ?g {{ ?s ?p ?o }} }})";
-	if (ImGui::Button("refresh")) {
-	      auto rq = fmt::format(rq_fmt, items[item_current_idx]);
-	      cout << "rq: " << rq << endl;	  
+	if (ImGui::Button("refresh\nlist")) {
+	  
 	}
 	
 	ImGui::SameLine();
 
-	{
-	  if (true) { // load test json
-	    bool button_disabled = false;
-	    if (this->http_req_in_progress) {
-	      button_disabled = true;
-	      ImGui::BeginDisabled(true);
+	{ // load graph
+	  bool button_disabled = false;
+	  if (node_manager.in_progress_load_graph()) {
+	    button_disabled = true;
+	    ImGui::BeginDisabled(true);
+	  }
+
+	  if (ImGui::Button("load")) {
+	    if (!node_manager.in_progress_load_graph()) {
+	      auto gse_path = items[item_current_idx];
+	      node_manager.start_load_graph(gse_path, this->fuseki_server_url);
 	    }
-	    
-	    if (ImGui::Button("load")) {
-	      this->http_req_in_progress = true;
-	      string rq = fmt::format(rq_fmt, items[item_current_idx]);
-	      cout << "sending rq: " << rq << endl;
-	      HTTPPostRequest req{this->fuseki_url, toUrlEncodedForm(map<string, string>{{"query", rq}})};
-	      this->http_request_handler.send_http_request(req);
-	    }
-	    
-	    string raw_response;
-	    if (this->http_request_handler.get_response_non_blocking(&raw_response) == true) {
-	      if (raw_response.size() > 0) {
-		cout << raw_response << endl;
-		node_manager.load_json(raw_response.c_str());
-	      }
-	      this->http_req_in_progress = false;
-	    }
-	    
-	    if (button_disabled) {
-	      ImGui::EndDisabled();
-	    }
-	  }	  
+	  }
+	  
+	  if (node_manager.in_progress_load_graph()) {
+	    node_manager.finish_load_graph();
+	  }
+	  
+	  if (button_disabled) {
+	    ImGui::EndDisabled();
+	  }
 	}
       }
       
@@ -134,7 +120,7 @@ struct Example: public LoopStep
       ImGui::SetNextWindowPos(ImVec2(viewportPos.x + viewportSize.x * 0.15f, viewportPos.y));
       ImGui::SetNextWindowSize(ImVec2(viewportSize.x * 0.85f, viewportSize.y));
       ImGui::Begin("Right Window", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
-      ImGui::Text("%s", this->fuseki_url.c_str());
+      ImGui::Text("%s", this->fuseki_server_url.c_str());
 
       ed::SetCurrentEditor(m_Editor);
 
@@ -208,8 +194,8 @@ int main(int argc, char** argv)
   quit();
 
 #ifndef __EMSCRIPTEN__
-  e.http_request_handler.send_http_request(HTTPPostRequest()); // thread will exit on empty request
-  e.http_request_handler.http_req_thread.join(); // wait for above to complete
+  e.node_manager.http_request_handler.send_http_request(HTTPPostRequest()); // thread will exit on empty request
+  e.node_manager.http_request_handler.http_req_thread.join(); // wait for above to complete
 #endif
   
   cout << "all done, exiting" << endl;
