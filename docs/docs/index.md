@@ -28,7 +28,7 @@ Bob,Human
 Bob_height,6 feet
 ```
 
-RDF makes two changes to key-value pairs idea. First it adds third element so you now will have subject-predicate-object triples instead of key-value pairs. And then RDF restricts what could be subject, predicate and object. In most cases the parts of RDF triple will be either [URIs](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier) or [xsd literals](https://www.w3.org/TR/xmlschema-2/#built-in-datatypes).
+RDF makes two changes to key-value pairs idea. First it adds third element so you now will have subject-predicate-object triples instead of key-value pairs. And then RDF restricts what could be subject, predicate and object. In most cases the parts of RDF triple will be either [URIs](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier) or [xsd literals](https://www.w3.org/TR/rdf11-concepts/#xsd-datatypes) (see also for [more on xsd literals](https://www.w3.org/TR/xmlschema-2/#built-in-datatypes)).
 
 I.e. to have RDF triples to be compliant you have to make sure that subject 
 
