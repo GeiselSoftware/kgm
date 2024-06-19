@@ -4,6 +4,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <array>
 #include <map>
 
 struct URLComponents {
