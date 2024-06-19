@@ -92,15 +92,19 @@ void HTTPRawRequestHandler::send_http_request(const HTTPPostRequest& req)
   attr.requestData = postData_buf;
   attr.requestDataSize = req.body.size();
 	
-  auto requestHeaders = { // std::initializer_list<const char *>
-    "Content-Type", "application/x-www-form-urlencoded",
-    (const char*)0 };
-  for (auto rq: requestHeaders) {
-    cout << "rq: " << rq << endl;
+  cout << "req headers:" << endl;
+  for (auto& h: req.request_headers) {
+    cout << h[0] << ": " << h[1] << endl;
   }
   cout << "------" << endl;
-  
-  attr.requestHeaders = requestHeaders.begin();
+
+  std::vector<const char*> requestHeaders;
+  for (auto& rh: req.request_headers) {
+    requestHeaders.push_back(rh[0].c_str()); requestHeaders.push_back(rh[1].c_str());
+  }
+  requestHeaders.push_back(0);
+
+  attr.requestHeaders = &requestHeaders[0];
   attr.onsuccess = HTTPRawRequestHandler::on_success;
   attr.onerror = HTTPRawRequestHandler::on_error;
   attr.userData = this;
@@ -170,17 +174,24 @@ static int OpenConnection(const char *hostname, int port)
   return sd;
 }
 
-void HTTPRawRequestHandler::send_post_request__(const std::string& server, int port, const std::string& target, const std::string& body)
+void HTTPRawRequestHandler::send_post_request__(const std::string& server, int port, const std::string& target,
+						const std::vector<std::array<std::string, 2>>& req_headers,  const std::string& body)
 { 
   int sock = OpenConnection(server.c_str(), port);
   
   std::string request = "POST " + target + " HTTP/1.1\r\n";
   request += "Host: " + server + "\r\n";
   request += "User-Agent: curl/7.81.0\r\n";
+#if 0
   request += "Accept: */*\r\n";
   request += "Content-Type: application/x-www-form-urlencoded\r\n";
   //request += "Accept-Encoding: gzip, deflate\r\n";
   //request += "Accept-Encoding: deflate\r\n";
+#else
+  for (auto& h: req_headers) {
+    request += h[0]; request += ": "; request += h[1];
+  }
+#endif
   request += "Content-Length: " + std::to_string(body.length()) + "\r\n";
   request += "Connection: close\r\n\r\n";
   request += body;
@@ -217,7 +228,7 @@ void HTTPRawRequestHandler::start()
 	cout << "only http urls are supported" << endl;
 	throw runtime_error("only http urls are supported");
       }
-      this->send_post_request__(url.hostname, stoi(url.port), url.path, req_o.body);
+      this->send_post_request__(url.hostname, stoi(url.port), url.path, req_o.request_headers, req_o.body);
     }
   });
 }

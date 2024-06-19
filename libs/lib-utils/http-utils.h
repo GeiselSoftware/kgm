@@ -3,6 +3,7 @@
 
 #include <string>
 #include <utility>
+#include <vector>
 #include <map>
 
 struct URLComponents {
@@ -17,6 +18,7 @@ URLComponents parse_url(const std::string& url);
 struct HTTPPostRequest
 {
   std::string url;
+  std::vector<std::array<std::string, 2>> request_headers;
   std::string body;
 };
 
@@ -49,8 +51,8 @@ public:
 class HTTPRawRequestHandler
 {
 private:
-  void send_post_request__(const std::string& server, int port, const std::string& target, const std::string& body);
-
+  void send_post_request__(const std::string& server, int port, const std::string& target,
+			   const std::vector<std::array<std::string, 2>>& req_headers,  const std::string& body);
   ThreadSafeQueue<HTTPPostRequest> request_q;
   ThreadSafeQueue<std::string> response_q;
 

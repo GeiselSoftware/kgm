@@ -32,10 +32,37 @@ void NodeManager::do_dump_shacl()
 
 void NodeManager::start_load_graph(const string& gse_path, const string& fuseki_server_url)
 {
+#if 1
   constexpr auto rq_fmt = R"(prefix gse: <gse:> select ?s ?p ?o {{ ?g gse:path "{}" . graph ?g {{ ?s ?p ?o }} }})";
+#else
+  constexpr auto rq_fmt = R"(
+  prefix sh: <http://www.w3.org/ns/shacl#>
+  prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+  prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+  
+  construct {{ 
+   ?s ?member_path ?member; ?member_type ?m_type; ?p ?o
+  }}
+  where {{
+   ?g <gse:path> "{}" .
+   graph ?g {{
+    {{
+     ?s rdf:type rdfs:Class; sh:property [ sh:path ?member; sh:dataclass|sh:class ?m_type ] 
+     bind(concat("member_name__", str(?member)) as ?member_path)
+     bind(concat("member_type__", str(?member)) as ?member_type)
+    }} union {{
+      ?s ?p ?o minus {{ ?ss rdf:type rdfs:Class; rdf:type sh:NodeShape; ?pp ?oo }}
+    }}
+   }}
+  }})";
+#endif
+  
   string rq = fmt::format(rq_fmt, gse_path);
   cout << "sending rq: " << rq << endl;
-  HTTPPostRequest req{fuseki_server_url, toUrlEncodedForm(map<string, string>{{"query", rq}})};
+  decltype(HTTPPostRequest::request_headers) req_headers;
+  req_headers.push_back({"Content-Type", "application/x-www-form-urlencoded"});
+  //req_headers.push_back({"Accept", "application/n-triples"});
+  HTTPPostRequest req{fuseki_server_url, req_headers, toUrlEncodedForm(map<string, string>{{"query", rq}})};
   this->http_request_handler.send_http_request(req);
   this->in_progress_load_graph_f = true;
 }
@@ -48,6 +75,7 @@ bool NodeManager::finish_load_graph()
   }
 
   cout << raw_response << endl;
+  if (1) {
   auto j = nlohmann::json::parse(raw_response);
   for (auto& b: j["results"]["bindings"]) {
     auto [s, p, o] = rdf_parse_binding(b);
@@ -67,6 +95,7 @@ bool NodeManager::finish_load_graph()
       auto n = nodes.get<DataNode>(s);
       n->members.push_back(DataNodeMember{p.uri, get_display_value(o)});
     }
+  }
   }
 
   this->in_progress_load_graph_f = false;

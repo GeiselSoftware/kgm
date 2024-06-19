@@ -13,7 +13,7 @@ PREFIX : <orh:>
 
 :Dog rdf:type rdfs:Class; rdf:type sh:NodeShape;
        sh:property [sh:path :name; sh:minCount 1; sh:maxCount 1; sh:dataclass xsd:string];
-       sh:ownedBy [sh:minCount 1; sh:maxCount 1; sh:class :Human] .
+       sh:property [sh:part :ownedBy sh:minCount 1; sh:maxCount 1; sh:class :Human] .
 
 :Human sh:property [sh:path gse:node_vis_color; sh:minCount 0; sh:maxCount 1; sh:dataclass xsd:string] .
 :Dog sh:property [sh:path gse:node_vis_color; sh:minCount 0; sh:maxCount 1; sh:dataclass xsd:string] .
