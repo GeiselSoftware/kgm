@@ -16,9 +16,23 @@ Graph databases store information using graph, more precisely `knowledge graph`.
 
 In example above two facts are stored related to proverbal Alice-Bob pair: there is a human named Alice with identity :alice.
 
-RDF (Resource Definition Framework) is the standardized way to create such graphs (also known as knowledge graphs). The idea of RDF is simple: all facts are stored as triples i.e. statement which always has three parts: subject, predicate and object. E.g. first triple in example above introduces triple with subject `:alice`, predicate `rdf:type` and object `foaf:Human`.
+[RDF (Resource Definition Framework)](https://www.w3.org/TR/rdf11-concepts/) is the standardized way to create knowledge graphs. The idea of RDF is simple: all facts are stored as triples i.e. statement which always has three parts: *subject*, *predicate* and *object*. E.g. first triple in example above introduces triple with subject `:alice`, predicate `rdf:type` and object `foaf:Human`.
 
-In this first triple we see example of triple where all three part are *URIs* (Universal Resource Identifier). RDF/turtle allows to use URI in shortened form. The same example where all URIs are complete would look like this:
+You may think about RDF triples as extention of an idea of key-value pairs. Key-value pair has two parts: kay and value. The type of key and value may vary. You may have keys as strings and values as numbers, string - anything you can type into the file editor. E.g. you may have such KV pairs shown as CSV file fragment:
+
+```
+Key,Value
+Alice,Human
+Alice_height,5 feet 9 inch
+Bob,Human
+Bob_height,6 feet
+```
+
+RDF makes two changes to key-value pairs idea. First it adds third element so you now will have subject-predicate-object triples instead of key-value pairs. And then RDF restricts what could be subject, predicate and object. In most cases the parts of RDF triple will be either [URIs](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier) or [xsd literals](https://prefix.cc/xsd).
+
+I.e. to have RDF triples to be compliant you have to make sure that subject 
+
+In this first triple we see example where all three part are *URIs* (Universal Resource Identifier). RDF/turtle allows to use URI in shortened form. The same example where all URIs are complete would look like this:
 
 ```
 <http://example.com/#alice> <...:type> <...:Human> .
