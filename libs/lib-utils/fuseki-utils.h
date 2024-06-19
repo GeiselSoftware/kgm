@@ -8,35 +8,37 @@
 
 //const char* RDF_type = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
 
-struct URIRef {
+struct URI {
   std::string uri;
 };
 
 namespace std {
-  template <> struct less<URIRef>
+  template <> struct less<URI>
   {
-    bool operator() (const URIRef& l, const URIRef& r) const { return l.uri < r.uri; }
+    bool operator() (const URI& l, const URI& r) const { return l.uri < r.uri; }
   };
 }
 
-URIRef create_URI(const URIRef& class_uri);
-URIRef create_classURI(const URIRef& prefix);
+URI create_URI(const URI& class_uri);
+URI create_classURI(const URI& prefix);
 
 struct Literal {
   std::string literal;  
 };
 
-std::string get_display_value(const std::variant<URIRef, Literal>& l);
+typedef std::variant<URI, Literal> UOL; // URI or Literal
+std::string get_display_value(const UOL& l);
 
-inline std::ostream& operator<<(std::ostream& out, const URIRef& obj) { out << "<" << obj.uri << ">"; return out; }
-inline std::ostream& operator<<(std::ostream& out, const std::variant<URIRef, Literal> obj) {
-  if (obj.index() == 0) {
-    out << "<" << std::get<0>(obj).uri << ">";
+inline std::ostream& operator<<(std::ostream& out, const URI& uri) { out << "<" << uri.uri << ">"; return out; }
+inline std::ostream& operator<<(std::ostream& out, const UOL uol) {
+  if (uol.index() == 0) {
+    out << "<" << std::get<0>(uol).uri << ">";
   } else {
-    out << "\"" << std::get<1>(obj).literal << "\"";
+    out << "\"" << std::get<1>(uol).literal << "\"";
   }
   return out;
 }
 
-typedef std::tuple<URIRef, URIRef, std::variant<URIRef, Literal>> RDFSPO;
-RDFSPO rdf_parse_binding(const nlohmann::json& binding);
+typedef std::tuple<URI, URI, UOL> RDFSPO;
+typedef std::map<Literal, UOL> aux_output_t;
+RDFSPO rdf_parse_binding(const nlohmann::json& binding, aux_output_t* aux_output);

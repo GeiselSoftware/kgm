@@ -52,7 +52,7 @@ struct Example: public LoopStep
 #if 0
       if (ImGui::Button("add new class")) {
 	cout << "add new class pressed" << endl;
-	auto new_class_uri = create_classURI(URIRef{"test"});
+	auto new_class_uri = create_classURI(URI{"test"});
 	node_manager.nodes.set(new_class_uri, make_shared<RDFSClassNode>(new_class_uri));
       }
 #endif

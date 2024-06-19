@@ -7,7 +7,7 @@
 
 #include "node.h"
 
-class URIRef;
+class URI;
 struct RDFSClassMember {
   bool checkbox_value = false;
   std::string member_name, member_type;
@@ -19,7 +19,7 @@ struct RDFSClassMember {
 class RDFSClassNode : public Node
 {
 public:
-  explicit RDFSClassNode(const URIRef& class_uri);
+  explicit RDFSClassNode(const URI& class_uri);
   
   bool is_editable = true;
   

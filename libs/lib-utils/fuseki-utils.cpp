@@ -22,7 +22,7 @@ using namespace std;
 #include "fuseki-utils.h"
 #include "uuid.h"
 
-RDFSPO rdf_parse_binding(const nlohmann::json& binding)
+RDFSPO rdf_parse_binding(const nlohmann::json& binding, aux_output_t* aux_output)
 {
   /* 
      {
@@ -38,30 +38,30 @@ RDFSPO rdf_parse_binding(const nlohmann::json& binding)
      }
   */
   assert(binding["s"]["type"] == "uri");
-  URIRef s{binding["s"]["value"]};
+  URI s{binding["s"]["value"]};
   assert(binding["p"]["type"] == "uri");  
-  URIRef p{binding["p"]["value"]};
+  URI p{binding["p"]["value"]};
   assert(binding["o"]["type"] == "uri" || binding["o"]["type"] == "literal");
 
-  variant<URIRef, Literal> o;
+  UOL o;
   if (binding["o"]["type"] == "uri") {
-    o = variant<URIRef, Literal>(URIRef{binding["o"]["value"]});
+    o = UOL(URI{binding["o"]["value"]});
   } else {
-    o = variant<URIRef, Literal>(Literal{binding["o"]["value"]});
+    o = UOL(Literal{binding["o"]["value"]});
   }
 
   return {s, p, o};
 }
 
-URIRef create_classURI(const URIRef& prefix)
+URI create_classURI(const URI& prefix)
 {
-  return URIRef{prefix.uri + "#" + generate_uuid_v4()};
+  return URI{prefix.uri + "#" + generate_uuid_v4()};
 }
 
-std::string get_display_value(const std::variant<URIRef, Literal>& l)
+std::string get_display_value(const UOL& l)
 {
   string ret;
-  if (auto vv = get_if<URIRef>(&l)) {
+  if (auto vv = get_if<URI>(&l)) {
     ret = vv->uri;
   } else if (auto vv = get_if<Literal>(&l)) {
     ret = vv->literal;

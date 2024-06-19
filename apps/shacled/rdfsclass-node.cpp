@@ -12,7 +12,7 @@ RDFSClassMember::RDFSClassMember()
   this->out_pin_id = Node::last_node_id++;
 }
 
-RDFSClassNode::RDFSClassNode(const URIRef& class_uri) : Node{get_next_id()}
+RDFSClassNode::RDFSClassNode(const URI& class_uri) : Node{get_next_id()}
 {
   this->uri = class_uri.uri;
   this->node_InputPinId = last_node_id++;

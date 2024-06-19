@@ -13,7 +13,7 @@ class Link;
 class NodeManager
 {
 public:  
-  Dict<URIRef, std::shared_ptr<Node>> nodes;
+  Dict<URI, std::shared_ptr<Node>> nodes;
   std::vector<std::shared_ptr<Link>> links;
   
 public:  
