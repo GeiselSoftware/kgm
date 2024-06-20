@@ -171,7 +171,7 @@ int main(int argc, char** argv)
   }
   cout << "--------------------" << endl;
 
-  string fuseki_url = "http://metis:3030/gse/";
+  string fuseki_url;
   
 #ifdef __EMSCRIPTEN__
   if (argc != 3) {
@@ -183,8 +183,20 @@ int main(int argc, char** argv)
     string fuseki_port = string_split(argv[2], '=')[1];
     fuseki_url = string("http://") + fuseki_host + ":" + fuseki_port + "/gse/";
   }
+#else  
+  if (argc != 2) {
+    cout << "error, need suply url to fuseki server" << endl;
+    cout << "Example: " << argv[0] << " http://metis:3030/gse/" << endl;
+    exit(2);
+  } else {
+    fuseki_url = argv[1];
+  }
 #endif
-  fuseki_url = "http://h1:3030/gse/";
+
+  if (fuseki_url.size() == 0) {
+    cout << "no fuseki url specified" << endl;
+    exit(2);
+  }
   
   cout << "fuseki url: " << fuseki_url << endl;
   Example e(fuseki_url);

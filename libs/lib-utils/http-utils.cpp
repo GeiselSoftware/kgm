@@ -184,14 +184,11 @@ void HTTPRawRequestHandler::send_post_request__(const std::string& server, int p
   request += "User-Agent: curl/7.81.0\r\n";
   request += "Accept: */*\r\n";
   request += "Content-Type: application/x-www-form-urlencoded\r\n";
-#if 0
   //request += "Accept-Encoding: gzip, deflate\r\n";
   //request += "Accept-Encoding: deflate\r\n";
-#else
   for (auto& h: req_headers) {
     request += h[0]; request += ": "; request += h[1]; request += "\r\n";
   }
-#endif
   request += "Content-Length: " + std::to_string(body.length()) + "\r\n";
   request += "Connection: close\r\n\r\n";
   request += body;
