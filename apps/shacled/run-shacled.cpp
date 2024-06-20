@@ -184,7 +184,7 @@ int main(int argc, char** argv)
     fuseki_url = string("http://") + fuseki_host + ":" + fuseki_port + "/gse/";
   }
 #endif
-  //fuseki_url = "http://h1:3030/gse/";
+  fuseki_url = "http://h1:3030/gse/";
   
   cout << "fuseki url: " << fuseki_url << endl;
   Example e(fuseki_url);
