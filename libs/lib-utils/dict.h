@@ -1,18 +1,47 @@
 // -*- c++ -*-
 #pragma once
 
+#include <map>
 #include <memory>
 
 // Dict<string, string>
 template <class K, class V> class Dict
 {
+private:
+  std::map<K, V> m;
+  
 public:
-  bool has_key(const K&) const;
-  V* set(const K& k, const V&);
-  V* set(const K& k);
+  bool has_key(const K& k) const { return m.find(k) != m.end(); }
+  V* set(const K& k, const V& v) { auto [it, _] = this->m.insert_or_assign(k, v); return &(*it).second; }
+  V* set(const K& k) { auto [it, _] = this->m.insert_or_assign(k, V()); return &(*it).second; }
 
-  V* get(const K& k);
-  const V* get(const K& k) const;
+  V* get(const K& k) { auto it = m.find(k); return it == m.end() ? 0 : &(*it).second; }  
+  //const V* get(const K& k) const;
+
+  std::vector<K> keys() const { std::vector<K> ret; for (const auto& [k, _]: m) { ret.push_back(k); } return ret; }
+  
+  typename decltype(m)::iterator begin() { return this->m.begin(); }
+  typename decltype(m)::iterator end() { return this->m.end(); }  
+};
+
+template <class K, class V> class Dict<K, V*>
+{
+private:
+  std::map<K, V*> m;
+
+public:
+  bool has_key(const K& k) const { return m.find(k) != m.end(); }
+  V* set(const K& k, V* v) { auto [it, _] = this->m.insert_or_assign(k, v); return (*it).second; }
+  V* set(const K& k) { auto [it, _] = this->m.insert_or_assign(k, 0); return (*it).second; }
+
+  V* get(const K& k) { auto it = m.find(k); return it == m.end() ? 0 : (*it).second; }  
+  //std::shared_ptr<V> get(const K&) const;
+  template <class DV> DV* get(const K& k) { auto it = m.find(k); return dynamic_cast<DV*>(it == m.end() ? 0 : (*it).second); }
+  
+  std::vector<K> keys() const { std::vector<K> ret; for (const auto& [k, _]: m) { ret.push_back(k); } return ret; }
+  
+  typename decltype(m)::iterator begin() { return this->m.begin(); }
+  typename decltype(m)::iterator end() { return this->m.end(); }  
 };
 
 // Dict<URIRef, shared_ptr<Node>>
@@ -22,63 +51,17 @@ private:
   std::map<K, std::shared_ptr<V>> m;
   
 public:
-  bool has_key(const K&) const;
-  std::shared_ptr<V> set(const K& k, std::shared_ptr<V>);
-  std::shared_ptr<V> set(const K&);
+  bool has_key(const K& k) const { return m.find(k) != m.end(); }
+  std::shared_ptr<V> set(const K& k, std::shared_ptr<V> v) { auto [it, _] = this->m.insert_or_assign(k, v); return (*it).second; }
+  std::shared_ptr<V> set(const K& k) { auto [it, _] = this->m.insert_or_assign(k, std::shared_ptr<V>()); return (*it).second; }
 
-  std::shared_ptr<V> get(const K&);
+  std::shared_ptr<V> get(const K& k) { auto it = m.find(k); return it == m.end() ? std::shared_ptr<V>() : (*it).second; }  
   //std::shared_ptr<V> get(const K&) const;
-  template <class DV> std::shared_ptr<DV> get(const K&);
+  template <class DV> std::shared_ptr<DV> get(const K& k) { auto it = m.find(k); return std::dynamic_pointer_cast<DV>(it == m.end() ? std::shared_ptr<V>() : (*it).second); }
   
-  std::vector<K> keys() const;
+  std::vector<K> keys() const { std::vector<K> ret; for (const auto& [k, _]: m) { ret.push_back(k); } return ret; }
   
   typename decltype(m)::iterator begin() { return this->m.begin(); }
   typename decltype(m)::iterator end() { return this->m.end(); }
 };
-
-template <class K, class V>
-inline bool Dict<K, std::shared_ptr<V>>::has_key(const K& key) const
-{
-  return this->m.find(key) != this->m.end();
-}
-
-template <class K, class V>
-inline std::vector<K> Dict<K, std::shared_ptr<V>>::keys() const
-{
-  std::vector<K> ret;
-  for (const auto& [k, _]: this->m) {
-    ret.push_back(k);
-  }
-  return ret;
-}
-
-template <class K, class V>
-inline std::shared_ptr<V> Dict<K, std::shared_ptr<V>>::set(const K& key, std::shared_ptr<V> v)
-{
-  auto [it, res] = this->m.insert_or_assign(key, v);
-  return (*it).second;
-}
-
-template <class K, class V>
-inline std::shared_ptr<V> Dict<K, std::shared_ptr<V>>::set(const K& key)
-{
-  auto [it, res] = this->m.insert_or_assign(key, std::shared_ptr<V>());
-  return (*it).second;
-}
-
-template <class K, class V>
-inline std::shared_ptr<V> Dict<K, std::shared_ptr<V>>::get(const K& key)
-{
-  auto it = this->m.find(key);
-  return it == this->m.end() ? std::shared_ptr<V>() : (*it).second;
-}
-
-template <class K, class V>
-template <class DV>
-inline std::shared_ptr<DV> Dict<K, std::shared_ptr<V>>::get(const K& key)
-{
-  auto it = this->m.find(key);
-  auto ret = it == this->m.end() ? std::shared_ptr<V>() : (*it).second;
-  return std::dynamic_pointer_cast<DV>(ret);  
-}
 

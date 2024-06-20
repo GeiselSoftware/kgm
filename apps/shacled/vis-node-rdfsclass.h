@@ -5,7 +5,7 @@
 #include <memory>
 #include <string>
 
-#include "node.h"
+#include "vis-node.h"
 
 class URI;
 struct RDFSClassMember {
@@ -16,10 +16,10 @@ struct RDFSClassMember {
   RDFSClassMember();
 };
 
-class RDFSClassNode : public Node
+class VisNode_RDFSClass : public VisNode
 {
 public:
-  explicit RDFSClassNode(const URI& class_uri);
+  explicit VisNode_RDFSClass(const URI& class_uri);
   
   bool is_editable = true;
   
@@ -29,7 +29,6 @@ public:
   
   ed::PinId node_InputPinId, node_OutputPinId;
   ed::PinId node_bottom_pin;
-  
-  
+    
   void make_frame() override;
 };

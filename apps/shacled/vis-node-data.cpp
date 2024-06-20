@@ -1,11 +1,11 @@
-#include "data-node.h"
+#include "vis-node-data.h"
 #include <misc/cpp/imgui_stdlib.h>
 
-DataNode::DataNode() : Node{get_next_id()}
+VisNode_Data::VisNode_Data() : VisNode{get_next_id()}
 {
 }
 
-void DataNode::make_frame()
+void VisNode_Data::make_frame()
 {
   ed::BeginNode(this->ID);
   ImGui::PushID(this->ID.Get());

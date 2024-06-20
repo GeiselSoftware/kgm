@@ -2,7 +2,8 @@
 #include <imgui.h>
 
 #include <lib-apploops/loop-runner.h>
-#include "node-manager.h"
+#include "vis-node-manager.h"
+#include "rdf-node-manager.h"
 
 namespace ed = ax::NodeEditor;
 
@@ -19,12 +20,13 @@ struct Example: public LoopStep
     this->fuseki_server_url = fuseki_server_url;
   }
   
-  NodeManager node_manager;
+  RDFNodeManager rdf_node_manager;
+  VisNodeManager vis_node_manager;
   ed::EditorContext* m_Editor = 0;
 
   void before_loop_starts() override {
 #ifndef __EMSCRIPTEN__
-    this->node_manager.http_request_handler.start(); // start http handler thread
+    this->rdf_node_manager.http_request_handler.start(); // start http handler thread
 #endif
     
     ed::Config config;
@@ -59,7 +61,7 @@ struct Example: public LoopStep
       
       if (ImGui::Button("dump shacl")) {
 	cout << "dump shacl" << endl;
-	node_manager.do_dump_shacl();
+	rdf_node_manager.do_dump_shacl();
       }
 
       { // list of gse graphs
@@ -90,20 +92,20 @@ struct Example: public LoopStep
 
 	{ // load graph
 	  bool button_disabled = false;
-	  if (node_manager.in_progress_load_graph()) {
+	  if (rdf_node_manager.in_progress_load_graph()) {
 	    button_disabled = true;
 	    ImGui::BeginDisabled(true);
 	  }
 
 	  if (ImGui::Button("load")) {
-	    if (!node_manager.in_progress_load_graph()) {
+	    if (!rdf_node_manager.in_progress_load_graph()) {
 	      auto gse_path = items[item_current_idx];
-	      node_manager.start_load_graph(gse_path, this->fuseki_server_url);
+	      rdf_node_manager.start_load_graph(gse_path, this->fuseki_server_url);
 	    }
 	  }
 	  
-	  if (node_manager.in_progress_load_graph()) {
-	    node_manager.finish_load_graph();
+	  if (rdf_node_manager.in_progress_load_graph()) {
+	    rdf_node_manager.finish_load_graph(&this->vis_node_manager);
 	  }
 	  
 	  if (button_disabled) {
@@ -125,7 +127,7 @@ struct Example: public LoopStep
       ed::SetCurrentEditor(m_Editor);
 
       ed::Begin("My Editor", ImVec2(0.0, 0.0f));
-      this->node_manager.make_frame();
+      this->vis_node_manager.make_frame();
       ed::End();
 
       //ed::NavigateToContent(0.0f);     
@@ -194,8 +196,8 @@ int main(int argc, char** argv)
   quit();
 
 #ifndef __EMSCRIPTEN__
-  e.node_manager.http_request_handler.send_http_request(HTTPPostRequest()); // thread will exit on empty request
-  e.node_manager.http_request_handler.http_req_thread.join(); // wait for above to complete
+  e.rdf_node_manager.http_request_handler.send_http_request(HTTPPostRequest()); // thread will exit on empty request
+  e.rdf_node_manager.http_request_handler.http_req_thread.join(); // wait for above to complete
 #endif
   
   cout << "all done, exiting" << endl;

@@ -6,7 +6,7 @@
 
 namespace ed = ax::NodeEditor;
 
-class Node : public std::enable_shared_from_this<Node>
+class VisNode : public std::enable_shared_from_this<VisNode>
 {
 public:
   static int last_node_id;
@@ -14,14 +14,14 @@ public:
   
   ed::NodeId ID;
 
-  explicit Node(int new_node_id);
-  std::shared_ptr<Node> get_ptr() { return shared_from_this(); }
+  explicit VisNode(int new_node_id);
+  std::shared_ptr<VisNode> get_ptr() { return shared_from_this(); }
   
-  virtual ~Node() = 0;
+  virtual ~VisNode() = 0;
   virtual void make_frame() = 0;
 };
 
-struct NodeIdLess
+struct VisNodeIdLess
 {
     bool operator()(const ed::NodeId& lhs, const ed::NodeId& rhs) const
     {
@@ -29,7 +29,7 @@ struct NodeIdLess
     }
 };
 
-struct Link
+struct VisLink
 {
   ed::LinkId ID;
   
@@ -38,7 +38,7 @@ struct Link
 
   ImColor Color;
   
-  Link(ed::LinkId id, ed::PinId startPinId, ed::PinId endPinId):
+  VisLink(ed::LinkId id, ed::PinId startPinId, ed::PinId endPinId):
     ID(id), StartPinID(startPinId), EndPinID(endPinId), Color(255, 255, 255)
   {
   }

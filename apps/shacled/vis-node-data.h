@@ -3,17 +3,17 @@
 
 #include <string>
 #include <vector>
-#include "node.h"
+#include "vis-node.h"
 
 struct DataNodeMember
 {
   std::string name, value;
 };
 
-class DataNode : public Node
+class VisNode_Data : public VisNode
 {
 public:
-  explicit DataNode();
+  explicit VisNode_Data();
   std::vector<std::string> rdfs_classes;
   std::string uri;
   std::string node_vis_color;

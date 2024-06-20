@@ -2,17 +2,17 @@
 #include <imgui_node_editor_internal.h>
 #include <misc/cpp/imgui_stdlib.h>
 
-#include "rdfsclass-node.h"
+#include "vis-node-rdfsclass.h"
 #include <lib-utils/fuseki-utils.h>
 #include <iostream>
 using namespace std;
 
 RDFSClassMember::RDFSClassMember()
 {
-  this->out_pin_id = Node::last_node_id++;
+  this->out_pin_id = VisNode::last_node_id++;
 }
 
-RDFSClassNode::RDFSClassNode(const URI& class_uri) : Node{get_next_id()}
+VisNode_RDFSClass::VisNode_RDFSClass(const URI& class_uri) : VisNode{get_next_id()}
 {
   this->uri = class_uri.uri;
   this->node_InputPinId = last_node_id++;
@@ -20,14 +20,13 @@ RDFSClassNode::RDFSClassNode(const URI& class_uri) : Node{get_next_id()}
   this->node_bottom_pin = last_node_id++;
 }
 
-void RDFSClassNode::make_frame()
-{  
+void VisNode_RDFSClass::make_frame()
+{
   ed::BeginNode(this->ID);
   ImGui::PushID(this->ID.Get());
 
   ImGui::BeginGroup();
   ImVec2 curr_cursor = ImGui::GetCursorPos();
-
   
   ed::BeginPin(this->node_InputPinId, ed::PinKind::Input);
   ImGui::Text(">>>");
@@ -84,5 +83,4 @@ void RDFSClassNode::make_frame()
 
   ImGui::PopID();
   ed::EndNode();
-
 }

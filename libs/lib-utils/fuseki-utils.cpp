@@ -22,7 +22,7 @@ using namespace std;
 #include "fuseki-utils.h"
 #include "uuid.h"
 
-RDFSPO rdf_parse_binding(const nlohmann::json& binding, aux_output_t* aux_output)
+RDFSPO rdf_parse_binding(const nlohmann::json& binding)
 {
   /* 
      {
@@ -37,20 +37,33 @@ RDFSPO rdf_parse_binding(const nlohmann::json& binding, aux_output_t* aux_output
         "o": { "type": "literal", "value": "Alice" }
      }
   */
-  assert(binding["s"]["type"] == "uri");
-  URI s{binding["s"]["value"]};
+  assert(binding["s"]["type"] == "uri" || binding["s"]["type"] == "bnode");
+  UOB s;
+  if (binding["s"]["type"] == "uri") {
+    s = UOB(URI{binding["s"]["value"]});
+  } else {
+    s = UOB(BNode{binding["s"]["value"]});
+  }
   assert(binding["p"]["type"] == "uri");  
   URI p{binding["p"]["value"]};
-  assert(binding["o"]["type"] == "uri" || binding["o"]["type"] == "literal");
 
-  UOL o;
+  assert(binding["o"]["type"] == "uri" || binding["o"]["type"] == "bnode" || binding["o"]["type"] == "literal");
+
+  UBOL o;
   if (binding["o"]["type"] == "uri") {
-    o = UOL(URI{binding["o"]["value"]});
+    o = UBOL(URI{binding["o"]["value"]});
+  } else if (binding["o"]["type"] == "bnode") {
+    o = UBOL(BNode{binding["o"]["value"]});
   } else {
-    o = UOL(Literal{binding["o"]["value"]});
+    if (binding["o"].contains("datatype")) {
+      o = UBOL(Literal{binding["o"]["value"], URI{binding["o"]["datatype"]}});
+    } else {
+      URI xsd_string_datatype{"http://www.w3.org/2001/XMLSchema#string"};
+      o = UBOL(Literal{binding["o"]["value"], xsd_string_datatype});
+    }
   }
 
-  return {s, p, o};
+  return RDFSPO{s, p, o};
 }
 
 URI create_classURI(const URI& prefix)
@@ -58,7 +71,7 @@ URI create_classURI(const URI& prefix)
   return URI{prefix.uri + "#" + generate_uuid_v4()};
 }
 
-std::string get_display_value(const UOL& l)
+std::string get_display_value(const UBOL& l)
 {
   string ret;
   if (auto vv = get_if<URI>(&l)) {
@@ -70,5 +83,3 @@ std::string get_display_value(const UOL& l)
   }
   return ret;
 }
-
-
