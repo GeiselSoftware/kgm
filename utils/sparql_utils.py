@@ -74,3 +74,19 @@ def rq_select(rq):
     results = sparql.query().convert()
 
     return results
+
+def rq_update(rq):
+    fuseki_query_url = f"{fuseki_url}/update"
+    sparql = SPARQLWrapper(fuseki_query_url)
+
+    # Set the query and the return format
+    sparql.setQuery(rq)
+    sparql.setMethod("POST");
+    #sparql.setReturnFormat(JSON)
+
+    # Run the query and get the results
+    results = sparql.query()
+
+    return results
+    
+

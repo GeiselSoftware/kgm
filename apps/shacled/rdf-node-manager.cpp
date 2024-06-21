@@ -29,6 +29,7 @@ void RDFNodeManager::build(const vector<RDFSPO>& triples)
       RDFNode* n = rdf_nodes.get(s);
       if (n == 0) {
 	n = rdf_nodes.set(s);
+	n->node_uri = s;
       }
 
       if (t.p.uri == "http://www.w3.org/1999/02/22-rdf-syntax-ns#type") {
@@ -60,18 +61,28 @@ void RDFNodeManager::build(const vector<RDFSPO>& triples)
   }
 }
 
-shared_ptr<VisNode> RDFNodeManager::create_vis_node(const URI& node_uri)
+shared_ptr<VisNode> RDFNodeManager::create_vis_node(RDFNode* n)
 {
-    auto n = this->rdf_nodes.get(node_uri);
     shared_ptr<VisNode> ret;
     if (n->rdfs_classes.contains(URI{"http://www.w3.org/2000/01/rdf-schema#Class"})) {
-      ret = make_shared<VisNode_RDFSClass>(node_uri);
-      //...;
-      
+      auto v_n = make_shared<VisNode_RDFSClass>(n->node_uri);
+      ret = v_n;	  
     } else {
-      auto lret = make_shared<VisNode_Data>();
-      lret->uri = node_uri.uri;
-      ret = lret;
+      auto v_n = make_shared<VisNode_Data>();
+      v_n->uri = n->node_uri.uri;
+
+      for (auto& uri: n->rdfs_classes) {
+	v_n->rdfs_classes.push_back(uri.uri);
+      }
+      for (auto& spo: n->triples) {
+	if (spo.p.uri == "gse:node_vis_color") {
+	  v_n->node_vis_color = get_display_value(spo.o);
+	} else { // if (p.uri == "simple:name") {
+	  v_n->members.push_back(DataNodeMember{spo.p.uri, get_display_value(spo.o)});
+	}
+      }
+      
+      ret = v_n;
     }
 
     return ret;
@@ -127,13 +138,13 @@ bool RDFNodeManager::finish_load_graph(VisNodeManager* vis_node_manager)
   vector<RDFSPO> triples;
   for (auto& b: j["results"]["bindings"]) {
     auto spo = rdf_parse_binding(b);
-    cout << "finish_load_graph: " << spo.s << " " << spo.p << " " << spo.o << endl;
+    //cout << "finish_load_graph: " << spo.s << " " << spo.p << " " << spo.o << endl;
     triples.push_back(spo);
   }
   this->build(triples);
 
   for (auto& s: this->rdf_nodes.keys()) {
-    auto vn = this->create_vis_node(s);
+    auto vn = this->create_vis_node(this->rdf_nodes.get(s));
     vis_node_manager->nodes.set(s, vn);
   }
   

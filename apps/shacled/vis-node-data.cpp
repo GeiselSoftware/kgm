@@ -10,6 +10,7 @@ void VisNode_Data::make_frame()
   ed::BeginNode(this->ID);
   ImGui::PushID(this->ID.Get());
 
+  ImGui::SetNextItemWidth(100.0f); ImGui::InputText("##uri", &this->uri, ImGuiInputTextFlags_ReadOnly);
 
   for (size_t i = 0; i < this->rdfs_classes.size(); i++) {
     ImGui::PushID(i);
@@ -20,8 +21,6 @@ void VisNode_Data::make_frame()
     ImGui::PopID();
   }
   
-  ImGui::SetNextItemWidth(100.0f); ImGui::InputText("##uri", &this->uri, ImGuiInputTextFlags_ReadOnly);
-
   for (size_t i = 0; i < this->members.size(); i++) {
     ImGui::PushID(i);
     auto& member = this->members[i];

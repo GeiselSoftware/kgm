@@ -27,7 +27,7 @@ private:
   
 public:
   void build(const std::vector<RDFSPO>& triples);
-  std::shared_ptr<VisNode> create_vis_node(const URI& node_uri);
+  std::shared_ptr<VisNode> create_vis_node(RDFNode*);
 
   void do_dump_shacl();
 

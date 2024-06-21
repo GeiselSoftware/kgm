@@ -1,20 +1,10 @@
 #!/bin/env python
 #import ipdb
 import argparse
-from sparql_utils import rq_select, rq_insert_graph, to_rdfw, gse_prefix
+from sparql_utils import rq_select, rq_insert_graph, rq_update, to_rdfw, gse_prefix
 import pandas as pd
 import rdflib
 import uuid
-
-"""
-will create and setup root graph
-"""
-def do_init(args):
-    g = rdflib.Graph()
-    #ipdb.set_trace()
-    g.add((rdflib.URIRef("gse:root"), rdflib.RDF.type, rdflib.URIRef("gse:RootGraph")))
-    g.add((rdflib.URIRef("gse:root"), rdflib.URIRef("gse:path"), rdflib.Literal("/")))
-    rq_insert_graph(g, None)
 
 def create_uri(rdfs_class):
     uri_s = rdfs_class + "##" + str(uuid.uuid4())
@@ -28,18 +18,28 @@ def do_insert_graph(args):
         
     # Load the Turtle data into an RDFLib graph
     descr_g = rdflib.Graph()
-    descr_g.add((rdflib.URIRef("gse:root"), rdflib.URIRef("gse:has"), graph_uri))
     descr_g.add((graph_uri, rdflib.URIRef("gse:path"), rdflib.Literal(gse_path)))
-    rq_insert_graph(descr_g, None)
-
     g = rdflib.Graph()
     g.parse(turtle_file_path, format="turtle")
+
+    rq_insert_graph(descr_g, None)
     rq_insert_graph(g, graph_uri)
 
 def do_remove_gse_graph(args):
-    query = """
+    gse_path = args.gse_path
+    query = f"""
+    prefix gse: <gse:>
+    delete {{ ?s ?p ?o }} where {{
+     {{
+      ?g gse:path "{gse_path}" .
+      graph ?g {{ ?s ?p ?o }}
+     }} union {{
+      ?s gse:path "{gse_path}". ?s ?p ?o
+     }}
+    }}
     """
-    raise Exception("not implemented")
+    print(query)
+    rq_update(query)
     
 def do_ls_gse_graphs(args):
     print("args:", args)
@@ -48,7 +48,7 @@ def do_ls_gse_graphs(args):
     #PREFIX gse: <%gse_prefix%>
     PREFIX gse: <gse:>
     PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-    select ?gse_path ?graph_uri { gse:root gse:has ?graph_uri. ?graph_uri gse:path ?gse_path } 
+    select ?gse_path ?graph_uri { ?graph_uri gse:path ?gse_path } 
     """.replace("%gse_prefix%", gse_prefix)
     #print(query)
     
@@ -88,9 +88,6 @@ if __name__ == "__main__":
     parser_config_set.add_argument("--key", required = True, help = "key")
     parser_config_set.add_argument("--value", required = True, help = "value")
     parser_config_set.set_defaults(func = do_config_set)
-
-    parser_init = subparsers.add_parser("create-root", help = "creates root graph")
-    parser_init.set_defaults(func = do_init)
     
     parser_ls_graphs = subparsers.add_parser("ls-graphs", help = "provides list of all graphs")
     parser_ls_graphs.set_defaults(func = do_ls_all_graphs)
