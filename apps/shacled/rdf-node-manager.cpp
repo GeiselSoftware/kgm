@@ -21,44 +21,42 @@ RDFNode::RDFNode(const URI& node_uri)
   this->node_uri = node_uri;
 }
 
-void RDFNodeManager::build(const vector<RDFSPO>& triples)
+void RDFNodeManager::build_rdf_nodes(const std::string& raw_response)
 {
-  for (auto& t: triples) {
-    if (isURI(t.s)) {
-      auto s = asURI(t.s);
-      RDFNode* n = rdf_nodes.get(s);
+  auto j = nlohmann::json::parse(raw_response);
+
+#if 0
+  vector<RDFSPO> triples;
+  for (auto& b: j["results"]["bindings"]) {
+    auto spo = rdf_parse_binding(b);
+    //cout << "finish_load_graph: " << spo.s << " " << spo.p << " " << spo.o << endl;
+    triples.push_back(spo);
+  }
+
+  const vector<Dict<FreeVar, UOL>>& rows;  
+  for (auto& row: rows) {
+    if (auto s = row.get(FV("s")); isURI(s)) {
+      auto s_uri = asURI(s);
+      auto o_uol = row.get(FV("o"));
+
+      RDFNode* n = this->rdf_nodes.get(s_uri);
       if (n == 0) {
-	n = rdf_nodes.set(s);
+	n = this->rdf_nodes.set(s);
 	n->node_uri = s;
       }
 
-      if (t.p.uri == "http://www.w3.org/1999/02/22-rdf-syntax-ns#type") {
-	n->rdfs_classes.insert(asURI(t.o));
+      auto p_uri = row.get(FV("p"));
+      if (p_uri.uri == "http://www.w3.org/1999/02/22-rdf-syntax-ns#type") {
+	n->rdfs_classes.insert(asURI(row.get(FV("o"))));
+      } else if (p.uri == "http://www.w3.org/ns/shacl#property") {
+	auto pp_uri = row.get(FV("pp"));
+	n->class_properties.push_back(make_pair(pp_uri, o_uol));
       } else {
-	n->triples.push_back(t);
-	if (isBNode(t.o)) {
-	  auto o = asBNode(t.o);
-	  if (bnodes.has_key(o)) {
-	    throw runtime_error("RDF triples do not for the tree");
-	  } else {
-	    bnodes.set(o, n);
-	  }
-	}
+	n->triples.push_back(RDFSPO(s_uri, p_uri, o_uol));
       }
     }
   }
-
-  for (auto& t: triples) {
-    if (isBNode(t.s)) {
-      auto s = asBNode(t.s);
-      auto assoc_n = bnodes.get(s);
-      if (assoc_n) {
-	assoc_n->triples.push_back(t);
-      } else {
-	throw runtime_error("stray bnode found");
-      }
-    }
-  }
+#endif
 }
 
 shared_ptr<VisNode> RDFNodeManager::create_vis_node(RDFNode* n)
@@ -114,7 +112,21 @@ void RDFNodeManager::do_dump_shacl()
 
 void RDFNodeManager::start_load_graph(const string& gse_path, const string& fuseki_server_url)
 {
-  constexpr auto rq_fmt = R"(prefix gse: <gse:> select ?s ?p ?o {{ ?g gse:path "{}" . graph ?g {{ ?s ?p ?o }} }})";
+  // sparql query to flatten sh:property
+  constexpr auto rq_fmt = R"(
+  select ?s ?p ?pp ?o where {{
+   ?g gse:path "{}"
+   graph ?g {{
+    {{ 
+      ?s ?p ?o filter(!isBlank(?s) && ?p != sh:property)
+    }}
+    union 
+    {{
+      ?s ?p ?bo filter(?p = sh:property). ?bo ?pp ?o 
+    }}
+   }}
+  }}
+ )";
   
   string rq = fmt::format(rq_fmt, gse_path);
   cout << "sending rq: " << rq << endl;
@@ -134,14 +146,7 @@ bool RDFNodeManager::finish_load_graph(VisNodeManager* vis_node_manager)
   }
 
   cout << raw_response << endl;
-  auto j = nlohmann::json::parse(raw_response);
-  vector<RDFSPO> triples;
-  for (auto& b: j["results"]["bindings"]) {
-    auto spo = rdf_parse_binding(b);
-    //cout << "finish_load_graph: " << spo.s << " " << spo.p << " " << spo.o << endl;
-    triples.push_back(spo);
-  }
-  this->build(triples);
+  this->build_rdf_nodes(raw_response);
 
   for (auto& s: this->rdf_nodes.keys()) {
     auto vn = this->create_vis_node(this->rdf_nodes.get(s));

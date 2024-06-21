@@ -35,6 +35,7 @@ namespace std {
 
 typedef std::variant<URI, BNode> UOB; // URI or BNode
 typedef std::variant<URI, BNode, Literal> UBOL; // URI, BNode or Literal
+typedef std::variant<URI, Literal> UOL; // URI or Literal
 std::string get_display_value(const UBOL& l);
 
 inline bool isURI(const UOB& uob) { return uob.index() == 0; }

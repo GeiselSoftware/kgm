@@ -16,6 +16,7 @@ public:
   
   URI node_uri;
   std::set<URI> rdfs_classes;
+  std::vector<std::pair<URI, UOL>> class_properties; // only for NodeShapes
   std::vector<RDFSPO> triples;
 };
 
@@ -26,7 +27,7 @@ private:
   Dict<BNode, RDFNode*> bnodes;
   
 public:
-  void build(const std::vector<RDFSPO>& triples);
+  void build_rdf_nodes(const std::string& raw_response);
   std::shared_ptr<VisNode> create_vis_node(RDFNode*);
 
   void do_dump_shacl();
