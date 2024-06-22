@@ -16,7 +16,7 @@ public:
   
   URI node_uri;
   std::set<URI> rdfs_classes;
-  std::vector<std::pair<URI, UOL>> class_properties; // only for NodeShapes
+  Dict<std::string, std::string> class_properties; // path -> datatype, only for NodeShapes
   std::vector<RDFSPO> triples;
 };
 

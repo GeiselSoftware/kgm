@@ -24,39 +24,32 @@ RDFNode::RDFNode(const URI& node_uri)
 void RDFNodeManager::build_rdf_nodes(const std::string& raw_response)
 {
   auto j = nlohmann::json::parse(raw_response);
+  for (auto& row_j: j["results"]["bindings"]) {
+    auto spo = fuseki::rdf_parse_binding(row_j);
+    //cout << spo.s << " " << spo.p << " " << spo.pp << " " << spo.o << endl;
+    assert(isURI(spo.s));
+    assert(!isBNode(spo.o));
+    auto s_uri = asURI(spo.s);
+    auto p_uri = spo.p;
+    auto pp_uri = spo.pp;
+    auto o_uol = spo.o;
+    
+    RDFNode* n = this->rdf_nodes.get(s_uri);
+    if (n == 0) {
+      n = this->rdf_nodes.set(s_uri);
+      n->node_uri = s_uri;
+    }
 
-#if 0
-  vector<RDFSPO> triples;
-  for (auto& b: j["results"]["bindings"]) {
-    auto spo = rdf_parse_binding(b);
-    //cout << "finish_load_graph: " << spo.s << " " << spo.p << " " << spo.o << endl;
-    triples.push_back(spo);
-  }
-
-  const vector<Dict<FreeVar, UOL>>& rows;  
-  for (auto& row: rows) {
-    if (auto s = row.get(FV("s")); isURI(s)) {
-      auto s_uri = asURI(s);
-      auto o_uol = row.get(FV("o"));
-
-      RDFNode* n = this->rdf_nodes.get(s_uri);
-      if (n == 0) {
-	n = this->rdf_nodes.set(s);
-	n->node_uri = s;
+    if (p_uri.uri == "http://www.w3.org/1999/02/22-rdf-syntax-ns#type") {
+      n->rdfs_classes.insert(asURI(o_uol));
+    } else if (pp_uri.uri != "") {
+      if (pp_uri.uri == "http://www.w3.org/ns/shacl#dataclass" || pp_uri.uri == "http://www.w3.org/ns/shacl#class") {
+	n->class_properties.set(p_uri.uri, get_display_value(spo.o));
       }
-
-      auto p_uri = row.get(FV("p"));
-      if (p_uri.uri == "http://www.w3.org/1999/02/22-rdf-syntax-ns#type") {
-	n->rdfs_classes.insert(asURI(row.get(FV("o"))));
-      } else if (p.uri == "http://www.w3.org/ns/shacl#property") {
-	auto pp_uri = row.get(FV("pp"));
-	n->class_properties.push_back(make_pair(pp_uri, o_uol));
-      } else {
-	n->triples.push_back(RDFSPO(s_uri, p_uri, o_uol));
-      }
+    } else {
+      n->triples.push_back(RDFSPO(s_uri, p_uri, o_uol));
     }
   }
-#endif
 }
 
 shared_ptr<VisNode> RDFNodeManager::create_vis_node(RDFNode* n)
@@ -64,7 +57,11 @@ shared_ptr<VisNode> RDFNodeManager::create_vis_node(RDFNode* n)
     shared_ptr<VisNode> ret;
     if (n->rdfs_classes.contains(URI{"http://www.w3.org/2000/01/rdf-schema#Class"})) {
       auto v_n = make_shared<VisNode_RDFSClass>(n->node_uri);
-      ret = v_n;	  
+      for (auto& cp: n->class_properties) {
+	v_n->members.push_back(RDFSClassMember(cp.first, cp.second));
+	//cout << cp.first << " " << cp.second << endl;	
+      }
+      ret = v_n;
     } else {
       auto v_n = make_shared<VisNode_Data>();
       v_n->uri = n->node_uri.uri;
@@ -114,6 +111,9 @@ void RDFNodeManager::start_load_graph(const string& gse_path, const string& fuse
 {
   // sparql query to flatten sh:property
   constexpr auto rq_fmt = R"(
+  prefix sh: <http://www.w3.org/ns/shacl#>
+  prefix gse: <gse:>
+
   select ?s ?p ?pp ?o where {{
    ?g gse:path "{}"
    graph ?g {{
@@ -122,11 +122,12 @@ void RDFNodeManager::start_load_graph(const string& gse_path, const string& fuse
     }}
     union 
     {{
-      ?s ?p ?bo filter(?p = sh:property). ?bo ?pp ?o 
+      ?s sh:property ?m_props. 
+      ?m_props sh:path ?p; ?pp ?o filter (?pp != sh:path)
     }}
    }}
   }}
- )";
+  )";
   
   string rq = fmt::format(rq_fmt, gse_path);
   cout << "sending rq: " << rq << endl;

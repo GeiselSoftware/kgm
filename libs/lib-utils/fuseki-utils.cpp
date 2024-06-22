@@ -14,15 +14,11 @@
 //
 
 #include <iostream>
-#include <sstream>
-#include <thread>
-#include <nlohmann/json.hpp>
 using namespace std;
 
 #include "fuseki-utils.h"
-#include "uuid.h"
 
-RDFSPO rdf_parse_binding(const nlohmann::json& binding)
+RDFSPPO fuseki::rdf_parse_binding(const nlohmann::json& binding)
 {
   /* 
      {
@@ -37,6 +33,7 @@ RDFSPO rdf_parse_binding(const nlohmann::json& binding)
         "o": { "type": "literal", "value": "Alice" }
      }
   */
+  //cout << binding << endl;
   assert(binding["s"]["type"] == "uri" || binding["s"]["type"] == "bnode");
   UOB s;
   if (binding["s"]["type"] == "uri") {
@@ -46,6 +43,11 @@ RDFSPO rdf_parse_binding(const nlohmann::json& binding)
   }
   assert(binding["p"]["type"] == "uri");  
   URI p{binding["p"]["value"]};
+  //assert(binding["pp"]["type"] == "uri");
+  URI pp;
+  if (binding.contains("pp")) {
+    pp = URI{binding["pp"]["value"]};
+  }
 
   assert(binding["o"]["type"] == "uri" || binding["o"]["type"] == "bnode" || binding["o"]["type"] == "literal");
 
@@ -63,23 +65,5 @@ RDFSPO rdf_parse_binding(const nlohmann::json& binding)
     }
   }
 
-  return RDFSPO{s, p, o};
-}
-
-URI create_classURI(const URI& prefix)
-{
-  return URI{prefix.uri + "#" + generate_uuid_v4()};
-}
-
-std::string get_display_value(const UBOL& l)
-{
-  string ret;
-  if (auto vv = get_if<URI>(&l)) {
-    ret = vv->uri;
-  } else if (auto vv = get_if<Literal>(&l)) {
-    ret = vv->literal;
-  } else {
-    throw runtime_error("get_display_value failed");
-  }
-  return ret;
+  return RDFSPPO{s, p, pp, o};
 }
