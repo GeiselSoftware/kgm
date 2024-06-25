@@ -1,0 +1,37 @@
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix dash: <http://datashapes.org/dash#> .
+
+@prefix gse: <gse:> .
+@prefix NW: <NW:> .
+
+NW:Orders rdf:type rdfs:Class; rdf:type sh:NodeShape;
+	  sh:property [sh:path NW:customer; sh:class NW:Customers; sh:minCount 1; sh:maxCount 1];
+	  sh:property [sh:path NW:employee; sh:class NW:Employees; sh:minCount 1; sh:maxCount 1];
+	  sh:property [sh:path NW:shipper; sh:class NW:Shippers; sh:minCount 1; sh:maxCount 1];
+	  sh:property [sh:path NW:order_detail; sh:class NW:OrderDetails; sh:minCount 1];
+	  sh:property [sh:path NW:orderdate; sh:dataclass xsd:string; sh:minCount 1; sh:maxCount 1].
+
+NW:OrderDetails rdf:type rdfs:Class; rdf:type sh:NodeShape;
+		sh:property [ sh:path NW:product; sh:class NW:Products; sh:minCount 1; sh:maxCount 1];
+		sh:property [sh:path NW:quantity; sh:dataclass xsd:string; sh:minCount 1; sh:maxCount 1].
+
+NW:Products rdf:type rdfs:Class; rdf:type sh:NodeShape;
+	    sh:property [sh:path NW:supplier; sh:class NW:Suppliers; sh:minCount 1; sh:maxCount 1];
+	    sh:property [sh:path NW:category; sh:class NW:Categorys; sh:minCount 1];
+	    sh:property [sh:path NW:unit; sh:dataclass xsd:string; sh:minCount 1; sh:maxCount 1];
+	    sh:property [sh:path NW:price; sh:dataclass xsd:string; sh:minCount 1; sh:maxCount 1].
+
+NW:Suppliers rdf:type rdfs:Class; rdf:type sh:NodeShape;
+	     sh:property [sh:path NW:supplierOf; sh:class NW:Products; sh:minCount 1];
+	     sh:property [sh:path NW:suppliername; sh:dataclass xsd:string; sh:minCount 1; sh:maxCount 1];
+	     sh:property [sh:path NW:contactname; sh:dataclass xsd:string; sh:minCount 1; sh:maxCount 1];
+	     sh:property [sh:path NW:address; sh:dataclass xsd:string; sh:minCount 1; sh:maxCount 1];
+	     sh:property [sh:path NW:city; sh:dataclass xsd:string; sh:minCount 1; sh:maxCount 1];
+	     sh:property [sh:path NW:postalcode; sh:dataclass xsd:string; sh:minCount 1; sh:maxCount 1];
+	     sh:property [sh:path NW:country; sh:dataclass xsd:string; sh:minCount 1; sh:maxCount 1];
+	     sh:property [sh:path NW:phone; sh:dataclass xsd:string; sh:minCount 1; sh:maxCount 1].
+	     
+NW:Categorys rdf:type rdfs:Class; rdf:type sh:NodeShape .

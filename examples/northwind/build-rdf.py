@@ -18,13 +18,14 @@ def dump_node_members(df, prefix, rdfs_classname, node_uri_col, obj_cols, exclud
     df.drop(node_uri_col, inplace = True, axis = 1)
 
     output_cols = []
-    for obj_col in obj_cols:
-        classname = prefix + ":" + obj_col.replace("ID", "")
-        df[classname] = make_URI(classname, df[obj_col])
-        output_cols.append(classname)
+    for obj_col in obj_cols:        
+        classname = prefix + ":" + obj_col.replace("ID", "s")
+        pred = prefix + ":" + obj_col.replace("ID", "").lower()
+        df[pred] = make_URI(classname, df[obj_col])
+        output_cols.append(pred)
 
     for col in literal_cols:
-        pred = prefix + ":" + col
+        pred = prefix + ":" + col.lower()
         df[pred] = df[col].apply(lambda x: f'"{x}"^^xsd:string')
         output_cols.append(pred)
 
@@ -39,8 +40,8 @@ def dump_node_members(df, prefix, rdfs_classname, node_uri_col, obj_cols, exclud
     
 def dump_triples(df, prefix, pred):
     #print(df.head())
-    subj_col = df.columns[0]; subj_classname = prefix + ":" + subj_col.replace("ID", "")
-    obj_col = df.columns[1]; obj_classname = prefix + ":" + obj_col.replace("ID", "")
+    subj_col = df.columns[0]; subj_classname = prefix + ":" + subj_col.replace("ID", "s")
+    obj_col = df.columns[1]; obj_classname = prefix + ":" + obj_col.replace("ID", "s")
     triples = []
     for ii, r in df.iterrows():
         triples.append(f"{subj_classname}\#{r[subj_col]} {pred} {obj_classname}\#{r[obj_col]} .")
