@@ -17,3 +17,7 @@ select ?s ?s_name ?pet_name where {
  }
 }
 ```
+
+```
+python -m rdflib.tools.rdf2dot ./data.ttl | xdot -
+```
