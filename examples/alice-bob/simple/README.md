@@ -20,4 +20,7 @@ select ?s ?s_name ?pet_name where {
 
 ```
 python -m rdflib.tools.rdf2dot ./data.ttl | xdot -
+python -m rdflib.tools.rdf2dot ./data.ttl | dot -Tpdf -odata.pdf
+python show-shacl.py  | dot -Tpdf -o data.shacl.pdf
+python show-shacl.py ab:alice | dot -Tpdf -o data.pdf
 ```

@@ -14,15 +14,11 @@ ab:Human rdf:type rdfs:Class; rdf:type sh:NodeShape;
 
 ab:Dog rdf:type rdfs:Class; rdf:type sh:NodeShape;
        sh:property [sh:path ab:name; sh:minCount 1; sh:maxCount 1; sh:dataclass xsd:string];
-       sh:property [sh:part ab:ownedBy; sh:minCount 1; sh:maxCount 1; sh:class ab:Human] .
+       sh:property [sh:path ab:ownedBy; sh:minCount 1; sh:maxCount 1; sh:class ab:Human] .
 
 ab:Cat rdf:type rdfs:Class; rdf:type sh:NodeShape;
        sh:property [sh:path ab:name; sh:minCount 1; sh:maxCount 1; sh:dataclass xsd:string];
-       sh:property [sh:part ab:ownedBy; sh:minCount 1; sh:maxCount 1; sh:class ab:Human] .
-
-ab:Turtle rdf:type rdfs:Class; rdf:type sh:NodeShape;
-       sh:property [sh:path ab:name; sh:minCount 1; sh:maxCount 1; sh:dataclass xsd:string];
-       sh:property [sh:part ab:ownedBy; sh:minCount 1; sh:maxCount 1; sh:class ab:Human] .
+       sh:property [sh:path ab:ownedBy; sh:minCount 1; sh:maxCount 1; sh:class ab:Human] .
 
 ab:MusicGenre rdf:type rdfs:Class; rdf:type sh:NodeShape;
        sh:property [sh:path ab:name; sh:minCount 1; sh:maxCount 1; sh:dataclass xsd:string];
