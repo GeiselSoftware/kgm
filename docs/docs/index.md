@@ -85,26 +85,3 @@ Given .ttl file it is possible to upload the content into GDB using `gse insert`
 /alice-bob/simple <gse:Graph##03027263-2242-454b-8d4d-7aaecb9990ae>
 ```
 
-## Fuseki
-
-[Apache Jena Fuseki](https://jena.apache.org/documentation/fuseki2/) is open-source RDF/SPARQL server.
-
-### Fuseki server install and operation
-
-Use archive apache-jena-fuseki-5.0.0. Unpack that to location `FUSEKI_HOME`.
-
-To create run database server use command:
-
-```
-cd $FUSEKI_HOME
-./fuseki-server --update --loc=run/databases /gse
-```
-
-At this point you should be able to access fuseki server via webbrowers at port 3030. You should find single dataset /gse.
-
-Logging destination: $FUSEKI_HOME/run/logs/stderrout.log
-To observe http requests modify file ${FUSEKI_HOME}/webapp/log4j2.properties. You need to set property `logger.fuseki-request.level`:
-
-```
-logger.fuseki-request.level                  = DEBUG
-```

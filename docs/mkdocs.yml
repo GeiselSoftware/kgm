@@ -13,6 +13,7 @@ theme: readthedocs
 
 nav:
   - Index: index.md
+  - Fuseki: fuseki.md
   - Addendum: addendum.md
   - About MkDocs: about-mkdocs.md
 
