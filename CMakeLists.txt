@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.12)
 
 project(shacled)
 
+# check packages/README.md to find out how to setup env vars used below
+#
 set(FMT_ROOT_DIR $ENV{FMT_ROOT_DIR})
 set(NLOHMANN_ROOT_DIR $ENV{NLOHMANN_ROOT_DIR})
 set(IMGUI_ROOT_DIR $ENV{IMGUI_ROOT_DIR})
