@@ -5,8 +5,25 @@ SHACL editor
 # Ubuntu 22.04
 
 ```
-git clone --depth 1 https://github.com/nlohmann/json.git
 sudo apt install emscripten # for wasm build
+```
+
+```
+mkdir -p ~/local/cloned
+cd ~/local/cloned
+git clone https://github.com/fmtlib/fmt.git
+git clone https://github.com/nlohmann/json.git
+git clone https://github.com/ocornut/imgui.git
+git clone https://github.com/thedmd/imgui-node-editor.git
+```
+
+Have env vars defined as below:
+
+```
+export FMT_ROOT_DIR=${HOME}/local/cloned/fmt
+export NLOHMANN_ROOT_DIR=${HOME}/local/cloned/json
+export IMGUI_ROOT_DIR=$HOME/local/cloned/imgui
+export IMGUI_NODE_EDITOR_ROOT_DIR=${HOME}/local/cloned/imgui-node-editor
 ```
 
 # Builds
