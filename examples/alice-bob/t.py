@@ -41,7 +41,7 @@ if __name__ == "__main__":
     #init_bindings = {}
     init_bindings = {'s0': rdflib.URIRef("ab:alice")}
         
-    ttl_files = ["./data.shacl.ttl", "./data.ttl"]
+    ttl_files = ["./ab.shacl.ttl", "./ab.ttl"]
     #ttl_files = ttl_files[:-1]
     g = rdflib.Graph()
     for ttl_file in ttl_files:

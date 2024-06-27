@@ -1,5 +1,5 @@
 ```
-sh ~/local/shacl-1.4.3/bin/shaclvalidate.sh -datafile ./data.ttl -shapesfile ./data.shacl.ttl
+sh ~/local/shacl-1.4.3/bin/shaclvalidate.sh -datafile ./ab.ttl -shapesfile ./ab.shacl.ttl
 ```
 
 ```
@@ -19,8 +19,8 @@ select ?s ?s_name ?pet_name where {
 ```
 
 ```
-python -m rdflib.tools.rdf2dot ./data.ttl | xdot -
-python -m rdflib.tools.rdf2dot ./data.ttl | dot -Tpdf -odata.pdf
-python show-shacl.py  | dot -Tpdf -o data.shacl.pdf
-python show-shacl.py ab:alice | dot -Tpdf -o data.pdf
+python -m rdflib.tools.rdf2dot ./ab.ttl | xdot -
+python -m rdflib.tools.rdf2dot ./ab.ttl | dot -Tpdf -oab.pdf
+python show-shacl.py  | dot -Tpdf -o ab.shacl.pdf
+python show-shacl.py ab:alice | dot -Tpdf -o ab.pdf
 ```

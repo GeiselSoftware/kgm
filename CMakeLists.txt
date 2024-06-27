@@ -20,7 +20,7 @@ else ()
   set(CMAKE_EXECUTABLE_SUFFIX ".tsk")
 endif()
 
-add_subdirectory(external)
+add_subdirectory(packages)
 
 include_directories(${CMAKE_SOURCE_DIR}/libs ${IMGUI_ROOT_DIR}/backends ${IMGUI_ROOT_DIR} ${IMGUI_NODE_EDITOR_ROOT_DIR} ${NLOHMANN_ROOT_DIR}/include ${FMT_ROOT_DIR}/include)
 add_subdirectory(libs)
