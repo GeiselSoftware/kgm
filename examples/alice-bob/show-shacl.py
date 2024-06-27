@@ -1,7 +1,8 @@
 #import ipdb
-import sys
+import sys, io
 import rdflib
 import rdflib.tools.rdf2dot
+import graphviz
 
 if __name__ == "__main__":
     init_bindings = {}
@@ -33,6 +34,24 @@ if __name__ == "__main__":
       ?s ?p ?o . ?o ?pp ?oo filter(?pp not in (sh:property, rdf:type)) . ?o rdf:type ?ot }
     }
     """, initBindings = init_bindings)
+
+    pdf_file = "graph.pdf"
     #print("\n".join([f"{t}" for t in ng.graph]))
-    rdflib.tools.rdf2dot.rdf2dot(ng.graph, sys.stdout)
+    dot_output = io.StringIO()
+    rdflib.tools.rdf2dot.rdf2dot(ng.graph, dot_output)
+    dot_output.seek(0)
+
+    dot_data = dot_output.getvalue()
+    if not dot_data.strip():
+        print("No DOT data was generated.")
+        sys.exit(2)
+        
+    graph = graphviz.Source(dot_data)
+    pdf_data = graph.pipe(format='pdf')
+    
+    with open(pdf_file, "wb") as f:
+        f.write(pdf_data)        
+        print(f"PDF generated: {pdf_file}")
+        
+
     
