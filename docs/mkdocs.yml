@@ -12,7 +12,7 @@ edit_uri: edit/main/docs/docs
 theme: readthedocs
 
 nav:
-  - Home: index.md
+  - Index: index.md
   - Addendum: addendum.md
   - About MkDocs: about-mkdocs.md
 
