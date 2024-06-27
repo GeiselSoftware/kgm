@@ -1,49 +1,62 @@
 # SHACL editor
 
+# Introduction
 
-## Introduction to GDB
+## RDF
 
-Graph databases store information using graph, more precisely `knowledge graph`. I.e. to store certain facts you don't need to define tables with columns. You can store the facts directly e.g. using `RDF/turtle` format:
+[RDF (Resource Definition Framework)](https://en.wikipedia.org/wiki/Resource_Description_Framework) is standartized way to store facts in the form of RDF triples. E.g. using [RDF/turtle](https://en.wikipedia.org/wiki/Turtle_(syntax)) format it is possible to define such statements:
 
 ```
-@prefix rdf: ...
-@prefix foaf: ...
-@prefix : ...
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix ab: <ab:> .
 
-:alice rdf:type foaf:Human .
-:alice foaf:name "Alice".
+ab:Human rdf:type rdfs:Class .
+ab:alice rdf:type ab:Human .
+ab:alice ab:name "Alice".
+ab:bob rdf:type ab:Human .
+ab:bob ab:name "Bob" .
 ```
 
-In example above two facts are stored related to proverbal Alice-Bob pair: there is a human named Alice with identity :alice.
+In example above two facts are stored related to proverbal Alice-Bob pair:
 
-[RDF (Resource Definition Framework)](https://www.w3.org/TR/rdf11-concepts/) is the standardized way to create knowledge graphs. The idea of RDF is simple: all facts are stored as triples i.e. statement which always has three parts: *subject*, *predicate* and *object*. E.g. first triple in example above introduces triple with subject `:alice`, predicate `rdf:type` and object `foaf:Human`.
+ - there is a human named Alice with identity `ab:alice`
+ - there is a human named Bob with identity `ab:bob`
+
+RDF/turtle allows to use URI in shortened form using `@prefix` directive. The same example where all URIs are complete would look like this:
+
+```
+<ab:Human> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2000/01/rdf-schema#Class> .
+<ab:alice> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <ab:Human> .
+<ab:alice> <ab:name> "Alice" .
+<ab:bob> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <ab:Human> .
+<ab:bob> <ab:name> "Bob" .
+```
+
+In this example URIs are strings between angle brackets - but brakets are not part of URI. E.g. first line `predicate` is URI `http://www.w3.org/1999/02/22-rdf-syntax-ns#type`. URI is very often look like URL. However it is very likely you will not be able to get anything from such URI if you try to point your internet browser to that location. URI are just strings with certain requirements, they are used to identify the `resource`.
+
+In third line of the example you've seen that object could also be present as `literal`. In RDF/turle literals are in double-quotes to distibguish them from URIs. Doble-quotes are not part of the literal. The third statement `object` is string *Alice*.
+
+If you want to shorten the statement you can use `prefix` defined on top of RDF/turtle file. Prefixes are used to construct full URI from shortened form. The shortened form was used in first example: you can just substitute prefix value with prefix URI as given at the top of the file. Shortened URI look different from full URI: then never enclosed to angle brakets. They are also different from literals: no double-quote encloser.
 
 You may think about RDF triples as extention of an idea of key-value pairs. Key-value pair has two parts: kay and value. The type of key and value may vary. You may have keys as strings and values as numbers, string - anything you can type into the file editor. E.g. you may have such KV pairs shown as CSV file fragment:
 
 ```
 Key,Value
-Alice,Human
-Alice_height,5 feet 9 inch
-Bob,Human
-Bob_height,6 feet
+alice_type,Human
+alice_name,Alice
+bob_type,Human
+bob_name,Bob
 ```
 
-RDF makes two changes to key-value pairs idea. First it adds third element so you now will have subject-predicate-object triples instead of key-value pairs. And then RDF restricts what could be subject, predicate and object. In most cases the parts of RDF triple will be either [URIs](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier) or [xsd literals](https://www.w3.org/TR/rdf11-concepts/#xsd-datatypes) (see also for [more on xsd literals](https://www.w3.org/TR/xmlschema-2/#built-in-datatypes)).
+RDF makes two changes to key-value pairs idea. First it adds third element so you now will have subject-predicate-object triples instead of key-value pairs. Then RDF restricts what could be `subject`, `predicate` and `object`. In most cases the parts of RDF triple will be either [URIs](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier) or [xsd literals](https://www.w3.org/TR/rdf11-concepts/#xsd-datatypes), [more on xsd literals](https://www.w3.org/TR/xmlschema-2/#built-in-datatypes).
 
-I.e. to have RDF triples to be compliant you have to make sure that subject 
+## RDF triples as graphs
 
-In this first triple we see example where all three part are *URIs* (Universal Resource Identifier). RDF/turtle allows to use URI in shortened form. The same example where all URIs are complete would look like this:
+[RDF (Resource Definition Framework)](https://en.wikipedia.org/wiki/Resource_Description_Framework) is the standardized way to create knowledge graphs. The idea of RDF is simple: all facts are stored as triples i.e. statement which always has three parts: *subject*, *predicate* and *object*. E.g. first triple in example above introduces triple with subject `ab:alice`, predicate `rdf:type` and object `ab:Human`.
 
-```
-<http://example.com/#alice> <...:type> <...:Human> .
-<http://example.com/#alice> <...:name> "Alice" .
-```
-
-In this example URIs are strings between angle brackets - but brakets are not part of URI. E.g. first line subject is URI `http://example.com/#alice`. URI is very often look like URL. However it is very likely you will not be able to get anything from such URI if you try to point your internet browser to that location. URI are just strings with certain requirements, they are used to identify the `resource`.
-
-In second line of the example you've seen that object could also be present as *literal*. In RDF/turle literals are in double-quotes to distibguish them from URIs. Doble-quotes are not part of the literal: second statement object is string `Alice`.
-
-If you want to shorten the statement you can use *prefix* defined on top of RDF/turtle file. Prefixes are used to construct full URI from shortened form. The shortened form was used in first example: you can just substitute prefix value with prefix URI as given at the top of the file. Shortened URI look different from full URI: then never enclosed to angle brakets. They are also different from literals: no double-quote encloser.
+[![image](ab-full.png)][file ab-full.png]
+[file ab-full.png]: ab-full.png
 
 ## Graph store explorer (gse)
 

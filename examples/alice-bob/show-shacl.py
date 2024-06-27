@@ -1,15 +1,13 @@
 #import ipdb
-import sys, io
+import sys
+sys.dont_write_bytecode = True
+
 import rdflib
-import rdflib.tools.rdf2dot
-import graphviz
+import graphviz_utils
 
 if __name__ == "__main__":
-    init_bindings = {}
-    if len(sys.argv) > 1:
-        init_bindings = {'s': rdflib.URIRef("ab:alice")}
-    else:
-        init_bindings = {'s': rdflib.URIRef("rdf:nil")}
+    #init_bindings = {}
+    init_bindings = {'s': rdflib.URIRef("ab:alice")}
         
     ttl_files = ["./data.shacl.ttl", "./data.ttl"]
     #ttl_files = ttl_files[:-1]
@@ -35,23 +33,5 @@ if __name__ == "__main__":
     }
     """, initBindings = init_bindings)
 
-    pdf_file = "graph.pdf"
-    #print("\n".join([f"{t}" for t in ng.graph]))
-    dot_output = io.StringIO()
-    rdflib.tools.rdf2dot.rdf2dot(ng.graph, dot_output)
-    dot_output.seek(0)
-
-    dot_data = dot_output.getvalue()
-    if not dot_data.strip():
-        print("No DOT data was generated.")
-        sys.exit(2)
-        
-    graph = graphviz.Source(dot_data)
-    pdf_data = graph.pipe(format='pdf')
-    
-    with open(pdf_file, "wb") as f:
-        f.write(pdf_data)        
-        print(f"PDF generated: {pdf_file}")
-        
-
+    graphviz_utils.generate_png(ng.graph, "graph.png")
     

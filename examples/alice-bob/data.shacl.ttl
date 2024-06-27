@@ -22,8 +22,7 @@ ab:Cat rdf:type rdfs:Class; rdf:type sh:NodeShape;
 
 ab:MusicGenre rdf:type rdfs:Class; rdf:type sh:NodeShape;
        sh:property [sh:path ab:name; sh:minCount 1; sh:maxCount 1; sh:dataclass xsd:string];
-       sh:property [sh:path ab:averageLength; sh:minCount 1; sh:maxCount 1; sh:dataclass xsd:number];
-       sh:property [sh:path ab:author; sh:minCount 1; sh:maxCount 1; sh:class ab:Human].
+       sh:property [sh:path ab:averageLength; sh:minCount 1; sh:maxCount 1; sh:dataclass xsd:number].
 
 ab:FamousPainting rdf:type rdfs:Class; rdf:type sh:NodeShape;
        sh:property [sh:path ab:name; sh:minCount 1; sh:maxCount 1; sh:dataclass xsd:string];

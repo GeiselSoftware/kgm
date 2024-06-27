@@ -1,4 +1,8 @@
 #!/bin/env python
+
+import sys
+sys.dont_write_bytecode = True
+
 #import ipdb
 import argparse
 from sparql_utils import rq_select, rq_insert_graph, rq_update, to_rdfw, gse_prefix
