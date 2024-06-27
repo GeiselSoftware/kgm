@@ -2,6 +2,11 @@
 
 This whole site was built using [mkdocs-quickstart](https://github.com/MichaelCurrin/mkdocs-quickstart) repo as starting point.
 
+Looks like there are better ways to setup mkdocs: [Material for MkDocs](https://github.com/squidfunk/mkdocs-material?tab=readme-ov-file)
+
+See also [EricJMa mkdocs setup](https://github.com/pyjanitor-devs/pyjanitor/blob/dev/mkdocs.yml)
+
+
 ## What is MkDocs?
 
 The description on the MkDocs site is:
