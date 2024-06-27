@@ -1,5 +1,7 @@
 project(imgui VERSION 1.76)
 
+include_directories(${PROJECT_NAME} PUBLIC ${IMGUI_ROOT_DIR})
+
 set(_imgui_Sources
     ${IMGUI_ROOT_DIR}/imconfig.h
     ${IMGUI_ROOT_DIR}/imgui.cpp
@@ -16,6 +18,11 @@ set(_imgui_Sources
     ${IMGUI_ROOT_DIR}/LICENSE.txt
 )
 
-add_library(${PROJECT_NAME} STATIC ${_imgui_Sources})
+add_library(imgui STATIC ${_imgui_Sources})
 
-target_include_directories(${PROJECT_NAME} PUBLIC ${IMGUI_ROOT_DIR})
+set(_imgui_backends_sources
+  ${IMGUI_ROOT_DIR}/backends/imgui_impl_opengl3.cpp
+  ${IMGUI_ROOT_DIR}/backends/imgui_impl_glfw.cpp
+)
+
+add_library(imgui_backends STATIC ${_imgui_backends_sources})
