@@ -47,7 +47,7 @@ void RDFNodeManager::build_rdf_nodes(const std::string& raw_response)
 	n->class_properties.set(p_uri.uri, get_display_value(spo.o));
       }
     } else {
-      n->triples.push_back(RDFSPO(s_uri, p_uri, o_uol));
+      n->triples.push_back(RDFSPO{s_uri, p_uri, o_uol});
     }
   }
 }

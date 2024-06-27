@@ -2,10 +2,10 @@ cmake_minimum_required(VERSION 3.12)
 
 project(shacled)
 
-set(FMT_ROOT_DIR $ENV{HOME}/local/cloned/fmt)
-set(NLOHMANN_ROOT_DIR $ENV{HOME}/local/cloned/json)
-set(IMGUI_ROOT_DIR $ENV{HOME}/local/cloned/imgui)
-set(IMGUI_NODE_EDITOR_ROOT_DIR $ENV{HOME}/local/cloned/imgui-node-editor)
+set(FMT_ROOT_DIR $ENV{FMT_ROOT_DIR})
+set(NLOHMANN_ROOT_DIR $ENV{NLOHMANN_ROOT_DIR})
+set(IMGUI_ROOT_DIR $ENV{IMGUI_ROOT_DIR})
+set(IMGUI_NODE_EDITOR_ROOT_DIR $ENV{IMGUI_NODE_EDITOR_ROOT_DIR})
 
 set(CMAKE_BUILD_TYPE Debug)
 
