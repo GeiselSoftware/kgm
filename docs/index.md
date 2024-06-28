@@ -1,4 +1,4 @@
-# GSE (Graph Store Explorer)
+# VRGS (Versatile and Robust Graph Supervision)
 
 ## Introduction
 
