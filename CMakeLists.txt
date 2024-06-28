@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.12)
 
-project(shacled)
+project(VRGS)
 
 # check packages/README.md to find out how to setup env vars used below
 #

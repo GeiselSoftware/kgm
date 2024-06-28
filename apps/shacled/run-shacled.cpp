@@ -64,11 +64,11 @@ struct Example: public LoopStep
 	rdf_node_manager.do_dump_shacl();
       }
 
-      { // list of gse graphs
-	ImGui::Text("gse graphs");
+      { // list of vrgs graphs
+	ImGui::Text("vrgs graphs");
 	vector<string> items = { "/alice-bob/simple", "/alice-bob/simple-shacl", "/alice-bob/KUI" };
         static int item_current_idx = 0; // Here we store our selection data as an index.
-        if (ImGui::BeginListBox("##gse-graphs")) {
+        if (ImGui::BeginListBox("##vrgs-graphs")) {
 	  for (int n = 0; n < items.size(); n++) {
 	    const bool is_selected = (item_current_idx == n);
 	    if (ImGui::Selectable(items[n].c_str(), is_selected)) {
@@ -99,8 +99,8 @@ struct Example: public LoopStep
 
 	  if (ImGui::Button("load")) {
 	    if (!rdf_node_manager.in_progress_load_graph()) {
-	      auto gse_path = items[item_current_idx];
-	      rdf_node_manager.start_load_graph(gse_path, this->fuseki_server_url);
+	      auto vrgs_path = items[item_current_idx];
+	      rdf_node_manager.start_load_graph(vrgs_path, this->fuseki_server_url);
 	    }
 	  }
 	  
@@ -181,12 +181,12 @@ int main(int argc, char** argv)
   } else {
     string fuseki_host = string_split(argv[1], '=')[1];
     string fuseki_port = string_split(argv[2], '=')[1];
-    fuseki_url = string("http://") + fuseki_host + ":" + fuseki_port + "/gse/";
+    fuseki_url = string("http://") + fuseki_host + ":" + fuseki_port + "/vrgs/";
   }
 #else  
   if (argc != 2) {
     cout << "error, need suply url to fuseki server" << endl;
-    cout << "Example: " << argv[0] << " http://metis:3030/gse/" << endl;
+    cout << "Example: " << argv[0] << " http://metis:3030/vrgs/" << endl;
     exit(2);
   } else {
     fuseki_url = argv[1];

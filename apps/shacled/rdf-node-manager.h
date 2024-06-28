@@ -35,6 +35,6 @@ public:
   HTTPRawRequestHandler http_request_handler; 
   bool in_progress_load_graph_f = false;
   bool in_progress_load_graph() { return this->in_progress_load_graph_f; }
-  void start_load_graph(const std::string& gse_path, const std::string& fuseki_server_url);
+  void start_load_graph(const std::string& vrgs_path, const std::string& fuseki_server_url);
   bool finish_load_graph(VisNodeManager* vis_node_manager);
 };
