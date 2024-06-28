@@ -2,6 +2,16 @@
 We do need better name for this project
 SHACL editor
 
+# python venv setup
+
+To use python utils and other code you better setup venv called `gse` using commands below:
+
+```
+python3 -m venv ~/venv/gse
+source ~/venv/gse/bin/activate
+pip install -r ./requirements.txt
+```
+
 # Ubuntu 22.04
 
 ```
@@ -47,12 +57,6 @@ python3 -m http.server # use http://localhost:8000 then navigate to apps
 ```
 
 # Docs
-
-```
-python3 -m venv ~/venv/gse
-source ~/venv/gse/bin/activate
-pip install -r requirements.txt
-```
 
 ```
 source ~/venv/gse/bin/activate

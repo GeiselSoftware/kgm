@@ -2,3 +2,11 @@ site_name: My site
 site_url: http://h1:8001/mysite
 theme:
   name: material
+
+# Page tree
+nav:
+  - Home: index.md
+  - Backends: backends.md
+  - mkdocs-material: about-mkdocs.md
+  - Addendum: addendum.md
+  
