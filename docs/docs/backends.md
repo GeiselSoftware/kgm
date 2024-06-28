@@ -1,12 +1,15 @@
-## Fuseki
+# Fuseki Setup
 
-[Apache Jena Fuseki](https://jena.apache.org/documentation/fuseki2/) is open-source RDF/SPARQL server.
+[Apache Jena Fuseki](https://jena.apache.org/documentation/fuseki2/) is open-source RDF/SPARQL server. The steps below are to have Fuseki server configured and run to be used as shacled GSE backend.
 
-### Fuseki server install and operation
+## Install
 
-Use archive apache-jena-fuseki-5.0.0. Unpack that to location `FUSEKI_HOME`.
+Fuseki can be downloaded from [Apache Jena Releases](https://jena.apache.org/download/index.cgi)<br/>
+Use binary distribution archive `apache-jena-fuseki-5.0.0.tar.gz` Unpack that to location `FUSEKI_HOME`.
 
-To create run database server use command:
+## Quick test run
+
+To run database server use command:
 
 ```
 cd $FUSEKI_HOME
@@ -22,7 +25,9 @@ To observe http requests modify file ${FUSEKI_HOME}/webapp/log4j2.properties. Yo
 logger.fuseki-request.level                  = DEBUG
 ```
 
-### Fuseki configuration
+## Setup and run gse fuseki instance
+
+Run with Fuseki configuration via config.ttl
 
 https://github.com/apache/jena/tree/main/jena-fuseki2/examples
 

@@ -1,6 +1,8 @@
 # SHACL editor
 
-## RDF triples
+## Introduction
+
+### RDF triples
 
 [RDF (Resource Definition Framework)](https://en.wikipedia.org/wiki/Resource_Description_Framework) is standartized way to store facts in the form of RDF triples. E.g. using [RDF/turtle](https://en.wikipedia.org/wiki/Turtle_(syntax)) format it is possible to define such statements:
 
@@ -49,14 +51,14 @@ bob_name,Bob
 
 RDF makes two changes to key-value pairs idea. First it adds third element so you now will have subject-predicate-object triples instead of key-value pairs. Then RDF restricts what could be `subject`, `predicate` and `object`. In most cases the parts of RDF triple will be either [URIs](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier) or [xsd literals](https://www.w3.org/TR/rdf11-concepts/#xsd-datatypes), [more on xsd literals](https://www.w3.org/TR/xmlschema-2/#built-in-datatypes).
 
-## Knowledge graphs
+### Knowledge graphs
 
 Set of [RDF (Resource Definition Framework)](https://en.wikipedia.org/wiki/Resource_Description_Framework) triples can be tought of as [knowledge graph](https://en.wikipedia.org/wiki/Knowledge_graph). [Extended Alice-Bob example](/addendum/#appendix_c_alice-bob_rdf_triples) RDF triples can be presented as graph below:
 
 [![image](ab-objs.png)][file ab-objs.png]
 [file ab-objs.png]: ab-objs.png
 
-## SPARQL queries
+### SPARQL queries
 
 
 
