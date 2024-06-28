@@ -70,7 +70,6 @@ Set of [RDF (Resource Definition Framework)](https://en.wikipedia.org/wiki/Resou
 ```
 python3 -m venv ~/venv/vgm
 source ~/venv/vgm/bin/activate
-cd shacled/utils
 ```
 
 ### Usage
