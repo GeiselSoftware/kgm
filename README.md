@@ -46,6 +46,19 @@ make
 python3 -m http.server # use http://localhost:8000 then navigate to apps
 ```
 
+# Docs
+
+```
+python3 -m venv ~/venv/gse
+source ~/venv/gse/bin/activate
+pip install -r requirements.txt
+```
+
+```
+source ~/venv/gse/bin/activate
+mkdocs serve -a 0.0.0.0:8001
+```
+
 # Misc
 
 The description of emcc runtime debugging facilities is in [Debugging with Sanitizers](https://emscripten.org/docs/debugging/Sanitizers.html#debugging-with-sanitizers) section of emscripten docs. It includes description of how to enable [seg fault at zero address](https://emscripten.org/docs/debugging/Sanitizers.html#catching-null-dereference) - it is different from usuall abort/coredump behaviour of native build.
