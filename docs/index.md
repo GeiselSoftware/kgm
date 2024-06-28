@@ -58,9 +58,34 @@ Set of [RDF (Resource Definition Framework)](https://en.wikipedia.org/wiki/Resou
 [![image](ab-objs.png)][file ab-objs.png]
 [file ab-objs.png]: ab-objs.png
 
-### SPARQL queries
+## Examples
 
+### Alice-Bob
 
+data files location:
+
+ - [examples/alice-bob/ab.ttl](examples/alice-bob/ab.ttl) -- data RDF triples
+ - examples/alice-bob/ab.shacl.ttl -- SHACL structure
+
+Alice-Bob queries:
+
+```
+PREFIX sh: <http://www.w3.org/ns/shacl#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+prefix gse: <gse:>
+prefix ab: <ab:>
+
+select ?owner_name ?pet_name ?pet_class 
+where { 
+  ?pet ab:name ?pet_name . 
+  ?pet rdf:type ?pet_class .
+  ?pet ab:ownedBy ?owner . 
+  ?owner ab:name ?owner_name .
+}
+```
+
+### northwind
 
 
 ## vgm command-line
