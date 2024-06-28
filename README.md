@@ -32,7 +32,7 @@ Have env vars defined as below:
 ```
 export FMT_ROOT_DIR=${HOME}/local/cloned/fmt
 export NLOHMANN_ROOT_DIR=${HOME}/local/cloned/json
-export IMGUI_ROOT_DIR=$HOME/local/cloned/imgui
+export IMGUI_ROOT_DIR=${HOME}/local/cloned/imgui
 export IMGUI_NODE_EDITOR_ROOT_DIR=${HOME}/local/cloned/imgui-node-editor
 ```
 
