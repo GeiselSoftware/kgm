@@ -13,10 +13,10 @@ To run database server use command:
 
 ```
 cd $FUSEKI_HOME
-./fuseki-server --update --loc=run/databases /gse
+./fuseki-server --update --loc=run/databases /vgm
 ```
 
-At this point you should be able to access fuseki server via webbrowers at port 3030. You should find single dataset /gse.
+At this point you should be able to access fuseki server via webbrowers at port 3030. You should find single dataset /vgm.
 
 Logging destination: $FUSEKI_HOME/run/logs/stderrout.log
 To observe http requests modify file ${FUSEKI_HOME}/webapp/log4j2.properties. You need to set property `logger.fuseki-request.level`:
@@ -25,7 +25,7 @@ To observe http requests modify file ${FUSEKI_HOME}/webapp/log4j2.properties. Yo
 logger.fuseki-request.level                  = DEBUG
 ```
 
-## Setup and run gse fuseki instance
+## Setup and run vgm fuseki instance
 
 Run with Fuseki configuration via config.ttl
 
@@ -38,6 +38,6 @@ https://jena.apache.org/documentation/shacl/index.html#integration-with-apache-j
 upload shacl:
 
 ```
-curl -XPOST --data-binary @ab.shacl.ttl --header 'Content-type: text/turtle' http://metis:3030/gse?default
+curl -XPOST --data-binary @ab.shacl.ttl --header 'Content-type: text/turtle' http://metis:3030/vgm?default
 ```
 

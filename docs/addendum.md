@@ -1,29 +1,29 @@
 # Addendum
-## Appendix A: gse: prefix definitions
+## Appendix A: vgm: prefix definitions
 
-gse prefix URI - `http://www.geisel-software.com/gse#`
+vgm prefix URI - `http://www.geisel-software.com/vgm#`
 
-gse root subject is to be stored in default graph and has URI `gse:root`, full URI `<http://www.geisel-software.com/gse#root>`.
+vgm root subject is to be stored in default graph and has URI `vgm:root`, full URI `<http://www.geisel-software.com/vgm#root>`.
 
-gse predicates:
+vgm predicates:
 
-- gse:has-a
-- gse:path
-- gse:graph-uri
+- vgm:has-a
+- vgm:path
+- vgm:graph-uri
 
-### gse: prefix
+### vgm: prefix
 
-**gse:** is prefix introduced for GSE users. It defines set of RDF predicates used to specify how certain RDF graph is stored in GDB server:
+**vgm:** is prefix introduced for VGM users. It defines set of RDF predicates used to specify how certain RDF graph is stored in GDB server:
 ```
 @prefix mydata: <mydata:> .
-@prefix gse: <http://www.geisel-software.com/gse#> .
+@prefix vgm: <http://www.geisel-software.com/vgm#> .
 
-mydata:g1 rdf:type gse:PlainGraph .
-mydata:g1 gse:path "/G1" .
-mydata:g1 gse:graph-uri <...> .
-mydata:g2 rdf:type gse:SHACLGraph .
-mydata:g2 gse:graph-uri <...> .
-mydata:g1 gse:shacl-graph mydata:g2 .
+mydata:g1 rdf:type vgm:PlainGraph .
+mydata:g1 vgm:path "/G1" .
+mydata:g1 vgm:graph-uri <...> .
+mydata:g2 rdf:type vgm:SHACLGraph .
+mydata:g2 vgm:graph-uri <...> .
+mydata:g1 vgm:shacl-graph mydata:g2 .
 ```
 
 ## Appendix B: SHACL notes
@@ -56,15 +56,15 @@ ab:boston rdf:type ab:Location.
 ab:pop-music rdf:type ab:MusicGenre.
 ab:heavy-metal-music rdf:type ab:MusicGenre.
 
-ab:alice ab:name "Alice"; gse:node_vis_color "green"; ab:livesIn ab:worcester;
+ab:alice ab:name "Alice"; vgm:node_vis_color "green"; ab:livesIn ab:worcester;
          ab:likes ab:mona-lisa; ab:likes ab:pop-music .
-ab:bob ab:name "Bob"; gse:node_vis_color "cyan"; ab:livesIn ab:boston;
+ab:bob ab:name "Bob"; vgm:node_vis_color "cyan"; ab:livesIn ab:boston;
        ab:likes ab:night-watch; ab:likes ab:heavy-metal-music .
-ab:charlie ab:name "Charlie"; gse:node_vis_color "orange"; ab:livesIn ab:worcester;
+ab:charlie ab:name "Charlie"; vgm:node_vis_color "orange"; ab:livesIn ab:worcester;
        ab:likes ab:pop-music .
 
-ab:amy ab:name "Amy"; gse:node_vis_color "brown"; ab:ownedBy ab:alice .
-ab:luna ab:name "Luna"; gse:node_vis_color "white"; ab:ownedBy ab:bob .
+ab:amy ab:name "Amy"; vgm:node_vis_color "brown"; ab:ownedBy ab:alice .
+ab:luna ab:name "Luna"; vgm:node_vis_color "white"; ab:ownedBy ab:bob .
 
 ab:mona-lisa ab:name "Mona Lisa"; ab:author ab:leonardo-da-vinci; ab:location ab:paris.
 ab:night-watch ab:name "Night Watch"; ab:author ab:rembrandt; ab:location ab:amsterdam.

@@ -2,8 +2,8 @@ from rdflib import Graph
 from SPARQLWrapper import SPARQLWrapper, JSON
 from SPARQLWrapper import POST, BASIC
 
-vrgs_prefix = "https://www.geisel-software.com/RDFPrefix/#"
-fuseki_url = "http://localhost:3030/vrgs"
+vgm_prefix = "https://www.geisel-software.com/RDFPrefix/#"
+fuseki_url = "http://localhost:3030/vgm"
 
 class uri:
     def __init__(self, s):

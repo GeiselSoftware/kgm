@@ -70,7 +70,7 @@ shared_ptr<VisNode> RDFNodeManager::create_vis_node(RDFNode* n)
 	v_n->rdfs_classes.push_back(uri.uri);
       }
       for (auto& spo: n->triples) {
-	if (spo.p.uri == "vrgs:node_vis_color") {
+	if (spo.p.uri == "vgm:node_vis_color") {
 	  v_n->node_vis_color = get_display_value(spo.o);
 	} else { // if (p.uri == "simple:name") {
 	  v_n->members.push_back(DataNodeMember{spo.p.uri, get_display_value(spo.o)});
@@ -107,15 +107,15 @@ void RDFNodeManager::do_dump_shacl()
 #endif
 }
 
-void RDFNodeManager::start_load_graph(const string& vrgs_path, const string& fuseki_server_url)
+void RDFNodeManager::start_load_graph(const string& vgm_path, const string& fuseki_server_url)
 {
   // sparql query to flatten sh:property
   constexpr auto rq_fmt = R"(
   prefix sh: <http://www.w3.org/ns/shacl#>
-  prefix vrgs: <vrgs:>
+  prefix vgm: <vgm:>
 
   select ?s ?p ?pp ?o where {{
-   ?g vrgs:path "{}"
+   ?g vgm:path "{}"
    graph ?g {{
     {{ 
       ?s ?p ?o filter(!isBlank(?s) && ?p != sh:property)
@@ -129,7 +129,7 @@ void RDFNodeManager::start_load_graph(const string& vrgs_path, const string& fus
   }}
   )";
   
-  string rq = fmt::format(rq_fmt, vrgs_path);
+  string rq = fmt::format(rq_fmt, vgm_path);
   cout << "sending rq: " << rq << endl;
   decltype(HTTPPostRequest::request_headers) req_headers;
   req_headers.push_back({"Content-Type", "application/x-www-form-urlencoded"});

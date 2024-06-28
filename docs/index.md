@@ -1,4 +1,4 @@
-# VRGS (Versatile and Robust Graph Supervision)
+# VGM (Versatile Graph Management)
 
 ## Introduction
 
@@ -63,27 +63,27 @@ Set of [RDF (Resource Definition Framework)](https://en.wikipedia.org/wiki/Resou
 
 
 
-## gse command-line
+## vgm command-line
 
 ### Installation
 
 ```
-python3 -m venv ~/venv/gse
-source ~/venv/gse/bin/activate
+python3 -m venv ~/venv/vgm
+source ~/venv/vgm/bin/activate
 cd shacled/utils
 ```
 
 ### Usage
 
-**gse** is command-line utility to facilitate the tasks which could be described as 'graph store exploration'.
+**vgm** is command-line utility to facilitate the tasks which could be described as 'graph store exploration'.
 
-Given .ttl file it is possible to upload the content into GDB using `gse insert` command. This operation allow to specify **gse path** to resulting graph in GDB.
+Given .ttl file it is possible to upload the content into GDB using `vgm insert` command. This operation allow to specify **vgm path** to resulting graph in GDB.
 
 ```
-> ./gse insert --gse-path /alice-bob/simple --ttl-file ../examples/alice-bob/simple/data.ttl
+> ./vgm insert --vgm-path /alice-bob/simple --ttl-file ../examples/alice-bob/simple/data.ttl
 ... tbc
-> ./gse ls
-         gse_path                                         graph_uri
-/alice-bob/simple <gse:Graph##03027263-2242-454b-8d4d-7aaecb9990ae>
+> ./vgm ls
+         vgm_path                                         graph_uri
+/alice-bob/simple <vgm:Graph##03027263-2242-454b-8d4d-7aaecb9990ae>
 ```
 

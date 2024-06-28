@@ -1,15 +1,15 @@
-# VRGS - Versatile and Robust Graph Supervision
+# VGM - Versatile Graph Management
 
-VRGS is set of UI and command line tools to help users to cope with complexities of graph database system design and usage. It focuses on RDF-based graph databases and SHACL-driven approach.
+VGM is set of UI and command line tools to help users to cope with complexities of graph database system design and usage. It focuses on RDF-based graph databases and SHACL-driven approach.
 
 
 # python venv setup
 
-To use python utils and other code you better setup venv called `vrgs` using commands below:
+To use python utils and other code you better setup venv called `vgm` using commands below:
 
 ```
-python3 -m venv ~/venv/vrgs
-source ~/venv/vrgs/bin/activate
+python3 -m venv ~/venv/vgm
+source ~/venv/vgm/bin/activate
 pip install -r ./requirements.txt
 ```
 
