@@ -5,12 +5,18 @@ VRGS is set of UI and command line tools to help users to cope with complexities
 
 # python venv setup
 
-To use python utils and other code you better setup venv called `gse` using commands below:
+To use python utils and other code you better setup venv called `vrgs` using commands below:
 
 ```
-python3 -m venv ~/venv/gse
-source ~/venv/gse/bin/activate
+python3 -m venv ~/venv/vrgs
+source ~/venv/vrgs/bin/activate
 pip install -r ./requirements.txt
+```
+
+# mkdocs
+
+```
+mkdocs server -a 0.0.0.0:8001
 ```
 
 # Ubuntu 22.04
