@@ -1,6 +1,7 @@
-# shacled
-We do need better name for this project
-SHACL editor
+# GSE (Graph Store Editor)
+
+GSE is set of UI and command line tools to help users to store and maintain their data in graph database.
+
 
 # python venv setup
 

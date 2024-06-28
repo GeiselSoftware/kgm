@@ -1,4 +1,4 @@
-# SHACL editor
+# GSE (Graph Store Explorer)
 
 ## Introduction
 
@@ -63,7 +63,7 @@ Set of [RDF (Resource Definition Framework)](https://en.wikipedia.org/wiki/Resou
 
 
 
-## Graph store explorer (gse)
+## gse command-line
 
 ### Installation
 
