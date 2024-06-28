@@ -1,6 +1,6 @@
-# GSE (Graph Store Editor)
+# VRGS - Versatile and Robust Graph Supervision
 
-GSE is set of UI and command line tools to help users to store and maintain their data in graph database.
+VRGS is set of UI and command line tools to help users to cope with complexities of graph database system design and usage. It focuses on RDF-based graph databases and SHACL-driven approach.
 
 
 # python venv setup
