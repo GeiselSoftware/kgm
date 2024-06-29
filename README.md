@@ -1,7 +1,7 @@
 # VGM - Versatile Graph Management
 
-VGM is set of UI and command line tools to help users to cope with complexities of graph database system design and usage. It focuses on RDF-based graph databases and SHACL-driven approach.
-
+VGM is set of UI and command line tools to help users to cope with complexities of graph database system design and usage.
+It focuses on RDF-based graph databases and management of its data using SHACL as core instrument.
 
 # python venv setup
 

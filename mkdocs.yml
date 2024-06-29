@@ -3,6 +3,10 @@ site_url: http://h1:8001/mysite
 theme:
   name: material
 
+markdown_extensions:
+  - toc:
+      permalink: true
+
 # Page tree
 nav:
   - Home: index.md
