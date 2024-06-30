@@ -1,6 +1,6 @@
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX ab: <ab:>
-prefix gse: <gse:>
+prefix vgm: <vgm:>
 
 ab:alice rdf:type ab:Human.
 ab:bob rdf:type ab:Human.
@@ -18,17 +18,18 @@ ab:boston rdf:type ab:Location.
 ab:pop-music rdf:type ab:MusicGenre.
 ab:heavy-metal-music rdf:type ab:MusicGenre.
 
-ab:alice ab:name "Alice"; gse:node_vis_color "green"; ab:livesIn ab:worcester;
+ab:alice ab:name "Alice"; vgm:node_vis_color "green"; ab:livesIn ab:worcester;
          ab:likes ab:mona-lisa; ab:likes ab:pop-music .
-ab:bob ab:name "Bob"; gse:node_vis_color "cyan"; ab:livesIn ab:boston;
+ab:bob ab:name "Bob"; vgm:node_vis_color "cyan"; ab:livesIn ab:boston;
        ab:likes ab:night-watch; ab:likes ab:heavy-metal-music .
-ab:charlie ab:name "Charlie"; gse:node_vis_color "orange"; ab:livesIn ab:worcester;
+ab:charlie ab:name "Charlie"; vgm:node_vis_color "orange"; ab:livesIn ab:worcester;
        ab:likes ab:pop-music .
 
-ab:amy ab:name "Amy"; gse:node_vis_color "brown"; ab:ownedBy ab:alice .
-ab:luna ab:name "Luna"; gse:node_vis_color "white"; ab:ownedBy ab:bob .
+ab:amy ab:name "Amy"; vgm:node_vis_color "brown"; ab:ownedBy ab:alice .
+ab:luna ab:name "Luna"; vgm:node_vis_color "white"; ab:ownedBy ab:bob .
 
 ab:mona-lisa ab:name "Mona Lisa"; ab:author ab:leonardo-da-vinci; ab:location ab:paris.
+ab:mona-lisa vgm:node_vis_color "white".
 ab:night-watch ab:name "Night Watch"; ab:author ab:rembrandt; ab:location ab:amsterdam.
 
 ab:leonardo-da-vinci ab:name "Leonardo Da Vinci".

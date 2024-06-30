@@ -4,7 +4,7 @@
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix dash: <http://datashapes.org/dash#> .
 
-@prefix gse: <gse:> .
+@prefix vgm: <vgm:> .
 @prefix ab: <ab:> .
 
 ab:Human rdf:type rdfs:Class; rdf:type sh:NodeShape;
@@ -33,5 +33,5 @@ ab:Location rdf:type rdfs:Class; rdf:type sh:NodeShape;
        sh:property [sh:path ab:city; sh:minCount 1; sh:maxCount 1; sh:dataclass xsd:string];
        sh:property [sh:path ab:country; sh:minCount 1; sh:maxCount 1; sh:dataclass xsd:string].
 
-ab:Human sh:property [sh:path gse:node_vis_color; sh:minCount 0; sh:maxCount 1; sh:dataclass xsd:string] .
-ab:Dog sh:property [sh:path gse:node_vis_color; sh:minCount 0; sh:maxCount 1; sh:dataclass xsd:string] .
+ab:Human sh:property [sh:path vgm:node_vis_color; sh:minCount 0; sh:maxCount 1; sh:dataclass xsd:string] .
+ab:Dog sh:property [sh:path vgm:node_vis_color; sh:minCount 0; sh:maxCount 1; sh:dataclass xsd:string] .

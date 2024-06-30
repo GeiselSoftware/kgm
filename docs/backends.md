@@ -116,3 +116,11 @@ cd $FUSEKI_HOME
 ./fuseki-server --config=run/config-vgm.ttl
 ```
    
+Alice-Bob upload and SHACL validation test:
+
+```
+curl -XPOST --data-binary @$VGM_HOME/examples/alice-bob/ab.ttl  --header 'Content-type: text/turtle' http://localhost:3030/vgm-default-dataset?default
+curl -XPOST --data-binary @$VGM_HOME/examples/alice-bob/ab.shacl.ttl  --header 'Content-type: text/turtle' http://localhost:3030/vgm-default-dataset/shacl?graph=default
+```
+
+Code location: https://github.com/apache/jena/blob/b31a480975d9cf511ae0d5f2c11a3898b453d664/jena-fuseki2/jena-fuseki-core/src/main/java/org/apache/jena/fuseki/servlets/SHACL_Validation.java#L66
