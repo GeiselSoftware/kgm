@@ -5,12 +5,8 @@
 //   https://jena.apache.org/documentation/fuseki2/fuseki-quick-start.html
 //   https://jena.apache.org/documentation/tdb/commands.html#tdbloader
 //
-// apache-jena-5.0.0/bin/tdbloader --loc ~/local/apache-jena-5.0.0/databases/alice-bob ~/projects/shacled/apps/shacled/alice-bob.ttl
-// ./fuseki-server --update --loc=$HOME/local/apache-jena-5.0.0/databases/alice-bob /ds 
-//
 // example of spaqrl request via http post:
-// curl -v -X POST http://h1:3030/ds/ -H "Content-Type: application/x-www-form-urlencoded" -H "Cache-Control: no-cache" -H "Connection: keep-alive" -d query=PREFIX%20rdf%3A%20%3Chttp%3A%2F%2Fwww.w3.org%2F1999%2F02%2F22-rdf-syntax-ns%23%3E%0APREFIX%20rdfs%3A%20%3Chttp%3A%2F%2Fwww.w3.org%2F2000%2F01%2Frdf-schema%23%3E%0ASELECT%20%2A%20WHERE%20%7B%0A%20%20%3Fsub%20%3Fpred%20%3Fobj%20.%0A%7D%20LIMIT%202
-//
+// curl -v -X POST http://h1:3030/kgm-default-dataset/query -H "Content-Type: application/x-www-form-urlencoded" -H "Cache-Control: no-cache" -H "Connection: keep-alive" -d query=select%20*%20%7B%20%3Fs%20%3Fp%20%3Fo%20%7D
 //
 
 #include <iostream>

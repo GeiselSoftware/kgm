@@ -102,4 +102,10 @@ curl -XPOST --data-binary @$KGM_HOME/examples/alice-bob/ab.ttl  --header 'Conten
 curl -XPOST --data-binary @$KGM_HOME/examples/alice-bob/ab.shacl.ttl  --header 'Content-type: text/turtle' http://localhost:3030/kgm-default-dataset/shacl?graph=default
 ```
 
+## Misc
+
 Code location: https://github.com/apache/jena/blob/b31a480975d9cf511ae0d5f2c11a3898b453d664/jena-fuseki2/jena-fuseki-core/src/main/java/org/apache/jena/fuseki/servlets/SHACL_Validation.java#L66
+
+```
+curl -X POST http://h1:3030/kgm-default-dataset/query -H "Content-Type: application/x-www-form-urlencoded" -H "Cache-Control: no-cache" -H "Connection: keep-alive" -d query=select%20*%20%7B%20%3Fs%20%3Fp%20%3Fo%20%7D
+```

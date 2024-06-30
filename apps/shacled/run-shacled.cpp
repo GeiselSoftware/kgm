@@ -47,8 +47,10 @@ struct Example: public LoopStep
     ImGui::SetNextWindowPos(viewportPos);
     ImGui::SetNextWindowSize(ImVec2(viewportSize.x * 0.15f, viewportSize.y));
     if (1) {
-      ImGui::Begin("Left Window", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);	
-      ImGui::Text("FPS: %.2f (%.2gms)", io.Framerate, io.Framerate ? 1000.0f / io.Framerate : 0.0f);
+      ImGui::Begin("Left Window", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
+      //double r_fps = double(round(io.Framerate / 10.0) * 10);
+      double r_fps = io.Framerate;
+      ImGui::Text("FPS: %.2f", r_fps);
       ImGui::Separator();	
 
 #if 0
@@ -66,7 +68,7 @@ struct Example: public LoopStep
 
       { // list of kgm graphs
 	ImGui::Text("kgm graphs");
-	vector<string> items = { "/alice-bob/simple", "/alice-bob/simple-shacl", "/alice-bob/KUI" };
+	vector<string> items = { "/alice-bob", "/alice-bob.shacl" };
         static int item_current_idx = 0; // Here we store our selection data as an index.
         if (ImGui::BeginListBox("##kgm-graphs")) {
 	  for (int n = 0; n < items.size(); n++) {
@@ -181,12 +183,12 @@ int main(int argc, char** argv)
   } else {
     string fuseki_host = string_split(argv[1], '=')[1];
     string fuseki_port = string_split(argv[2], '=')[1];
-    fuseki_url = string("http://") + fuseki_host + ":" + fuseki_port + "/kgm/";
+    fuseki_url = string("http://") + fuseki_host + ":" + fuseki_port + "/kgm-default-dataset/query";
   }
 #else  
   if (argc != 2) {
     cout << "error, need suply url to fuseki server" << endl;
-    cout << "Example: " << argv[0] << " http://metis:3030/kgm/" << endl;
+    cout << "Example: " << argv[0] << " http://metis:3030/kgm-default-dataset/query" << endl;
     exit(2);
   } else {
     fuseki_url = argv[1];
