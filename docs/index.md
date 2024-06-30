@@ -1,4 +1,4 @@
-# VGM (Versatile Graph Management)
+# KGM (Knowledge Graph Management)
 
 ## Introduction
 
@@ -88,26 +88,26 @@ where {
 ### northwind
 
 
-## vgm command-line
+## kgm command-line
 
 ### Installation
 
 ```
-python3 -m venv ~/venv/vgm
-source ~/venv/vgm/bin/activate
+python3 -m venv ~/venv/kgm
+source ~/venv/kgm/bin/activate
 ```
 
 ### Usage
 
-**vgm** is command-line utility to facilitate the tasks which could be described as 'graph store exploration'.
+**kgm** is command-line utility to facilitate the tasks which could be described as 'graph store exploration'.
 
-Given .ttl file it is possible to upload the content into GDB using `vgm insert` command. This operation allow to specify **vgm path** to resulting graph in GDB.
+Given .ttl file it is possible to upload the content into GDB using `kgm insert` command. This operation allow to specify **kgm path** to resulting graph in GDB.
 
 ```
-> ./vgm insert --vgm-path /alice-bob/simple --ttl-file ../examples/alice-bob/simple/data.ttl
+> ./kgm insert --kgm-path /alice-bob/simple --ttl-file ../examples/alice-bob/simple/data.ttl
 ... tbc
-> ./vgm ls
-         vgm_path                                         graph_uri
-/alice-bob/simple <vgm:Graph##03027263-2242-454b-8d4d-7aaecb9990ae>
+> ./kgm ls
+         kgm_path                                         graph_uri
+/alice-bob/simple <kgm:Graph##03027263-2242-454b-8d4d-7aaecb9990ae>
 ```
 

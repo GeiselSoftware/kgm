@@ -15,10 +15,10 @@ To run database server use command:
 
 ```
 cd $FUSEKI_HOME
-./fuseki-server --update --loc=/tmp/test-databases /vgm
+./fuseki-server --update --loc=/tmp/test-databases /kgm
 ```
 
-At this point you should be able to access fuseki server via webbrowers at port 3030. You will have single dataset /vgm.
+At this point you should be able to access fuseki server via webbrowers at port 3030. You will have single dataset /kgm.
 If you want to observe http requests you need to modify file ${FUSEKI_HOME}/webapp/log4j2.properties. You need to set property `logger.fuseki-request.level`:
 
 ```
@@ -51,17 +51,17 @@ wget -O run/config-shacl.ttl https://raw.githubusercontent.com/apache/jena/main/
 ./fuseki-server --config=run/config-shacl.ttl
 ```
 
-This fuseki server configuration will create transient in-memory dataset named as `/dataset` and configure additional SHACL endpoint. You can use VGM supplied Alice-Bob example files to test SHACL validation:
+This fuseki server configuration will create transient in-memory dataset named as `/dataset` and configure additional SHACL endpoint. You can use KGM supplied Alice-Bob example files to test SHACL validation:
 
 ```
-curl -XPOST --data-binary @$VGM_HOME/examples/alice-bob/ab.ttl  --header 'Content-type: text/turtle' http://localhost:3030/dataset?default
-curl -XPOST --data-binary @$VGM_HOME/examples/alice-bob/ab.shacl.ttl  --header 'Content-type: text/turtle' http://localhost:3030/dataset/shacl?graph=default
+curl -XPOST --data-binary @$KGM_HOME/examples/alice-bob/ab.ttl  --header 'Content-type: text/turtle' http://localhost:3030/dataset?default
+curl -XPOST --data-binary @KGM_HOME/examples/alice-bob/ab.shacl.ttl  --header 'Content-type: text/turtle' http://localhost:3030/dataset/shacl?graph=default
 ```
 See also [Integration with Apache Jena Fuseki](https://jena.apache.org/documentation/shacl/index.html#integration-with-apache-jena-fuseki)
 
-### Default VGM setup
+### Default KGM setup
 
-By default VGM should have persistent `/vgm-default-dataset` dataset and SHACL endpoint configured as below. The location of TDB2 directory is `$FUSEKI_HOME/vgm-default-dataset`.
+By default KGM should have persistent `/kgm-default-dataset` dataset and SHACL endpoint configured as below. The location of TDB2 directory is `$FUSEKI_HOME/kgm-default-dataset`.
 
 ```
 # based on https://github.com/apache/jena/tree/main/jena-fuseki2/examples
@@ -76,7 +76,7 @@ PREFIX tdb2:    <http://jena.apache.org/2016/tdb#>
 [] rdf:type fuseki:Server; fuseki:services ( :service ). # see also https://www.w3.org/TR/rdf12-turtle/#collections
 
 :service rdf:type fuseki:Service;
-    fuseki:name "vgm-default-dataset";
+    fuseki:name "kgm-default-dataset";
     fuseki:dataset :dataset_tdb2;
     fuseki:endpoint [ fuseki:operation fuseki:query; fuseki:name "query" ];
     fuseki:endpoint [ fuseki:operation fuseki:update; fuseki:name "update" ];
@@ -84,22 +84,22 @@ PREFIX tdb2:    <http://jena.apache.org/2016/tdb#>
 .
 
 :dataset_tdb2 rdf:type  tdb2:DatasetTDB2;
-              tdb2:location "vgm-default-dataset"; # the tbd2 direction is relative to FUSEKI_HOME, look it up in server log output
+              tdb2:location "kgm-default-dataset"; # the tbd2 direction is relative to FUSEKI_HOME, look it up in server log output
 ## Optional - with union default for query and update WHERE matching.
 ## tdb2:unionDefaultGraph true ;
 .
 ```
 
-Save config above into `$FUSEKI_HOME/run/config-vgm.ttl`. Then run server:
+Save config above into `$FUSEKI_HOME/run/config-kgm.ttl`. Then run server:
 ```
 cd $FUSEKI_HOME
-./fuseki-server --config=run/config-vgm.ttl
+./fuseki-server --config=run/config-kgm.ttl
 ```
    
 Alice-Bob upload and SHACL validation test:
 ```
-curl -XPOST --data-binary @$VGM_HOME/examples/alice-bob/ab.ttl  --header 'Content-type: text/turtle' http://localhost:3030/vgm-default-dataset?default
-curl -XPOST --data-binary @$VGM_HOME/examples/alice-bob/ab.shacl.ttl  --header 'Content-type: text/turtle' http://localhost:3030/vgm-default-dataset/shacl?graph=default
+curl -XPOST --data-binary @$KGM_HOME/examples/alice-bob/ab.ttl  --header 'Content-type: text/turtle' http://localhost:3030/kgm-default-dataset?default
+curl -XPOST --data-binary @$KGM_HOME/examples/alice-bob/ab.shacl.ttl  --header 'Content-type: text/turtle' http://localhost:3030/kgm-default-dataset/shacl?graph=default
 ```
 
 Code location: https://github.com/apache/jena/blob/b31a480975d9cf511ae0d5f2c11a3898b453d664/jena-fuseki2/jena-fuseki-core/src/main/java/org/apache/jena/fuseki/servlets/SHACL_Validation.java#L66

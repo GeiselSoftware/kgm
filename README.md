@@ -1,15 +1,15 @@
-# VGM - Versatile Graph Management
+# KGM - Knowledge Graph Management
 
-VGM is set of UI and command line tools to help users to cope with complexities of graph database system design and usage.
-It focuses on RDF-based graph databases and management of its data using SHACL as core instrument.
+KGM is set of UI and command line tools to help users to cope with complexities of graph database system design and usage.
+It focuses on RDF-based knowledge graph DBs databases and management of its data using SHACL as core instrument.
 
 # python venv setup
 
-To use python utils and other code you better setup venv called `vgm` using commands below:
+To use python utils and other code you better setup venv called `kgm` using commands below:
 
 ```
-python3 -m venv ~/venv/vgm
-source ~/venv/vgm/bin/activate
+python3 -m venv ~/venv/kgm
+source ~/venv/kgm/bin/activate
 pip install -r ./requirements.txt
 ```
 

@@ -64,11 +64,11 @@ struct Example: public LoopStep
 	rdf_node_manager.do_dump_shacl();
       }
 
-      { // list of vgm graphs
-	ImGui::Text("vgm graphs");
+      { // list of kgm graphs
+	ImGui::Text("kgm graphs");
 	vector<string> items = { "/alice-bob/simple", "/alice-bob/simple-shacl", "/alice-bob/KUI" };
         static int item_current_idx = 0; // Here we store our selection data as an index.
-        if (ImGui::BeginListBox("##vgm-graphs")) {
+        if (ImGui::BeginListBox("##kgm-graphs")) {
 	  for (int n = 0; n < items.size(); n++) {
 	    const bool is_selected = (item_current_idx == n);
 	    if (ImGui::Selectable(items[n].c_str(), is_selected)) {
@@ -99,8 +99,8 @@ struct Example: public LoopStep
 
 	  if (ImGui::Button("load")) {
 	    if (!rdf_node_manager.in_progress_load_graph()) {
-	      auto vgm_path = items[item_current_idx];
-	      rdf_node_manager.start_load_graph(vgm_path, this->fuseki_server_url);
+	      auto kgm_path = items[item_current_idx];
+	      rdf_node_manager.start_load_graph(kgm_path, this->fuseki_server_url);
 	    }
 	  }
 	  
@@ -181,12 +181,12 @@ int main(int argc, char** argv)
   } else {
     string fuseki_host = string_split(argv[1], '=')[1];
     string fuseki_port = string_split(argv[2], '=')[1];
-    fuseki_url = string("http://") + fuseki_host + ":" + fuseki_port + "/vgm/";
+    fuseki_url = string("http://") + fuseki_host + ":" + fuseki_port + "/kgm/";
   }
 #else  
   if (argc != 2) {
     cout << "error, need suply url to fuseki server" << endl;
-    cout << "Example: " << argv[0] << " http://metis:3030/vgm/" << endl;
+    cout << "Example: " << argv[0] << " http://metis:3030/kgm/" << endl;
     exit(2);
   } else {
     fuseki_url = argv[1];
