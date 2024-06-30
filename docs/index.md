@@ -70,18 +70,19 @@ data files location:
 Alice-Bob queries:
 
 ```
-PREFIX sh: <http://www.w3.org/ns/shacl#>
-PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-prefix gse: <gse:>
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix kgm: <kgm:>
 prefix ab: <ab:>
 
-select ?owner_name ?pet_name ?pet_class 
-where { 
-  ?pet ab:name ?pet_name . 
-  ?pet rdf:type ?pet_class .
-  ?pet ab:ownedBy ?owner . 
-  ?owner ab:name ?owner_name .
+select ?owner_name ?pet_name ?pet_class
+where {
+  ?g kgm:path "/alice-bob"
+  graph ?g {
+      ?pet rdf:type ?pet_class .
+      ?pet ab:name ?pet_name .
+      ?pet ab:ownedBy ?owner .
+      ?owner ab:name ?owner_name .
+  }
 }
 ```
 
