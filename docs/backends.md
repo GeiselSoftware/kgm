@@ -64,9 +64,7 @@ See also [Integration with Apache Jena Fuseki](https://jena.apache.org/documenta
 By default VGM should have persistent `/vgm-default-dataset` dataset and SHACL endpoint configured as below. The location of TDB2 directory is `$FUSEKI_HOME/vgm-default-dataset`.
 
 ```
-# from https://github.com/apache/jena/tree/main/jena-fuseki2/examples
-#
-## Licensed under the terms of http://www.apache.org/licenses/LICENSE-2.0
+# based on https://github.com/apache/jena/tree/main/jena-fuseki2/examples
 
 PREFIX :        <#>
 PREFIX fuseki:  <http://jena.apache.org/fuseki#>
@@ -75,36 +73,18 @@ PREFIX rdfs:    <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX ja:      <http://jena.hpl.hp.com/2005/11/Assembler#>
 PREFIX tdb2:    <http://jena.apache.org/2016/tdb#>
 
-[] rdf:type fuseki:Server ;
-   fuseki:services (
-     :service
-   ) .
+[] rdf:type fuseki:Server; fuseki:services ( :service ). # see also https://www.w3.org/TR/rdf12-turtle/#collections
 
-## Service description for "/dataset" with
-## a SHACL validation service on "/dataset/shacl"
-## See https://jena.apache.org/documentation/shacl/
+:service rdf:type fuseki:Service;
+    fuseki:name "vgm-default-dataset";
+    fuseki:dataset :dataset_tdb2;
+    fuseki:endpoint [ fuseki:operation fuseki:query; fuseki:name "query" ];
+    fuseki:endpoint [ fuseki:operation fuseki:update; fuseki:name "update" ];
+    fuseki:endpoint [ fuseki:operation fuseki:shacl; fuseki:name "shacl" ];
+.
 
-:service rdf:type fuseki:Service ;
-    fuseki:name "vgm-default-dataset" ;
-    
-    fuseki:endpoint [ fuseki:operation fuseki:query ] ;
-    
-    ## SPARQL Graph Store Protocol : PUT/POST data to /vgm-default-dataset.
-    fuseki:endpoint [ fuseki:operation fuseki:gsp-rw ] ;
-
-## SHACL service - see https://jena.apache.org/documentation/shacl/
-    ## /vgm-default-dataset/shacl
-    fuseki:endpoint [ 
-        fuseki:operation fuseki:shacl ;
-        fuseki:name "shacl"
-    ] ;
-    fuseki:dataset :dataset_tdb2 ;
-    .
-
-:dataset rdf:type ja:MemoryDataset . # this entry is not used
-
-:dataset_tdb2 rdf:type  tdb2:DatasetTDB2 ;
-	      tdb2:location "vgm-default-dataset" ; # the tbd2 direction is relative to FUSEKI_HOME, look it up in server log output
+:dataset_tdb2 rdf:type  tdb2:DatasetTDB2;
+              tdb2:location "vgm-default-dataset"; # the tbd2 direction is relative to FUSEKI_HOME, look it up in server log output
 ## Optional - with union default for query and update WHERE matching.
 ## tdb2:unionDefaultGraph true ;
 .
@@ -117,7 +97,6 @@ cd $FUSEKI_HOME
 ```
    
 Alice-Bob upload and SHACL validation test:
-
 ```
 curl -XPOST --data-binary @$VGM_HOME/examples/alice-bob/ab.ttl  --header 'Content-type: text/turtle' http://localhost:3030/vgm-default-dataset?default
 curl -XPOST --data-binary @$VGM_HOME/examples/alice-bob/ab.shacl.ttl  --header 'Content-type: text/turtle' http://localhost:3030/vgm-default-dataset/shacl?graph=default
