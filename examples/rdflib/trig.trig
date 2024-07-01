@@ -1,0 +1,16 @@
+PREFIX eg: <http://example.com/person/>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+prefix vgm: <vgm:>
+
+eg:drewp a foaf:Person .
+eg:drewp eg:says "Hola" .
+
+eg:graph-1 {
+    eg:drewp a foaf:Person .
+    eg:drewp eg:says "Hello World" .
+}
+
+eg:graph-2 {
+    eg:nick a foaf:Person .
+    eg:nick eg:says "Hi World" .
+}
