@@ -14,10 +14,7 @@ struct RDFSClassMember {
   ax::NodeEditor::PinId out_pin_id;
 
   RDFSClassMember();
-  RDFSClassMember(const std::string& member_name, const std::string& member_type) {
-    this->member_name = member_name;
-    this->member_type = member_type;
-  }
+  RDFSClassMember(const std::string& member_name, const std::string& member_type);
 };
 
 class VisNode_RDFSClass : public VisNode

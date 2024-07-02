@@ -12,6 +12,13 @@ RDFSClassMember::RDFSClassMember()
   this->out_pin_id = VisNode::last_node_id++;
 }
 
+RDFSClassMember::RDFSClassMember(const std::string& member_name, const std::string& member_type)
+{
+  this->out_pin_id = VisNode::last_node_id++;
+  this->member_name = member_name;
+  this->member_type = member_type;
+}
+
 VisNode_RDFSClass::VisNode_RDFSClass(const URI& class_uri) : VisNode{get_next_id()}
 {
   this->uri = class_uri.uri;
