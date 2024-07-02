@@ -4,7 +4,7 @@
 
 ### RDF triples
 
-[RDF (Resource Definition Framework)](https://en.wikipedia.org/wiki/Resource_Description_Framework) is standartized way to store facts in the form of RDF triples. E.g. using [RDF/turtle](https://en.wikipedia.org/wiki/Turtle_(syntax)) format it is possible to define such statements:
+[RDF (Resource Definition Framework)](https://en.wikipedia.org/wiki/Resource_Description_Framework) is standartized way to store facts in the form of RDF triples. The example of such triples stored using [RDF/turtle](https://en.wikipedia.org/wiki/Turtle_(syntax)) format is given below:
 
 ```
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
@@ -20,10 +20,10 @@ ab:bob ab:name "Bob" .
 
 In example above two facts are stored related to proverbal Alice-Bob pair:
 
- - there is a human named Alice with identity `ab:alice`
- - there is a human named Bob with identity `ab:bob`
+ - there is a human named Alice identified using URI `<ab:alice>`
+ - there is a human named Bob identified using URI `<ab:bob>`
 
-RDF/turtle allows to use URI in shortened form using `@prefix` directive. The same example where all URIs are complete would look like this:
+When using RDF/turtle notation, `ab:alice` and `<ab:alice>` are technically the same URI in two different forms: short and complete. RDF/turtle allows to use URI in shortened form using `@prefix` directive. The same example where all URIs are complete would look like this:
 
 ```
 <ab:Human> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2000/01/rdf-schema#Class> .
@@ -33,23 +33,24 @@ RDF/turtle allows to use URI in shortened form using `@prefix` directive. The sa
 <ab:bob> <ab:name> "Bob" .
 ```
 
-In this example URIs are strings between angle brackets - but brakets are not part of URI. E.g. first line `predicate` is URI `http://www.w3.org/1999/02/22-rdf-syntax-ns#type`. URI is very often look like URL. However it is very likely you will not be able to get anything from such URI if you try to point your internet browser to that location. URI are just strings with certain requirements, they are used to identify the `resource`.
+Also note RDF/turtle's complete URIs use angle brackets to designate the string between brackets as RDF URI. However the angle brackets themselves are not part of RDF URI. E.g. first line `predicate` is RDF URI `http://www.w3.org/1999/02/22-rdf-syntax-ns#type`. URIs are very often look like URLs - URLs are defined as subset of URIs. URIs are used to identify the `resources`.
 
-In third line of the example you've seen that object could also be present as `literal`. In RDF/turle literals are in double-quotes to distibguish them from URIs. Doble-quotes are not part of the literal. The third statement `object` is string *Alice*.
-
-If you want to shorten the statement you can use `prefix` defined on top of RDF/turtle file. Prefixes are used to construct full URI from shortened form. The shortened form was used in first example: you can just substitute prefix value with prefix URI as given at the top of the file. Shortened URI look different from full URI: then never enclosed to angle brakets. They are also different from literals: no double-quote encloser.
+In third line of the example you've seen that object could also be present as `literal`. In RDF/turle literals are in double-quotes to distibguish them from URIs. Double-quotes are not part of the literal. The third statement `object` is string *Alice*.
 
 You may think about RDF triples as extention of an idea of key-value pairs. Key-value pair has two parts: kay and value. The type of key and value may vary. You may have keys as strings and values as numbers, string - anything you can type into the file editor. E.g. you may have such KV pairs shown as CSV file fragment:
 
 ```
-Key,Value
+key,value
 alice_type,Human
 alice_name,Alice
 bob_type,Human
 bob_name,Bob
 ```
 
-RDF makes two changes to key-value pairs idea. First it adds third element so you now will have subject-predicate-object triples instead of key-value pairs. Then RDF restricts what could be `subject`, `predicate` and `object`. In most cases the parts of RDF triple will be either [URIs](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier) or [xsd literals](https://www.w3.org/TR/rdf11-concepts/#xsd-datatypes), [more on xsd literals](https://www.w3.org/TR/xmlschema-2/#built-in-datatypes).
+RDF makes two changes to key-value pairs idea:
+
+ - it adds third element so you now will have subject-predicate-object triples instead of key-value pairs.
+ - RDF restricts what could be `subject`, `predicate` and `object`. In most cases the parts of RDF triple will be either [URIs](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier) or [xsd literals](https://www.w3.org/TR/rdf11-concepts/#xsd-datatypes), [more on xsd literals](https://www.w3.org/TR/xmlschema-2/#built-in-datatypes).
 
 ### Knowledge graphs
 
@@ -58,14 +59,38 @@ Set of [RDF (Resource Definition Framework)](https://en.wikipedia.org/wiki/Resou
 [![image](ab-objs.png)][file ab-objs.png]
 [file ab-objs.png]: ab-objs.png
 
+### SPARQL
+
+SPARQL is the programming language to query and manipulate RDF knowledge graphs.
+
+```
+prefix kgm: <kgm:>
+prefix ab: <ab:>
+
+select ?owner_name ?pet_name ?pet_class
+where {
+  ?g kgm:path "/alice-bob"
+  graph ?g {
+   ?pet ab:name ?pet_name .
+   ?pet rdf:type ?pet_class .
+   ?pet ab:ownedBy ?owner .
+   ?owner ab:name ?owner_name .
+  }
+}
+```
+
+### SHACL
+
+SHACL is W3C standard adopted with purpose to provide the way to describe RDF knowledge graphs structure. It can be thought as graph database analog of 'database schema'.
+
 ## Examples
 
 ### Alice-Bob
 
 data files location:
 
- - [examples/alice-bob/ab.ttl](examples/alice-bob/ab.ttl) -- data RDF triples
- - examples/alice-bob/ab.shacl.ttl -- SHACL structure
+ - [KGM/examples/alice-bob/ab.ttl](https://github.com/GeiselSoftware/KGM/blob/main/examples/alice-bob/ab.ttl) -- data RDF triples
+ - [KGM/examples/alice-bob/ab.shacl.ttl](https://github.com/GeiselSoftware/KGM/blob/main/examples/alice-bob/ab.shacl.ttl) -- SHACL structure
 
 Alice-Bob queries:
 
@@ -78,9 +103,10 @@ select ?owner_name ?pet_name ?pet_class
 where {
   ?g kgm:path "/alice-bob"
   graph ?g {
-      ?pet rdf:type ?pet_class .
-      ?pet ab:name ?pet_name .
-      ?pet ab:ownedBy ?owner .
+      ?pet rdf:type ?pet_class;
+           ab:name ?pet_name;
+           ab:ownedBy ?owner;
+      .
       ?owner ab:name ?owner_name .
   }
 }
