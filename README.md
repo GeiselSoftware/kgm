@@ -3,23 +3,31 @@
 KGM is set of UI and command line tools to help users to cope with complexities of graph database system design and usage.
 It focuses on RDF-based knowledge graph DBs databases and management of its data using SHACL as core instrument.
 
-# python venv setup
-
-To use python utils and other code you better setup venv called `kgm` using commands below:
+# kgm-utils package
 
 ```
-python3 -m venv ~/venv/kgm
-source ~/venv/kgm/bin/activate
-pip install -r ./requirements.txt
+cd kgm-utils
+pip install .
+```
+
+```
+python3 -m venv ~/venv/kgm-utils
+source ~/venv/kgm-utils
+cd kgm-utils
+pip install .
 ```
 
 # mkdocs
 
 ```
+python3 -m venv ~/venv/kgm-docs
+source ~/venv/kgm-docs
+cd docs
+pip install -r ./requerements.txt
 mkdocs server -a 0.0.0.0:8001
 ```
 
-# Ubuntu 22.04
+# build - ubuntu 22.04
 
 ```
 sudo apt install emscripten # for wasm build
@@ -43,8 +51,6 @@ export IMGUI_ROOT_DIR=${HOME}/local/cloned/imgui
 export IMGUI_NODE_EDITOR_ROOT_DIR=${HOME}/local/cloned/imgui-node-editor
 ```
 
-# Builds
-
 to build desktop version:
 
 ```
@@ -61,13 +67,6 @@ cd build.wasm
 emcmake cmake ..
 make
 python3 -m http.server # use http://localhost:8000 then navigate to apps
-```
-
-# Docs
-
-```
-source ~/venv/gse/bin/activate
-mkdocs serve -a 0.0.0.0:8001
 ```
 
 # Misc
