@@ -23,15 +23,11 @@ pip install .
 python3 -m venv ~/venv/kgm-docs
 source ~/venv/kgm-docs
 cd docs
-pip install -r ./requerements.txt
+pip install -r ./requirements.txt
 mkdocs server -a 0.0.0.0:8001
 ```
 
 # build - ubuntu 22.04
-
-```
-sudo apt install emscripten # for wasm build
-```
 
 ```
 mkdir -p ~/local/cloned
@@ -62,6 +58,7 @@ make
 
 to build wasm version:
 ```
+sudo apt install emscripten
 mkdir build.wasm
 cd build.wasm
 emcmake cmake ..
