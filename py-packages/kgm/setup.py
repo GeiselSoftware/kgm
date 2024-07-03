@@ -1,14 +1,14 @@
 from setuptools import setup, find_packages
 
-setup(name='kgm-utils',
+setup(name='kgm',
       version='0.0.0',
       author='Andrei Smirnov',
       author_email='asmirnov@geisel-software.com',
       license='MIT',
-      description='Knowledge Graph Management - utility commands and library',
+      description='Knowledge Graph Management',
       long_description=open('README.md').read(),
       long_description_content_type='text/markdown',
-      url='https://github.com/GeiselSoftware/KGM',
+      url='https://github.com/GeiselSoftware/KGM/py-packages/kgm',
       packages=find_packages(),
       include_package_data=True,
       package_data={'': ['examples/alice-bob/ab.ttl']},

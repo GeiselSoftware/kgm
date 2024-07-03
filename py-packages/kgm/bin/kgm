@@ -9,7 +9,7 @@ import pandas as pd
 import rdflib
 import uuid
 
-from kgm_utils.sparql_utils import rq_select, rq_insert_graph, rq_update, to_rdfw, kgm_prefix
+from kgm.sparql_utils import rq_select, rq_insert_graph, rq_update, to_rdfw, kgm_prefix
 
 def create_uri(rdfs_class):
     uri_s = rdfs_class + "##" + str(uuid.uuid4())

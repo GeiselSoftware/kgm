@@ -3,17 +3,12 @@
 KGM is set of UI and command line tools to help users to cope with complexities of graph database system design and usage.
 It focuses on RDF-based knowledge graph DBs databases and management of its data using SHACL as core instrument.
 
-# kgm-utils package
+# kgm python package
 
 ```
-cd kgm-utils
-pip install .
-```
-
-```
-python3 -m venv ~/venv/kgm-utils
-source ~/venv/kgm-utils
-cd kgm-utils
+python3 -m venv ~/venv/kgm
+source ~/venv/kgm
+cd py-packages/kgm
 pip install .
 ```
 
