@@ -1,4 +1,0 @@
-mkdocs-material
-rdflib
-sparqlwrapper
-pandas

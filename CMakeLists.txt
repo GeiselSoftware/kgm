@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.12)
 
 project(KGM)
 
-# check packages/README.md to find out how to setup env vars used below
+# check src-packages/README.md to find out how to setup env vars used below
 #
 set(FMT_ROOT_DIR $ENV{FMT_ROOT_DIR})
 set(NLOHMANN_ROOT_DIR $ENV{NLOHMANN_ROOT_DIR})
@@ -22,7 +22,7 @@ else ()
   set(CMAKE_EXECUTABLE_SUFFIX ".tsk")
 endif()
 
-add_subdirectory(packages)
+add_subdirectory(src-packages)
 
 include_directories(${CMAKE_SOURCE_DIR}/libs ${IMGUI_ROOT_DIR}/backends ${IMGUI_ROOT_DIR} ${IMGUI_NODE_EDITOR_ROOT_DIR} ${NLOHMANN_ROOT_DIR}/include ${FMT_ROOT_DIR}/include)
 add_subdirectory(libs)

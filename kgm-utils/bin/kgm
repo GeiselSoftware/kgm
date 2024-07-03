@@ -1,14 +1,15 @@
-#!/bin/env python
+#!/usr/bin/env python3
 
 import sys
-sys.dont_write_bytecode = True
+#sys.dont_write_bytecode = True
 
 #import ipdb
 import argparse
-from sparql_utils import rq_select, rq_insert_graph, rq_update, to_rdfw, kgm_prefix
 import pandas as pd
 import rdflib
 import uuid
+
+from kgm_utils.sparql_utils import rq_select, rq_insert_graph, rq_update, to_rdfw, kgm_prefix
 
 def create_uri(rdfs_class):
     uri_s = rdfs_class + "##" + str(uuid.uuid4())
@@ -81,8 +82,8 @@ def do_ls_all_graphs(args):
 
     res = rq_select(query)
     print(pd.DataFrame.from_dict(res['results']['bindings']).map(to_rdfw))
-            
-if __name__ == "__main__":
+
+def main():
     parser = argparse.ArgumentParser(description="Command processor example")
     subparsers = parser.add_subparsers(title="subcommands") #, description="valid subcommands") #, help="sub-command help")
 
@@ -128,3 +129,6 @@ if __name__ == "__main__":
     else:
         parser.print_help()
         
+if __name__ == "__main__":
+    main()
+    
