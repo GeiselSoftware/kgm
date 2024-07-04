@@ -55,20 +55,19 @@ RDF makes two changes to key-value pairs idea:
 
 Set of [RDF (Resource Definition Framework)](https://en.wikipedia.org/wiki/Resource_Description_Framework) triples can be tought of as [knowledge graph](https://en.wikipedia.org/wiki/Knowledge_graph). [Extended Alice-Bob example](/addendum/#appendix_c_alice-bob_rdf_triples) RDF triples can be presented as graph below:
 
-[![image](sparql-example/ab-objs.png)][file sparql-example/ab-objs.png]
-[file sparql-example/ab-objs.png]: sparql-example/ab-objs.png
+[![image](sparql-example/ab.png)][file sparql-example/ab.png]
+[file sparql-example/ab.png]: sparql-example/ab.png
 
 ## SPARQL
 
 SPARQL is the programming language to query and manipulate RDF knowledge graphs. The example of SPARQL query and result using Alice-Bob dataset is below:
 
 ```
-prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix ab: <ab:>
 
 select ?owner_name ?pet_name ?pet_class
 where {
-   ?pet rdf:type ?pet_class .
+   ?pet ab:is-a ?pet_class .
    ?pet ab:name ?pet_name .
    ?pet ab:ownedBy ?owner .
    ?owner ab:name ?owner_name .
@@ -87,12 +86,13 @@ If you want to experiment with this simple query you can install python package 
 
 Expected result:
 ```
-loaded 58 triples
+loaded 17 triples
+query result:
 ['Alice', 'Amy', 'ab:Dog']
 ['Bob', 'Luna', 'ab:Cat']
 ```
 
-[Alice-Bob small example triples](/kgm/sparql-example/ab-small.ttl)
+[Alice-Bob small example triples](/kgm/sparql-example/ab.ttl)
 
 
 

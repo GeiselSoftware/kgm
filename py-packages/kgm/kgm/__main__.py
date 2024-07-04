@@ -10,6 +10,7 @@ import rdflib
 import uuid
 
 from .sparql_utils import rq_select, rq_insert_graph, rq_update, to_rdfw, kgm_prefix
+from . import graphviz_utils
 
 def create_uri(rdfs_class):
     uri_s = rdfs_class + "##" + str(uuid.uuid4())
@@ -83,6 +84,15 @@ def do_ls_all_graphs(args):
     res = rq_select(query)
     print(pd.DataFrame.from_dict(res['results']['bindings']).map(to_rdfw))
 
+def do_misc_gv(args):
+    print("args:", args)
+
+    g = rdflib.Graph()
+    g.parse(args.ttl_file)
+    print("loaded", len(g), "triples")
+
+    graphviz_utils.generate_png(g, png_file = args.output_png_file)
+    
 def main():
     parser = argparse.ArgumentParser(description="Command processor example")
     subparsers = parser.add_subparsers(title="subcommands") #, description="valid subcommands") #, help="sub-command help")
@@ -122,6 +132,15 @@ def main():
     if 1:
         subcommand_ls = subparsers.add_parser("ls", help = "provides list of all kgm graphs")
         subcommand_ls.set_defaults(func = do_ls_kgm_graphs)
+
+    if 1:
+        subcommand_misc = subparsers.add_parser("misc", help = "misc commands")
+        subcommand_misc_parsers = subcommand_misc.add_subparsers()
+        if 1:
+            subcommand_misc_gv = subcommand_misc_parsers.add_parser("gv", help = "graphviz")
+            subcommand_misc_gv.add_argument("--ttl-file", type=str, required = True, help = "ttl file")
+            subcommand_misc_gv.add_argument("--output-png-file", type=str, required = True, help = "output png file")
+            subcommand_misc.set_defaults(func = do_misc_gv)
         
     args = parser.parse_args()
     if 'func' in args:

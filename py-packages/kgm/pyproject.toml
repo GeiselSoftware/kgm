@@ -16,7 +16,7 @@ authors = [
   {name = "Andrei Smirnov", email = "asmirnov@geisel-software.com"}
 ]
 
-dependencies = ["rdflib", "sparqlwrapper", "pandas"]
+dependencies = ["rdflib", "sparqlwrapper", "pandas", "graphviz"]
 
 [project.urls]
 "Source" = "https://github.com/GeiselSoftware/KGM/py-packages/kgm"

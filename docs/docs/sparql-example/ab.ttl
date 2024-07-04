@@ -1,0 +1,17 @@
+prefix ab: <ab:>
+
+ab:alice ab:is-a ab:Human.
+ab:bob ab:is-a ab:Human.
+ab:charlie ab:is-a ab:Human.
+ab:amy ab:is-a ab:Dog.
+ab:luna ab:is-a ab:Cat.
+
+ab:alice ab:name "Alice"; ab:livesIn ab:worcester.
+ab:bob ab:name "Bob"; ab:livesIn ab:boston.
+ab:charlie ab:name "Charlie"; ab:livesIn ab:worcester.
+
+ab:amy ab:name "Amy"; ab:ownedBy ab:alice .
+ab:luna ab:name "Luna"; ab:ownedBy ab:bob .
+
+ab:alice ab:friendOf ab:bob .
+ab:bob ab:friendOf ab:alice .

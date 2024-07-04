@@ -1,5 +1,5 @@
 ```
-sh ~/local/shacl-1.4.3/bin/shaclvalidate.sh -datafile ./ab.ttl -shapesfile ./ab.shacl.ttl
+sh ~/local/shacl-1.4.3/bin/shaclvalidate.sh -datafile ./ab.data.ttl -shapesfile ./ab.shacl.ttl
 ```
 
 ```
