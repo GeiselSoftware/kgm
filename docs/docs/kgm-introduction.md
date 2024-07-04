@@ -1,8 +1,7 @@
-# KGM (Knowledge Graph Management)
+# KGM - Introduction
+Hello
 
-## Introduction
-
-### RDF triples
+## RDF triples
 
 [RDF (Resource Definition Framework)](https://en.wikipedia.org/wiki/Resource_Description_Framework) is standartized way to store facts in the form of RDF triples. The example of such triples stored using [RDF/turtle](https://en.wikipedia.org/wiki/Turtle_(syntax)) format is given below:
 
@@ -52,18 +51,19 @@ RDF makes two changes to key-value pairs idea:
  - it adds third element so you now will have subject-predicate-object triples instead of key-value pairs.
  - RDF restricts what could be `subject`, `predicate` and `object`. In most cases the parts of RDF triple will be either [URIs](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier) or [xsd literals](https://www.w3.org/TR/rdf11-concepts/#xsd-datatypes), [more on xsd literals](https://www.w3.org/TR/xmlschema-2/#built-in-datatypes).
 
-### Knowledge graphs
+## Knowledge graphs
 
 Set of [RDF (Resource Definition Framework)](https://en.wikipedia.org/wiki/Resource_Description_Framework) triples can be tought of as [knowledge graph](https://en.wikipedia.org/wiki/Knowledge_graph). [Extended Alice-Bob example](/addendum/#appendix_c_alice-bob_rdf_triples) RDF triples can be presented as graph below:
 
-[![image](ab-objs.png)][file ab-objs.png]
-[file ab-objs.png]: ab-objs.png
+[![image](sparql-example/ab-objs.png)][file sparql-example/ab-objs.png]
+[file sparql-example/ab-objs.png]: sparql-example/ab-objs.png
 
-### SPARQL
+## SPARQL
 
 SPARQL is the programming language to query and manipulate RDF knowledge graphs. The example of SPARQL query and result using Alice-Bob dataset is below:
 
 ```
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix ab: <ab:>
 
 select ?owner_name ?pet_name ?pet_class
@@ -74,52 +74,31 @@ where {
    ?owner ab:name ?owner_name .
 }
 ```
-[![image](ab-rq-result.png)][file ab-rq-result.png]
-[file ab-rq-result.png]: ab-rq-result.png
 
-If you want to experiment with this simple query you can install python package kgm-utils and launch command:
+[![image](sparql-example/ab-rq-result.png)][file sparql-example/ab-rq-result.png]
+[file sparql-example/ab-rq-result.png]: sparql-example/ab-rq-result.png
 
+If you want to experiment with this simple query you can install python package rdflib and use python script below:
+
+[rdflib-sparql.py](/kgm/sparql-example/rdflib-sparql.py)
+```python
+{% include 'sparql-example/rdflib-sparql.py' %}
 ```
-kgm-utils ...
-<copy-paste sparql query>
+
+Expected result:
+```
+loaded 58 triples
+['Alice', 'Amy', 'ab:Dog']
+['Bob', 'Luna', 'ab:Cat']
 ```
 
+[Alice-Bob small example triples](/kgm/sparql-example/ab-small.ttl)
 
-### SHACL
+
+
+## SHACL
 
 [SHACL](https://en.wikipedia.org/wiki/SHACL) is W3C standard. SHACL was designed as the mean to describe RDF knowledge graphs structure. It can be thought as graph database analog of 'database schema'.
 
 SHACL specify constraint to graph dabase nodes.
-
-## Examples
-
-### Alice-Bob
-
-data files location:
-
- - [KGM/examples/alice-bob/ab.ttl](https://github.com/GeiselSoftware/KGM/blob/main/examples/alice-bob/ab.ttl) -- data RDF triples
- - [KGM/examples/alice-bob/ab.shacl.ttl](https://github.com/GeiselSoftware/KGM/blob/main/examples/alice-bob/ab.shacl.ttl) -- SHACL structure
-
-Alice-Bob queries:
-
-```
-prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-prefix kgm: <kgm:>
-prefix ab: <ab:>
-
-select ?owner_name ?pet_name ?pet_class
-where {
-  ?g kgm:path "/alice-bob"
-  graph ?g {
-      ?pet rdf:type ?pet_class;
-           ab:name ?pet_name;
-           ab:ownedBy ?owner;
-      .
-      ?owner ab:name ?owner_name .
-  }
-}
-```
-
-### northwind
-
 
