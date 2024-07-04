@@ -1,20 +1,21 @@
 import urllib.request
 import rdflib
 
-# to quickly look at content: wget -q -O - http://h1:8001/kgm/sparql-example/ab.ttl
+# to quickly look at content: wget -q -O - http://h1:8001/kgm/sparql-example/ab-small.data.ttl
 
-ttl_file_url = 'http://h1:8001/kgm/sparql-example/ab.ttl'
+ttl_file_url = 'http://h1:8001/kgm/sparql-example/ab-small.data.ttl'
 with urllib.request.urlopen(ttl_file_url) as fd:
     g = rdflib.Graph()
     g.parse(fd, format = "turtle")
     print("loaded", len(g), "triples")
 
     rq = """
+    prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
     prefix ab: <ab:>
 
     select ?owner_name ?pet_name ?pet_class
     where {
-      ?pet ab:is-a ?pet_class;
+      ?pet rdf:type ?pet_class;
            ab:name ?pet_name;
            ab:ownedBy ?owner.
       ?owner ab:name ?owner_name
@@ -25,4 +26,3 @@ with urllib.request.urlopen(ttl_file_url) as fd:
     print("query result:")
     for row in rq_res:
         print([str(x) for x in row])
-

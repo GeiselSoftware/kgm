@@ -1,10 +1,11 @@
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix ab: <ab:>
 
-ab:alice ab:is-a ab:Human.
-ab:bob ab:is-a ab:Human.
-ab:charlie ab:is-a ab:Human.
-ab:amy ab:is-a ab:Dog.
-ab:luna ab:is-a ab:Cat.
+ab:alice rdf:type ab:Human.
+ab:bob rdf:type ab:Human.
+ab:charlie rdf:type ab:Human.
+ab:amy rdf:type ab:Dog.
+ab:luna rdf:type ab:Cat.
 
 ab:alice ab:name "Alice"; ab:livesIn ab:worcester.
 ab:bob ab:name "Bob"; ab:livesIn ab:boston.
