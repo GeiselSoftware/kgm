@@ -1,0 +1,6 @@
+select ?class ?class_member ?cm_s ?dest
+where {
+  ?class rdf:type rdfs:Class .  
+  optional { ?class sh:property [ sh:path ?class_member; sh:class ?dest ] }
+  bind(str(?class_member) as ?cm_s) 
+}

@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
-#sys.dont_write_bytecode = True
-
-#import ipdb
+import ipdb
 import argparse
 import pandas as pd
 import rdflib
@@ -86,12 +84,52 @@ def do_ls_all_graphs(args):
 
 def do_misc_gv(args):
     print("args:", args)
-
+    ttl_file = args.ttl_file
+    output_png_file = ttl_file + ".png"
+    
     g = rdflib.Graph()
-    g.parse(args.ttl_file)
+    g.parse(ttl_file)
     print("loaded", len(g), "triples")
 
-    graphviz_utils.generate_png(g, png_file = args.output_png_file)
+    #ipdb.set_trace()
+    if 'construct_query' in args:        
+        with open(args.construct_query) as fd:
+            query_text = fd.read()
+            print("got query:")
+            print(query_text)
+            print("---")
+            rq_res = g.query(query_text)
+            print(f"after contruct: {len(rq_res.graph)} triples")
+            for row in rq_res.graph:
+                print([str(x) for x in row])
+            print(f"saving to {output_png_file}")
+            graphviz_utils.generate_png(rq_res.graph, png_file = output_png_file)
+    else:
+        print(f"saving to {output_png_file}")
+        graphviz_utils.generate_png(g, png_file = output_png_file)
+
+    print("all done.")        
+
+def do_misc_select(args):
+    print("args:", args)
+    ttl_file = args.ttl_file
+    
+    g = rdflib.Graph()
+    g.parse(ttl_file)
+    print("loaded", len(g), "triples")
+
+    with open(args.select_query) as fd:
+        query_text = fd.read()
+        print("got query:")
+        print(query_text)
+        print("---")
+        rq_res = g.query(query_text)
+        ipdb.set_trace()
+        #df = pd.DataFrame(columns = [str(x) for x in rq_res.vars], 
+        print([str(x) for x in rq_res.vars])
+        print("-------")
+        for row in rq_res:
+            print([str(x) for x in row], len(row))
     
 def main():
     parser = argparse.ArgumentParser(description="Command processor example")
@@ -137,11 +175,16 @@ def main():
         subcommand_misc = subparsers.add_parser("misc", help = "misc commands")
         subcommand_misc_parsers = subcommand_misc.add_subparsers()
         if 1:
-            subcommand_misc_gv = subcommand_misc_parsers.add_parser("gv", help = "graphviz")
+            subcommand_misc_gv = subcommand_misc_parsers.add_parser("graphviz", help = "graphviz dump to png")
             subcommand_misc_gv.add_argument("--ttl-file", type=str, required = True, help = "ttl file")
-            subcommand_misc_gv.add_argument("--output-png-file", type=str, required = True, help = "output png file")
+            subcommand_misc_gv.add_argument("--construct-query", type=str, required = False, help = "sparql construct query to run before graphviz output")
             subcommand_misc.set_defaults(func = do_misc_gv)
-        
+        if 1:
+            subcommand_misc_sparq_select = subcommand_misc_parsers.add_parser("sparql-select", help = "doing select query")
+            subcommand_misc_sparq_select.add_argument("--ttl-file", type = str, required = True, help = "ttl file")
+            subcommand_misc_sparq_select.add_argument("--select-query", type=str, required = True, help = "sparql select query file")
+            subcommand_misc_sparq_select.set_defaults(func = do_misc_select)            
+            
     args = parser.parse_args()
     if 'func' in args:
         args.func(args)

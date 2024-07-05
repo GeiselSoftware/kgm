@@ -1,5 +1,5 @@
-prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-prefix ab: <ab:>
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix ab: <ab:>.
 
 ab:alice rdf:type ab:Human.
 ab:bob rdf:type ab:Human.
@@ -18,3 +18,6 @@ ab:luna ab:name "Luna"; ab:ownedBy ab:bob .
 
 ab:alice ab:friendOf ab:bob .
 ab:bob ab:friendOf ab:alice .
+
+ab:worcester ab:city-name "Worcester"; ab:country-code "US".
+ab:boston ab:city-name "Boston"; ab:country-code "UK".

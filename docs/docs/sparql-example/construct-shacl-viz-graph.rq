@@ -1,0 +1,13 @@
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+prefix sh: <http://www.w3.org/ns/shacl#>
+
+construct {
+  ?class <member> ?cm_s .
+  ?class ?class_member ?dest .
+}
+where {
+  ?class rdf:type rdfs:Class .
+  optional { ?class sh:property [ sh:path ?class_member; sh:class ?dest] }
+  ?class sh:property/sh:path ?class_member1. bind(str(?class_member1) as ?cm_s)
+}

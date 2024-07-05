@@ -1,5 +1,4 @@
 # KGM - Introduction
-Hello
 
 ## RDF triples
 
@@ -48,13 +47,12 @@ RDF makes two changes to key-value pairs idea:
  - it adds third element to the statement line so you now will have subject-predicate-object triples instead of key-value pairs.
  - RDF restricts what could be `subject`, `predicate` and `object`. In most cases the parts of RDF triple will be either [URIs](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier) or [xsd literals](https://www.w3.org/TR/rdf11-concepts/#xsd-datatypes), [more on xsd literals](https://www.w3.org/TR/xmlschema-2/#built-in-datatypes).
 
-## Knowledge graphs
+## Knowledge Graph
 
-Set of [RDF (Resource Definition Framework)](https://en.wikipedia.org/wiki/Resource_Description_Framework) triples can be tought of as [knowledge graph](https://en.wikipedia.org/wiki/Knowledge_graph). [Alice-Bob example RDF triples](/kgm/sparql-example/ab-small.data.ttl) can be presented as graph below:
+Set of [RDF (Resource Definition Framework)](https://en.wikipedia.org/wiki/Resource_Description_Framework) triples can be tought of as [knowledge graph](https://en.wikipedia.org/wiki/Knowledge_graph). [Alice-Bob example RDF triples](/kgm/sparql-example/ab.data.ttl) can be presented as graph below:
 
-[![image](sparql-example/ab-small.png)][file sparql-example/ab-small.png]
-[file sparql-example/ab-small.png]: sparql-example/ab-small.png
-
+[![image](sparql-example/ab.data.ttl.png)][file sparql-example/ab.data.ttl.png]
+[file sparql-example/ab.data.ttl.png]: sparql-example/ab.data.ttl.png
 
 ## SPARQL
 
@@ -77,18 +75,24 @@ where {
 [file sparql-example/ab-rq-result.png]: sparql-example/ab-rq-result.png
 
 If you want to experiment with this simple query you can install python package rdflib and use python script below:
-
 [rdflib-sparql.py](/kgm/sparql-example/rdflib-sparql.py)
-```python
-{% include 'sparql-example/rdflib-sparql.py' %}
-```
+
+=== "short"
+
+    ```python    
+    {% include 'sparql-example/rdflib-sparql-short.py' %}
+    ```
+    
+=== "long"
+
+    ```python
+    {% include 'sparql-example/rdflib-sparql.py' %}
+    ```
 
 Expected result:
 ```
-loaded 17 triples
-query result:
-['Alice', 'Amy', 'ab:Dog']
-['Bob', 'Luna', 'ab:Cat']
+['Amy', 'Alice', 'ab:Dog']
+['Luna', 'Bob', 'ab:Cat']
 ```
 
 ## SHACL
@@ -97,3 +101,8 @@ query result:
 
 SHACL specify constraint to graph dabase nodes.
 
+ - [ab.shacl.ttl](/kgm/sparql-example/ab.shacl.ttl)
+ - [SHACL playground](https://shacl.org/playground/)
+
+[![image](sparql-example/ab.shacl.ttl.png)][file sparql-example/ab.shacl.ttl.png]
+[file sparql-example/ab.shacl.ttl.png]: sparql-example/ab.shacl.ttl.png

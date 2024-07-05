@@ -1,0 +1,42 @@
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix dash: <http://datashapes.org/dash#> .
+
+@prefix ab: <ab:> .
+
+ab:Human rdf:type rdfs:Class; rdf:type sh:NodeShape;
+         sh:property [sh:path ab:name;
+	 	      sh:minCount 1; sh:maxCount 1;
+		      sh:dataclass xsd:string];
+       	 sh:property [sh:path ab:friendOf;
+	 	      sh:minCount 0;
+		      sh:class ab:Human];
+       	 sh:property [sh:path ab:livesIn;
+	              sh:minCount 1;
+		      sh:class ab:Location].
+
+ab:Dog rdf:type rdfs:Class; rdf:type sh:NodeShape;
+       sh:property [sh:path ab:name;
+       		    sh:minCount 1; sh:maxCount 1;
+		    sh:dataclass xsd:string];
+       sh:property [sh:path ab:ownedBy;
+       		    sh:minCount 1; sh:maxCount 1;
+		    sh:class ab:Human] .
+
+ab:Cat rdf:type rdfs:Class; rdf:type sh:NodeShape;
+       sh:property [sh:path ab:name;
+       		    sh:minCount 1; sh:maxCount 1;
+		    sh:dataclass xsd:string];
+       sh:property [sh:path ab:ownedBy;
+       		    sh:minCount 1; sh:maxCount 1;
+		    sh:class ab:Human] .
+
+ab:Location rdf:type rdfs:Class; rdf:type sh:NodeShape;
+       sh:property [sh:path ab:city-name;
+       		    sh:minCount 1; sh:maxCount 1;
+		    sh:dataclass xsd:string];
+       sh:property [sh:path ab:country-code;
+       		    sh:minCount 1; sh:maxCount 1;
+		    sh:dataclass xsd:string].

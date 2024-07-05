@@ -21,14 +21,7 @@ with urllib.request.urlopen(ttl_file_url) as fd:
       ?owner ab:name ?owner_name.
     }
     """
-    print(f"query on {len(g)} triples, result below")
-    print("---------")
-    print(rq)
-    print("---------")
-    
+
     rq_res = g.query(rq)
     for row in rq_res:
         print([str(x) for x in row])
-
-    print("")
-    print("all done.")
