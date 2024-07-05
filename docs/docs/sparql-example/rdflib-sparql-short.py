@@ -1,12 +1,9 @@
 import urllib.request
 import rdflib
 
-# to quickly look at content: wget -q -O - http://h1:8001/kgm/sparql-example/ab.data.ttl
-
 ttl_file_url = 'http://h1:8001/kgm/sparql-example/ab.data.ttl'
 with urllib.request.urlopen(ttl_file_url) as fd:
     g = rdflib.Graph()
-    print("loading triples from", ttl_file_url)
     g.parse(fd, format = "turtle")
 
     rq = """
@@ -22,6 +19,4 @@ with urllib.request.urlopen(ttl_file_url) as fd:
     }
     """
 
-    rq_res = g.query(rq)
-    for row in rq_res:
-        print([str(x) for x in row])
+    for row in g.query(rq): print([str(x) for x in row])

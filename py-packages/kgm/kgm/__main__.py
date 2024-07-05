@@ -99,9 +99,10 @@ def do_misc_gv(args):
             print(query_text)
             print("---")
             rq_res = g.query(query_text)
+            rq_res.graph.namespace_manager = g.namespace_manager # to fix missing namespace bind after construct
+
             print(f"after contruct: {len(rq_res.graph)} triples")
-            for row in rq_res.graph:
-                print([str(x) for x in row])
+            #for row in rq_res.graph: print([str(x) for x in row])
             print(f"saving to {output_png_file}")
             graphviz_utils.generate_png(rq_res.graph, png_file = output_png_file)
     else:
