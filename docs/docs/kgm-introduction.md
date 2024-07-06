@@ -6,7 +6,7 @@ Knowledge Graph and related technologies were introduced by practitioners in the
 
 This document purpose is to provide practical alternative to the mainstream KG introductions. After minimalistic introduction we are going to concentrate on few examples of purely technical utilization of **available** KG tech tools. In most cases it will be possible to easily reproduce this document scripts and queries using only python's [rdflib](https://pypi.org/project/rdflib/) and [graphviz](https://pypi.org/project/graphviz/) packages.
 
-## RDF triples
+## RDF and RDF/turtle
 
 [RDF (Resource Definition Framework)](https://en.wikipedia.org/wiki/Resource_Description_Framework) is standartized way to store facts in the form of RDF triples. The example of such triples stored using [RDF/turtle](https://en.wikipedia.org/wiki/Turtle_(syntax)) format is given below. It is the data about ubiquitous [Alice-Bob pair](https://en.wikipedia.org/wiki/Alice_and_Bob). Note that it is fragment of bigger Alice-Bob RDF triples file [ab.data.ttl](/kgm/sparql-example/ab.data.ttl).
 
@@ -23,10 +23,12 @@ ab:bob ab:name "Bob" .
 
 In example above few facts are stored in the form of [RDF statements](https://www.w3.org/TR/rdf11-primer/#section-triple):
 
- - there is a human named Alice identified using URI `<ab:alice>`
- - there is a human named Bob identified using URI `<ab:bob>`
+ - there is a human named Alice identified using [URI](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier) `<ab:alice>`
+ - there is a human named Bob identified using [URI](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier) `<ab:bob>`
 
-When using RDF/turtle notation, `ab:alice` and `<ab:alice>` are technically the same URI in two different forms: short and complete. RDF/turtle allows to use URI in shortened form using `@prefix` directive. The same example where all URIs are complete would look like this:
+[URI](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier) is Uniform Resource Identifier. You can quickly glance to to [few examples](https://datatracker.ietf.org/doc/html/rfc3986#section-1.1.2) - as you see [URI](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier) is quite practical and familiar notation used a lot in various web services. E.g. URL is special kind of URI.
+
+In example above `ab:alice` and `<ab:alice>` are used to identify the same person, Alice. `ab:alice` is an example of [compact URI or CURIE](https://en.wikipedia.org/wiki/CURIE). RDF/turtle allows to use compact URIs using `@prefix` directive. The same example without using CURIEs:
 
 ```
 <ab:alice> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <ab:Human> .
@@ -35,9 +37,19 @@ When using RDF/turtle notation, `ab:alice` and `<ab:alice>` are technically the 
 <ab:bob> <ab:name> "Bob" .
 ```
 
-Also note RDF/turtle's complete URIs use angle brackets to designate the string between brackets as RDF URI. However the angle brackets themselves are not part of RDF URI. E.g. first line `predicate` is RDF URI `http://www.w3.org/1999/02/22-rdf-syntax-ns#type`. URIs are very often look like URLs - URLs are defined as subset of URIs. URIs are used to identify the `resources`.
+Note what happen with compact URI `rdf:type`: it was expanded to <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> which is URI in RDF/turtle syntax.
 
-In the second line of the example you've seen that object could also be present as `literal`. In RDF/turle literals are in double-quotes to distibguish them from URIs. Double-quotes are not part of the literal. The third statement `object` is string *Alice*.
+RDF/turtle prescribe to enclose URIs inside of angle brackets to designate the string between brackets as URI. The angle brackets themselves are not part of URI. E.g. first line *predicate* is URI `http://www.w3.org/1999/02/22-rdf-syntax-ns#type`.
+
+In the second line of the example you've seen that *object* could also be [RDF literal](https://www.w3.org/TR/turtle/#literals). In RDF/turle literals are in double-quotes to distibguish them from URIs. Double-quotes are not part of the literal. The third statement *object* is string *Alice*.
+
+There are other ways to represent RDF triples: e.g. [RDF/XML](https://en.wikipedia.org/wiki/RDF/XML). However [RDF/turtle](https://en.wikipedia.org/wiki/Turtle_(syntax)) syntax plays special role. It used as important part of query language SPARQL. It is also main RDF representation in various W3C and similar formal documents.
+
+So from this point mention of RDF would assume RDF/turtle unless stated otherwise. We will also assume that any literal is actually RDF Literal.
+
+## RDF triple structure
+
+Each RDF triple has *subject*, *predicate* and *object* parts. 
 
 You may think about RDF triples as extention of an idea of key-value pairs. Key-value pair has two parts: kay and value. The type of key and value may vary. You may have keys as strings and values as numbers, string - anything you can type into the file editor. E.g. you may have such KV pairs shown as CSV file fragment:
 
