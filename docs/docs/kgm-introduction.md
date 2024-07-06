@@ -1,20 +1,27 @@
-# KGM - Introduction
+# Knowlege Graph for Practical Software Engeneering
+
+## Preface
+
+Knowledge Graph and related technologies were introduced by practitioners in the area of [knowledge representation](https://en.wikipedia.org/wiki/Knowledge_representation_and_reasoning). Historically KG technologies were used by data analysts and designers with purpose to build various ontologies and taxonomies to cover very wide areas of business and science. [Wikidata](https://www.wikidata.org/wiki/Wikidata:Main_Page) could be considered as famous example of such efforts. This project provides [SPARQL interface](https://www.wikidata.org/wiki/Wikidata:Request_a_query#Help_with_a_query) to allow queries using wikipedia data.
+
+This document purpose is to provide practical alternative to the mainstream KG introductions. After minimalistic introduction we are going to concentrate on few examples of purely technical utilization of **available** KG tech tools. In most cases it will be possible to easily reproduce this document scripts and queries using only python's [rdflib](https://pypi.org/project/rdflib/) and [graphviz](https://pypi.org/project/graphviz/) packages.
 
 ## RDF triples
 
-[RDF (Resource Definition Framework)](https://en.wikipedia.org/wiki/Resource_Description_Framework) is standartized way to store facts in the form of RDF triples. The example of such triples stored using [RDF/turtle](https://en.wikipedia.org/wiki/Turtle_(syntax)) format is given below:
+[RDF (Resource Definition Framework)](https://en.wikipedia.org/wiki/Resource_Description_Framework) is standartized way to store facts in the form of RDF triples. The example of such triples stored using [RDF/turtle](https://en.wikipedia.org/wiki/Turtle_(syntax)) format is given below. It is the data about ubiquitous [Alice-Bob pair](https://en.wikipedia.org/wiki/Alice_and_Bob). Note that it is fragment of bigger Alice-Bob RDF triples file [ab.data.ttl](/kgm/sparql-example/ab.data.ttl).
 
 ```
-prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-prefix ab: <ab:> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix ab: <ab:> .
 
 ab:alice rdf:type ab:Human .
 ab:alice ab:name "Alice".
 ab:bob rdf:type ab:Human .
 ab:bob ab:name "Bob" .
+...
 ```
 
-In example above two facts are stored related to proverbal Alice-Bob pair:
+In example above few facts are stored in the form of [RDF statements](https://www.w3.org/TR/rdf11-primer/#section-triple):
 
  - there is a human named Alice identified using URI `<ab:alice>`
  - there is a human named Bob identified using URI `<ab:bob>`
@@ -49,10 +56,18 @@ RDF makes two changes to key-value pairs idea:
 
 ## Knowledge Graph
 
-Set of [RDF (Resource Definition Framework)](https://en.wikipedia.org/wiki/Resource_Description_Framework) triples can be tought of as [knowledge graph](https://en.wikipedia.org/wiki/Knowledge_graph). [Alice-Bob example RDF triples](/kgm/sparql-example/ab.data.ttl) can be presented as graph below:
+Set of RDF triples can be tought of as [Knowledge Graph](https://en.wikipedia.org/wiki/Knowledge_graph) like this one below:
 
 [![image](sparql-example/ab.data.ttl.png)][file sparql-example/ab.data.ttl.png]
 [file sparql-example/ab.data.ttl.png]: sparql-example/ab.data.ttl.png
+
+As before precise content of the graph is avaible in [ab.data.ttl](/kgm/sparql-example/ab.data.ttl) file. In plain english the KG tells us about Alice and Bob:
+
+ - they are friends.
+ - Alice lives in the location `<ab:worcester>` which is idenitied and [Worcester somewhere in US](https://en.wikipedia.org/wiki/Worcester,_Massachusetts) based on provided country code.
+ - Bob lives in `<ab:boston>`. Unlike intiution based on URI `<ab:boston>` Bob does not live in the capital of Commonwealth of Massachusetts. `<ab:boston>` is identified in triples file as being [Boston somewhere UK](https://en.wikipedia.org/wiki/Boston,_Lincolnshire).
+ - Both Alice and Bob owns pets: dog Amy and cat Luna.
+ - there is one more person on diagram: `<ab:charlie>`. Charlie is from the same place as Alice.
 
 ## SPARQL
 
@@ -73,6 +88,8 @@ where {
 
 [![image](sparql-example/ab-rq-result.png)][file sparql-example/ab-rq-result.png]
 [file sparql-example/ab-rq-result.png]: sparql-example/ab-rq-result.png
+
+[SPARQL playground](https://atomgraph.github.io/SPARQL-Playground/)
 
 If you want to experiment with this simple query you can install python package rdflib and use python script below:
 [rdflib-sparql.py](/kgm/sparql-example/rdflib-sparql.py)
