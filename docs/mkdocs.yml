@@ -28,5 +28,10 @@ nav:
   - mkdocs-material: about-mkdocs.md
   - Addendum: addendum.md
 
-plugins:
-  - hello-world
+markdown_extensions:
+  - keyword_linker:
+      words:
+      - 'RDF'
+      - 'MkDocs'
+
+
