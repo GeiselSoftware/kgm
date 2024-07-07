@@ -23,12 +23,12 @@ ab:bob ab:name "Bob" .
 
 In example above few facts are stored in the form of [RDF statements](https://www.w3.org/TR/rdf11-primer/#section-triple):
 
- - there is a human named Alice identified using [URI](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier) `<ab:alice>`
- - there is a human named Bob identified using [URI](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier) `<ab:bob>`
+ - there is a human named Alice identified using [URI] `<ab:alice>`
+ - there is a human named Bob identified using [URI] `<ab:bob>`
 
-[URI](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier) is Uniform Resource Identifier. You can quickly glance to to [few examples](https://datatracker.ietf.org/doc/html/rfc3986#section-1.1.2) - as you see [URI](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier) is quite practical and familiar notation used a lot in various web services. E.g. URL is special kind of URI.
+[URI] is Uniform Resource Identifier. You can quickly glance to to [few examples](https://datatracker.ietf.org/doc/html/rfc3986#section-1.1.2) - as you see [URI] is quite practical and familiar notation used a lot in various web services. E.g. URL is special kind of URI.
 
-In example above `ab:alice` and `<ab:alice>` are used to identify the same person, Alice. `ab:alice` is an example of [compact URI or CURIE](https://en.wikipedia.org/wiki/CURIE). RDF/turtle allows to use compact URIs using `@prefix` directive. The same example without using CURIEs:
+In example above `ab:alice` and `<ab:alice>` are used to identify the same person, Alice. `ab:alice` is an example of compact URI or [CURIE]. RDF/turtle allows to use compact URIs using `@prefix` directive. The same example without using CURIEs:
 
 ```
 <ab:alice> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <ab:Human> .
@@ -37,7 +37,7 @@ In example above `ab:alice` and `<ab:alice>` are used to identify the same perso
 <ab:bob> <ab:name> "Bob" .
 ```
 
-Note what happen with compact URI `rdf:type`: it was expanded to <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> which is URI in RDF/turtle syntax.
+Note what happen with compact URI `rdf:type`. It was expanded to &lt;http://www.w3.org/1999/02/22-rdf-syntax-ns#type&gt; which is URI in RDF/turtle syntax.
 
 RDF/turtle prescribe to enclose URIs inside of angle brackets to designate the string between brackets as URI. The angle brackets themselves are not part of URI. E.g. first line *predicate* is URI `http://www.w3.org/1999/02/22-rdf-syntax-ns#type`.
 
@@ -47,7 +47,7 @@ There are other ways to represent RDF triples: e.g. [RDF/XML](https://en.wikiped
 
 So from this point mention of RDF would assume RDF/turtle unless stated otherwise. We will also assume that any literal is actually RDF Literal.
 
-## RDF triple structure
+## [RDF] triple structure
 
 Each RDF triple has *subject*, *predicate* and *object* parts. 
 
@@ -64,7 +64,7 @@ bob_name,Bob
 RDF makes two changes to key-value pairs idea:
 
  - it adds third element to the statement line so you now will have subject-predicate-object triples instead of key-value pairs.
- - RDF restricts what could be `subject`, `predicate` and `object`. In most cases the parts of RDF triple will be either [URIs](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier) or [xsd literals](https://www.w3.org/TR/rdf11-concepts/#xsd-datatypes), [more on xsd literals](https://www.w3.org/TR/xmlschema-2/#built-in-datatypes).
+ - RDF restricts what could be *subject*, *predicate* and *object*. In most cases the parts of RDF triple will be either [URI]s or [xsd literals](https://www.w3.org/TR/rdf11-concepts/#xsd-datatypes), [more on xsd literals](https://www.w3.org/TR/xmlschema-2/#built-in-datatypes).
 
 ## Knowledge Graph
 
@@ -107,15 +107,13 @@ If you want to experiment with this simple query you can install python package 
 [rdflib-sparql.py](/kgm/sparql-example/rdflib-sparql.py)
 
 === "short"
-
     ```python    
-    {% include 'sparql-example/rdflib-sparql-short.py' %}
+    --8<-- "docs/sparql-example/rdflib-sparql-short.py"
     ```
     
 === "long"
-
     ```python
-    {% include 'sparql-example/rdflib-sparql.py' %}
+    --8<-- "docs/sparql-example/rdflib-sparql.py"
     ```
 
 Expected result:
