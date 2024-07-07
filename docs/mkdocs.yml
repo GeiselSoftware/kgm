@@ -18,7 +18,6 @@ markdown_extensions:
       auto_append:
         - docs/abbreviations.md
   - abbr
-  - attr_list
 
 # Page tree
 nav:
@@ -27,3 +26,6 @@ nav:
   - Backends: backends.md
   - mkdocs-material: about-mkdocs.md
   - Addendum: addendum.md
+
+extra_javascript:
+  - javascripts/custom-abbr.js
