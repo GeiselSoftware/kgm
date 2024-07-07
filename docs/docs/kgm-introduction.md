@@ -6,9 +6,9 @@ Knowledge Graph and related technologies were introduced by practitioners in the
 
 This document purpose is to provide practical alternative to the mainstream KG introductions. After minimalistic introduction we are going to concentrate on few examples of purely technical utilization of **available** KG tech tools. In most cases it will be possible to easily reproduce this document scripts and queries using only python's [rdflib](https://pypi.org/project/rdflib/) and [graphviz](https://pypi.org/project/graphviz/) packages.
 
-## [<span>R</span>DF] and RDF/turtle
+## [R<span/>DF] and RDF/turtle
 
-[<span>R</span>DF] aka. Resource Definition Framework is standartized way to store facts in the form of [<span>R</span>DF] triples. The example of such triples stored using RDF/turtle format is given below. It is the data about ubiquitous [Alice-Bob pair](https://en.wikipedia.org/wiki/Alice_and_Bob). Note that it is fragment of bigger Alice-Bob [<span>R</span>DF]  triples file [ab.data.ttl](/kgm/sparql-example/ab.data.ttl).
+[R<span/>DF] aka. Resource Definition Framework is standartized way to store facts in the form of [R<span/>DF] triples. The example of such triples stored using RDF/turtle format is given below. It is the data about ubiquitous [Alice-Bob pair](https://en.wikipedia.org/wiki/Alice_and_Bob). Note that it is fragment of bigger Alice-Bob [R<span/>DF]  triples file [ab.data.ttl](/kgm/sparql-example/ab.data.ttl).
 
 ```
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
@@ -21,7 +21,7 @@ ab:bob ab:name "Bob" .
 ...
 ```
 
-In example above few facts are stored in the form of [<span>R</span>DF statements](https://www.w3.org/TR/rdf11-primer/#section-triple):
+In example above few facts are stored in the form of [R<span/>DF statements](https://www.w3.org/TR/rdf11-primer/#section-triple):
 
  - there is a human named Alice identified using URI `<ab:alice>`
  - there is a human named Bob identified using URI `<ab:bob>`
@@ -41,14 +41,14 @@ Note what happen with compact URI `rdf:type`. It was expanded to &lt;http://www.
 
 RDF/turtle prescribe to enclose URIs inside of angle brackets to designate the string between brackets as URI. The angle brackets themselves are not part of URI. E.g. first line *predicate* is URI `http://www.w3.org/1999/02/22-rdf-syntax-ns#type`.
 
-In the second line of the example you've seen that *object* could also be [RDF literal](https://www.w3.org/TR/turtle/#literals). In RDF/turle literals are in double-quotes to distibguish them from URIs. Double-quotes are not part of the literal. The third statement *object* is string *Alice*.
+In the second line of the example you've seen that *object* could also be [R<span/>DF Literal]. In RDF/turtle the l<span>iterals are in double-quotes to distibguish them from URIs. Double-quotes are not part of the [R<span/>DF Literal]. The third statement *object* is string *Alice*.
 
 There are other ways to represent RDF triples: e.g. [RDF/XML](https://en.wikipedia.org/wiki/RDF/XML). However [RDF/turtle](https://en.wikipedia.org/wiki/Turtle_(syntax)) syntax plays special role. It used as important part of query language SPARQL. It is also main RDF representation in various W3C and similar formal documents.
 
-So from this point mention of [<span>R</span>D<span>F</span>(Resource Definition Framework)] would assume RDF/turtle unless stated otherwise. We will also assume that any literal is actually RDF Literal.
+So from this point mention of [R<span/>DF] would assume RDF/turtle unless stated otherwise. We will also assume that any literal is actually [R<span/>DF Literal].
 
 
-## [RDF] triple structure
+## RDF triple structure
 
 Each RDF triple has *subject*, *predicate* and *object* parts. 
 
@@ -65,7 +65,7 @@ bob_name,Bob
 RDF makes two changes to key-value pairs idea:
 
  - it adds third element to the statement line so you now will have subject-predicate-object triples instead of key-value pairs.
- - RDF restricts what could be *subject*, *predicate* and *object*. In most cases the parts of RDF triple will be either [URI]s or [xsd literals](https://www.w3.org/TR/rdf11-concepts/#xsd-datatypes), [more on xsd literals](https://www.w3.org/TR/xmlschema-2/#built-in-datatypes).
+ - RDF restricts what could be *subject*, *predicate* and *object*. In most cases the parts of RDF triple will be either URIs or [xsd literals](https://www.w3.org/TR/rdf11-concepts/#xsd-datatypes), [more on xsd literals](https://www.w3.org/TR/xmlschema-2/#built-in-datatypes).
 
 ## Knowledge Graph
 
@@ -102,7 +102,7 @@ where {
 [![image](sparql-example/ab-rq-result.png)][file sparql-example/ab-rq-result.png]
 [file sparql-example/ab-rq-result.png]: sparql-example/ab-rq-result.png
 
-[SPARQL playground](https://atomgraph.github.io/SPARQL-Playground/)
+[S<span/>PARQL playground](https://atomgraph.github.io/SPARQL-Playground/)
 
 If you want to experiment with this simple query you can install python package rdflib and use python script below:
 [rdflib-sparql.py](/kgm/sparql-example/rdflib-sparql.py)
@@ -125,12 +125,12 @@ Expected result:
 
 ## SHACL
 
-[SHACL](https://en.wikipedia.org/wiki/SHACL) is W3C standard. SHACL was designed as the mean to describe RDF knowledge graphs structure. It can be thought as graph database analog of 'database schema'.
+SHACL is W3C standard. SHACL was designed as the mean to describe RDF knowledge graphs structure. It can be thought as graph database analog of 'database schema'.
 
 SHACL specify constraint to graph dabase nodes.
 
  - [ab.shacl.ttl](/kgm/sparql-example/ab.shacl.ttl)
- - [SHACL playground](https://shacl.org/playground/)
+ - [S<span/>HACL playground](https://shacl.org/playground/)
 
 [![image](sparql-example/ab.shacl.ttl.png)][file sparql-example/ab.shacl.ttl.png]
 [file sparql-example/ab.shacl.ttl.png]: sparql-example/ab.shacl.ttl.png

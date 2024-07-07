@@ -5,5 +5,8 @@
 *[URIs]: https://en.wikipedia.org/wiki/Uniform_Resource_Identifier
 *[CURIE]: https://www.w3.org/TR/2010/NOTE-curie-20101216/
 *[CURIEs]: https://www.w3.org/TR/2010/NOTE-curie-20101216/
+*[SHACL]: https://en.wikipedia.org/wiki/SHACL
+*[literal]: https://www.w3.org/TR/rdf12-turtle/#literals
 
-[<span>R</span>DF]: https://en.wikipedia.org/wiki/Resource_Description_Framework
+[R<span/>DF]: https://en.wikipedia.org/wiki/Resource_Description_Framework
+[R<span/>DF Literal]: https://www.w3.org/TR/rdf12-turtle/#literals
