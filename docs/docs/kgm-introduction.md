@@ -107,14 +107,17 @@ If you want to experiment with this simple query you can install python package 
 [rdflib-sparql.py](/kgm/sparql-example/rdflib-sparql.py)
 
 === "short"
-    ```python    
-    --8<-- "docs/sparql-example/rdflib-sparql-short.py"
-    ```
-    
-=== "long"
+
     ```python
-    --8<-- "docs/sparql-example/rdflib-sparql.py"
+    {% include 'sparql-example/rdflib-sparql-short.py' %}
     ```
+
+=== "long"
+
+    ```python
+    {% include 'sparql-example/rdflib-sparql.py' %}
+    ```
+
 
 Expected result:
 ```
