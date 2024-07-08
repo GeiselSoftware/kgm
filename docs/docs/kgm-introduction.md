@@ -94,7 +94,7 @@ RDF makes two changes to key-value pairs idea:
 
 ## Knowledge Graph
 
-Set of RDF triples can be tought of as [Knowledge Graph](https://en.wikipedia.org/wiki/Knowledge_graph) like this one below:
+Set of RDF triples can be thought of as [Knowledge Graph](https://en.wikipedia.org/wiki/Knowledge_graph) like this one below:
 
 [![image](sparql-example/ab.data.ttl.png)][file sparql-example/ab.data.ttl.png]
 [file sparql-example/ab.data.ttl.png]: sparql-example/ab.data.ttl.png
