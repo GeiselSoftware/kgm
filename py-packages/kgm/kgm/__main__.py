@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
-import ipdb
+#import ipdb
 import argparse
 import pandas as pd
 import rdflib
@@ -92,7 +92,7 @@ def do_misc_gv(args):
     print("loaded", len(g), "triples")
 
     #ipdb.set_trace()
-    if 'construct_query' in args:        
+    if 'construct_query' in args and not args.construct_query is None:
         with open(args.construct_query) as fd:
             query_text = fd.read()
             print("got query:")

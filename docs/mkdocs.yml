@@ -14,7 +14,12 @@ markdown_extensions:
   - pymdownx.superfences
   - pymdownx.tabbed:
       alternate_style: true
-
+  - pymdownx.snippets:
+      auto_append:
+        - docs/abbreviations.md
+  - abbr
+  - pymdownx.blocks.html
+  
 # Page tree
 nav:
   - KG for practical software engeneering: kgm-introduction.md
@@ -23,15 +28,5 @@ nav:
   - mkdocs-material: about-mkdocs.md
   - Addendum: addendum.md
 
-plugins:
-  - include-markdown # https://github.com/mondeja/mkdocs-include-markdown-plugin/blob/master/README.md
-  
-markdown_extensions:
-  - keyword_linker:
-      words:
-        RDF: https://www.w3.org/TR/rdf12-turtle/
-        SPARQL: https://www.w3.org/TR/rdf-sparql-query/
-        URI: https://en.wikipedia.org/wiki/Uniform_Resource_Identifier
-        CURIE: https://www.w3.org/TR/2010/NOTE-curie-20101216/
-
-
+extra_javascript:
+  - javascripts/custom-abbr.js

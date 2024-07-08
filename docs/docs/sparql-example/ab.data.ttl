@@ -9,15 +9,18 @@ ab:luna rdf:type ab:Cat.
 ab:worcester rdf:type ab:Location.
 ab:boston rdf:type ab:Location.
 
-ab:alice ab:name "Alice"; ab:livesIn ab:worcester.
-ab:bob ab:name "Bob"; ab:livesIn ab:boston.
-ab:charlie ab:name "Charlie"; ab:livesIn ab:worcester.
-
-ab:amy ab:name "Amy"; ab:ownedBy ab:alice .
-ab:luna ab:name "Luna"; ab:ownedBy ab:bob .
+ab:alice ab:name "Alice".
+ab:alice ab:livesIn ab:worcester.
+ab:bob ab:name "Bob".
+ab:bob ab:livesIn ab:boston.
+ab:charlie ab:name "Charlie".
+ab:charlie ab:livesIn ab:worcester.
 
 ab:alice ab:friendOf ab:bob .
 ab:bob ab:friendOf ab:alice .
 
-ab:worcester ab:city-name "Worcester"; ab:country-code "US".
-ab:boston ab:city-name "Boston"; ab:country-code "UK".
+ab:amy ab:name "Amy"; ab:ownedBy ab:alice .
+ab:luna ab:name "Luna"; ab:ownedBy ab:bob .
+
+ab:worcester ab:city-name "Worcester"; ab:county "Worcester"; ab:country-code "US".
+ab:boston ab:city-name "Boston"; ab:county: "Lincolnshire"; ab:country-code "UK".
