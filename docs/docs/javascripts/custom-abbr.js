@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", function() {
     document.querySelectorAll('abbr').forEach(function(abbr) {
 	let [url, tip] = splitAtFirstSpace(abbr.title);
 	//console.log("abbr: ", url, tip);
-        abbr.outerHTML = '<span class="custom-abbr" style="color: red;">' + '<a href=' + url + ' style="text-decoration: underline; text-decoration-style: dotted;">' + abbr.innerHTML + '</a></span>';
+        abbr.outerHTML = '<span class="custom-abbr" style="color: red;">' + '<a href=' + url + ' style="text-decoration: underline; text-decoration-style: dotted; color: black">' + abbr.innerHTML + '</a></span>';
     });
 });
 

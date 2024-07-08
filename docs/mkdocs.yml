@@ -18,7 +18,8 @@ markdown_extensions:
       auto_append:
         - docs/abbreviations.md
   - abbr
-
+  - pymdownx.blocks.html
+  
 # Page tree
 nav:
   - KG for practical software engeneering: kgm-introduction.md
