@@ -40,9 +40,9 @@ Note what happen with compact URI `rdf:type`. It was expanded to &lt;http://www.
 
 RDF/turtle prescribe to enclose URIs inside of angle brackets to designate the string between brackets as URI. The angle brackets themselves are not part of URI. E.g. first line *predicate* is URI `http://www.w3.org/1999/02/22-rdf-syntax-ns#type`.
 
-In the second line of the example you've seen that *object* could also be [R<span/>DF Literal]. In RDF/turtle the string l<span>iterals are in double-quotes to distibguish them from URIs. Double-quotes are not part of the [R<span/>DF Literal]. The third statement *object* is string *Alice*.
+In the second line of the example you've seen that *object* could also be [R<span/>DF Literal]. In RDF/turtle the string l<span>iterals are in double-quotes to distibguish them from URIs. E.g. the third statement *object* is string *Alice*.
 
-There are other ways to represent RDF triples: e.g. [RDF/XML](https://en.wikipedia.org/wiki/RDF/XML). However [RDF/turtle](https://en.wikipedia.org/wiki/Turtle_(syntax)) syntax plays special role. It used as important part of query language SPARQL. It is also main RDF representation in various W3C and similar formal documents.
+There are other ways to represent RDF triples: e.g. [R<span/>DF/XML](https://en.wikipedia.org/wiki/RDF/XML). However [RDF/turtle](https://en.wikipedia.org/wiki/Turtle_(syntax)) syntax plays special role. It used as important part of query language SPARQL. It is also main RDF representation in various W3C and similar formal documents.
 
 So from this point:
 
