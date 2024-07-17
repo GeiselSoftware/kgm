@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <imgui_node_editor.h>
+#include <lib-utils/rdf-utils.h>
 
 namespace ed = ax::NodeEditor;
 
@@ -11,10 +12,11 @@ class VisNode : public std::enable_shared_from_this<VisNode>
 public:
   static int last_node_id;
   static int get_next_id();
-  
+
+  URI node_uri;
   ed::NodeId ID;
 
-  explicit VisNode(int new_node_id);
+  explicit VisNode(int new_node_id, const URI&);
   std::shared_ptr<VisNode> get_ptr() { return shared_from_this(); }
   
   virtual ~VisNode() = 0;

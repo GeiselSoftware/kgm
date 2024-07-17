@@ -1,16 +1,17 @@
-#include "vis-node-data.h"
+#include "visnode-userobject.h"
 #include <misc/cpp/imgui_stdlib.h>
 
-VisNode_Data::VisNode_Data() : VisNode{get_next_id()}
+VisNode_UserObject::VisNode_UserObject(const URI& uri) :
+  VisNode{get_next_id(), uri}
 {
 }
 
-void VisNode_Data::make_frame()
+void VisNode_UserObject::make_frame()
 {
   ed::BeginNode(this->ID);
   ImGui::PushID(this->ID.Get());
 
-  ImGui::SetNextItemWidth(100.0f); ImGui::InputText("##uri", &this->uri, ImGuiInputTextFlags_ReadOnly);
+  ImGui::SetNextItemWidth(100.0f); ImGui::InputText("##uri", &this->node_uri.uri, ImGuiInputTextFlags_ReadOnly);
 
   for (size_t i = 0; i < this->rdfs_classes.size(); i++) {
     ImGui::PushID(i);

@@ -2,32 +2,31 @@
 #include <imgui_node_editor_internal.h>
 #include <misc/cpp/imgui_stdlib.h>
 
-#include "vis-node-rdfsclass.h"
-#include <lib-utils/fuseki-utils.h>
+#include "visnode-userclass.h"
 #include <iostream>
 using namespace std;
 
-RDFSClassMember::RDFSClassMember()
+VisNode_UserClass::Member::Member()
 {
   this->out_pin_id = VisNode::last_node_id++;
 }
 
-RDFSClassMember::RDFSClassMember(const std::string& member_name, const std::string& member_type)
+VisNode_UserClass::Member::Member(const std::string& member_name, const std::string& member_type)
 {
   this->out_pin_id = VisNode::last_node_id++;
   this->member_name = member_name;
   this->member_type = member_type;
 }
 
-VisNode_RDFSClass::VisNode_RDFSClass(const URI& class_uri) : VisNode{get_next_id()}
+VisNode_UserClass::VisNode_UserClass(const URI& class_uri) : VisNode{get_next_id(), class_uri}
 {
-  this->uri = class_uri.uri;
+  this->uri = class_uri;
   this->node_InputPinId = last_node_id++;
   this->node_OutputPinId = last_node_id++;
   this->node_bottom_pin = last_node_id++;
 }
 
-void VisNode_RDFSClass::make_frame()
+void VisNode_UserClass::make_frame()
 {
   ed::BeginNode(this->ID);
   ImGui::PushID(this->ID.Get());
@@ -41,16 +40,16 @@ void VisNode_RDFSClass::make_frame()
   
   if (this->is_editable) {
     ImGui::SetNextItemWidth(100);
-    ImGui::InputText("##uri", &this->uri);
+    ImGui::InputText("##uri", &this->uri.uri);
   } else {
     ImGui::SetNextItemWidth(100);
-    ImGui::InputText("##uri", &this->uri, ImGuiInputTextFlags_ReadOnly);
+    ImGui::InputText("##uri", &this->uri.uri, ImGuiInputTextFlags_ReadOnly);
   }
 
   ImGui::Text("This is the input");
   ImGui::SameLine();
   if (ImGui::Button(" + ")) {
-    this->members.push_back(RDFSClassMember());
+    this->members.push_back(Member());
   }
   ImGui::BeginDisabled();
   ImGui::SameLine(); ImGui::Button(" - ");

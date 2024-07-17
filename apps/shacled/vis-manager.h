@@ -9,13 +9,16 @@
 
 class VisNode;
 class VisLink;
-class VisNodeManager
+class RDFManager;
+class VisManager
 {
 public:  
   Dict<URI, std::shared_ptr<VisNode>> nodes;
   std::vector<std::shared_ptr<VisLink>> links;
   
 public:  
+  void build(RDFManager*);
+
   void make_frame();
 };
 
