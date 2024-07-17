@@ -14,20 +14,28 @@ void VisManager::build(RDFManager* rdf_man)
 {
   for (const RDFSubject& user_class: rdf_man->all_user_classes) {
     auto v_n = make_shared<VisNode_UserClass>(asURI(user_class));
-    Dict<RDFPredicate, vector<RDFObject>>* p_oo = rdf_man->triples.get(user_class);
-    vector<RDFObject>* sh_props_oo = p_oo->get(RDFPredicate(sh::property));
-    for (RDFObject& sh_prop: *sh_props_oo) {
-      Dict<RDFPredicate, vector<RDFObject>>* p_oo = rdf_man->triples.get(RDFSubject(asBNode(sh_prop)));
-      VisNode_UserClass::Member m;
-      for (auto& [prop_p, prop_v]: *p_oo) {
-	if (asURI(prop_p) == sh::path) {
-	  m.member_name = get_display_value(prop_v[0]);
-	} else if (asURI(prop_p) == sh::class_ || asURI(prop_p) == sh::dataclass) {
-	  m.member_type = get_display_value(prop_v[0]);
+    Dict<RDFPredicate, vector<RDFObject>>* user_class_doubles = rdf_man->triples.get(user_class);
+    if (user_class_doubles) {
+      vector<RDFObject>* sh_props_oo = user_class_doubles->get(RDFPredicate(sh::property));
+      if (sh_props_oo) {
+	for (RDFObject& sh_props_o: *sh_props_oo) {
+	  Dict<RDFPredicate, vector<RDFObject>>* sh_props_o_doubles = rdf_man->triples.get(RDFSubject(asBNode(sh_props_o)));
+	  if (sh_props_o_doubles) { 
+	    VisNode_UserClass::Member m;
+	    for (auto& [prop_p, prop_v]: *sh_props_o_doubles) {
+	      //cout << "prop_v: " << prop_p << " " <<  endl;
+	      //cout << "   >>>> display: " << get_display_value(prop_v[0]) << endl;
+	      if (asURI(prop_p) == sh::path) {
+		m.member_name = get_display_value(prop_v[0]);
+	      } else if (asURI(prop_p) == sh::class_ || asURI(prop_p) == sh::dataclass) {
+		m.member_type = get_display_value(prop_v[0]);
+	      }
+	    }
+	    v_n->members.push_back(m);
+	  }
 	}
       }
-      v_n->members.push_back(m);
-    }      
+    }
     this->nodes.set(asURI(user_class), v_n);
   }
 

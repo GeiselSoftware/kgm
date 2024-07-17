@@ -21,6 +21,9 @@ std::string get_display_value(const RDFObject& l)
     ret = vv->uri;
   } else if (auto vv = get_if<Literal>(&l)) {
     ret = vv->literal;
+  } else if (auto vv = get_if<BNode>(&l)) {
+    cout << "runtime_error: " << "get_display_value failed: attempt to display blank node" << endl;
+    throw runtime_error("get_display_value failed: attempt to display blank node");
   } else {
     throw runtime_error("get_display_value failed");
   }

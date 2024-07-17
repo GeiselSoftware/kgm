@@ -27,7 +27,6 @@ public:
   
   bool is_editable = true;
   
-  URI uri;
   std::string label;
   std::vector<Member> members;
   

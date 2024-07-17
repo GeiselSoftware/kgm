@@ -20,7 +20,6 @@ VisNode_UserClass::Member::Member(const std::string& member_name, const std::str
 
 VisNode_UserClass::VisNode_UserClass(const URI& class_uri) : VisNode{get_next_id(), class_uri}
 {
-  this->uri = class_uri;
   this->node_InputPinId = last_node_id++;
   this->node_OutputPinId = last_node_id++;
   this->node_bottom_pin = last_node_id++;
@@ -40,10 +39,10 @@ void VisNode_UserClass::make_frame()
   
   if (this->is_editable) {
     ImGui::SetNextItemWidth(100);
-    ImGui::InputText("##uri", &this->uri.uri);
+    ImGui::InputText("##uri", &this->node_uri.uri);
   } else {
     ImGui::SetNextItemWidth(100);
-    ImGui::InputText("##uri", &this->uri.uri, ImGuiInputTextFlags_ReadOnly);
+    ImGui::InputText("##uri", &this->node_uri.uri, ImGuiInputTextFlags_ReadOnly);
   }
 
   ImGui::Text("This is the input");

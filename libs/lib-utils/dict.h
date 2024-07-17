@@ -8,7 +8,7 @@
 // Set<string>
 template <class K> class Set
 {
-private:
+public:
   std::set<K> s;
 
 public:

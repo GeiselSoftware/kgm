@@ -12,7 +12,7 @@ private:
   Set<URI> known_dataclasses;
   Set<URI> all_user_classes; 
   Set<URI> all_user_objects;
-  Dict<URI, std::vector<URI>> all_user_object_types; // s -> rdf:type -> [o]
+  //Dict<URI, std::vector<URI>> all_user_object_types; // s -> rdf:type -> [o]
   Dict<RDFSubject, Dict<RDFPredicate, std::vector<RDFObject>>> triples; // s -> (p -> [o]), p != rdf:type
   
 public:
