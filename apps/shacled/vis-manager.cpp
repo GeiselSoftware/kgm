@@ -1,12 +1,48 @@
-#include "vis-node-manager.h"
-#include <imgui_node_editor.h>
-#include "vis-node.h"
+#include "vis-manager.h"
 #include <memory>
 #include <iostream>
+#include <imgui_node_editor.h>
+#include <lib-utils/known-prefixes.h>
+#include "visnode.h"
+#include "rdf-manager.h"
+#include "visnode-userclass.h"
+#include "visnode-userobject.h"
 
 using namespace std;
 
-void VisNodeManager::make_frame()
+void VisManager::build(RDFManager* rdf_man)
+{
+  for (auto& user_class_uri: rdf_man->all_user_classes) {
+    auto v_n = make_shared<VisNode_UserClass>(user_class_uri);
+    Dict<URI, vector<UBOL>>* p_oo = rdf_man->triples.get(UOB(user_class_uri));
+    auto sh_props_oo = p_oo->get(sh::property);
+    for (auto& sh_prop: *sh_props_oo) {
+      Dict<URI, vector<UBOL>>* p_oo = rdf_man->triples.get(UOB(asBNode(sh_prop)));
+      VisNode_UserClass::Member m;
+      for (auto& [prop_p, prop_v]: *p_oo) {
+	if (prop_p == sh::path) {
+	  m.member_name = get_display_value(prop_v[0]);
+	} else if (prop_p == sh::class_ || prop_p == sh::dataclass) {
+	  m.member_type = get_display_value(prop_v[0]);
+	}
+      }
+      v_n->members.push_back(m);
+    }      
+    this->nodes.set(user_class_uri, v_n);
+  }
+
+  for (auto& user_object_uri: rdf_man->all_user_objects) {
+    auto v_n = make_shared<VisNode_UserObject>(user_object_uri);
+    for (auto [p, O]: *rdf_man->triples.get(UOB(user_object_uri))) {
+      for (auto& o: O) {
+	v_n->members.push_back(VisNode_UserObject::Member{get_display_value(p), get_display_value(o)});      
+      }
+    }
+    this->nodes.set(user_object_uri, v_n);
+  }
+}
+
+void VisManager::make_frame()
 {
   // show all nodes
   for (auto [_, node]: this->nodes) {

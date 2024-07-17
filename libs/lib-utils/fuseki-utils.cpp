@@ -14,7 +14,7 @@ using namespace std;
 
 #include "fuseki-utils.h"
 
-RDFSPPO fuseki::rdf_parse_binding(const nlohmann::json& binding)
+RDFSPO fuseki::rdf_parse_binding(const nlohmann::json& binding)
 {
   /* 
      {
@@ -39,11 +39,6 @@ RDFSPPO fuseki::rdf_parse_binding(const nlohmann::json& binding)
   }
   assert(binding["p"]["type"] == "uri");  
   URI p{binding["p"]["value"]};
-  //assert(binding["pp"]["type"] == "uri");
-  URI pp;
-  if (binding.contains("pp")) {
-    pp = URI{binding["pp"]["value"]};
-  }
 
   assert(binding["o"]["type"] == "uri" || binding["o"]["type"] == "bnode" || binding["o"]["type"] == "literal");
 
@@ -61,5 +56,5 @@ RDFSPPO fuseki::rdf_parse_binding(const nlohmann::json& binding)
     }
   }
 
-  return RDFSPPO{s, p, pp, o};
+  return RDFSPO{s, p, o};
 }

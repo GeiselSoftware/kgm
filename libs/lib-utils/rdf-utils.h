@@ -5,11 +5,11 @@
 #include <iostream>
 #include <string>
 #include <variant>
-
-//const char* RDF_type = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
+#include <functional>
 
 struct URI {
   std::string uri;
+  bool operator==(const URI& u) const { return this->uri == u.uri; }
 };
 
 struct Literal {
@@ -21,29 +21,36 @@ struct BNode {
   std::string bnode;
 };
 
-namespace std {
-  template <> struct less<URI>
-  {
-    bool operator() (const URI& l, const URI& r) const { return l.uri < r.uri; }
-  };
-  
-  template <> struct less<BNode>
-  {
-    bool operator() (const BNode& l, const BNode& r) const { return l.bnode < r.bnode; }
-  };
-}
-
 typedef std::variant<URI, BNode> UOB; // URI or BNode
 typedef std::variant<URI, BNode, Literal> UBOL; // URI, BNode or Literal
 std::string get_display_value(const UBOL& l);
 
 inline bool isURI(const UOB& uob) { return uob.index() == 0; }
+inline bool isURI(const UBOL& ubol) { return ubol.index() == 0; }
 inline bool isBNode(const UOB& uob) { return uob.index() == 1; }
 inline bool isBNode(const UBOL& ubol) { return ubol.index() == 1; }
 inline URI asURI(const UOB& uob) { assert(uob.index() == 0); return std::get<0>(uob); }
 inline URI asURI(const UBOL& ubol) { assert(ubol.index() == 0); return std::get<0>(ubol); }
 inline BNode asBNode(const UOB& uob) { assert(uob.index() == 1); return std::get<1>(uob); }
 inline BNode asBNode(const UBOL& ubol) { assert(ubol.index() == 1); return std::get<1>(ubol); }
+
+namespace std {
+  template <> struct less<URI> {
+    bool operator() (const URI& l, const URI& r) const { return l.uri < r.uri; }
+  };
+
+  template <> struct less<BNode> {
+    bool operator() (const BNode& l, const BNode& r) const { return l.bnode < r.bnode; }
+  };
+
+  template <> struct less<UOB> {
+    bool operator() (const UOB& l, const UOB& r) const {
+      string l_s = isBNode(l) ? asBNode(l).bnode : asURI(l).uri;
+      string r_s = isBNode(r) ? asBNode(r).bnode : asURI(r).uri;
+      return l_s < r_s;
+    }
+  };
+}
 
 inline std::ostream& operator<<(std::ostream& out, const URI& uri) { out << "<" << uri.uri << ">"; return out; }
 		   
@@ -68,7 +75,6 @@ inline std::ostream& operator<<(std::ostream& out, const UBOL ubol) {
 }
 
 struct RDFSPO { UOB s; URI p; UBOL o; };
-struct RDFSPPO { UOB s; URI p, pp; UBOL o; };
 
 URI create_URI(const URI& class_uri);
 URI create_classURI(const URI& prefix);
