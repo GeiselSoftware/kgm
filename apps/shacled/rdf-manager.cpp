@@ -19,7 +19,6 @@ void RDFManager::process_raw_response(const std::string& raw_response)
     auto s = spo.s;
     auto p = spo.p;
     auto o = spo.o;
-    cout << s << " " << p << " " << o << endl;
     
     if (asURI(p) == rdf::type) {
       auto s_uri = asURI(s);
@@ -27,25 +26,47 @@ void RDFManager::process_raw_response(const std::string& raw_response)
       if (o_uri == rdfs::Class) {
 	all_user_classes.add(s_uri);
       } else if (o_uri == sh::NodeShape) {
+	all_user_classes.add(s_uri);
       } else {
 	all_user_objects.add(s_uri);
-	auto v = all_user_object_types.get(s_uri);
-	if (v == 0) {
-	  v = all_user_object_types.set(s_uri);
-	}
-	v->push_back(o_uri);
-      }      
-    } else {
-      auto S = triples.get(s);
-      if (S == 0) {
-	S = triples.set(s);
       }
-      auto P = S->get(p);
-      if (P == 0) {
-	P = S->set(p);
-      }
-      P->push_back(o);
     }
+  }
+
+  // all_user_objects still have all_user_class, we need to calc all_user_objects - all_user_classes
+  Set<URI> new_all_user_objects;
+  std::set_difference(all_user_objects.s.begin(), all_user_objects.s.end(), all_user_classes.s.begin(), all_user_classes.s.end(),
+		      std::inserter(new_all_user_objects.s, new_all_user_objects.s.begin()),
+		      [](auto& a, auto& b) { return a.uri < b.uri; });
+  all_user_objects = new_all_user_objects;
+
+  cout << "all_user_classes: ";
+  for (auto& s: all_user_classes) {
+    cout << s << ", ";
+  }
+  cout << endl;
+  cout << "all_user_objects: ";
+  for (auto& s: all_user_objects) {
+    cout << s << ", ";
+  }
+  cout << endl;
+
+  for (auto& row_j: j["results"]["bindings"]) {
+    auto spo = fuseki::rdf_parse_binding(row_j);
+    auto s = spo.s;
+    auto p = spo.p;
+    auto o = spo.o;
+    //cout << s << " " << p << " " << o << endl;
+    
+    auto S = triples.get(s);
+    if (S == 0) {
+      S = triples.set(s);
+    }
+    auto P = S->get(p);
+    if (P == 0) {
+      P = S->set(p);
+    }
+    P->push_back(o);
   }
 }
 
@@ -83,10 +104,13 @@ void RDFManager::start_load_graph(const string& fuseki_server_url, const string&
   prefix kgm: <kgm:>
 
   select ?s ?p ?o where {{
-   ?g kgm:path "{}". ?g_shacl kgm:path "{}".
-   {{ graph ?g {{ ?s ?p ?o }} }} 
-   union
-   {{ graph ?g_shacl {{ ?s ?p ?o }} }}
+   ?g kgm:path "{}". 
+   ?g_shacl kgm:path "{}".
+   {{
+     {{ graph ?g {{ ?s ?p ?o }} }} 
+     union
+     {{ graph ?g_shacl {{ ?s ?p ?o }} }}
+   }}
   }}
   )";  
     rq = fmt::format(rq_fmt, kgm_path, kgm_shacl_path);
@@ -97,9 +121,7 @@ void RDFManager::start_load_graph(const string& fuseki_server_url, const string&
 
   select ?s ?p ?o where {{
    ?g kgm:path "{}".
-   {{ graph ?g {{ ?s ?p ?o }} }} 
-   union
-   {{ graph ?g_shacl {{ ?s ?p ?o }} }}
+   graph ?g {{ ?s ?p ?o }}
   }}
   )";  
     rq = fmt::format(rq_fmt, kgm_path);
