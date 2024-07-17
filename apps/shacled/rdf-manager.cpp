@@ -21,7 +21,7 @@ void RDFManager::process_raw_response(const std::string& raw_response)
     auto o = spo.o;
     cout << s << " " << p << " " << o << endl;
     
-    if (p == rdf::type) {
+    if (asURI(p) == rdf::type) {
       auto s_uri = asURI(s);
       auto o_uri = asURI(o);
       if (o_uri == rdfs::Class) {

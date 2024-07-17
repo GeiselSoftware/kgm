@@ -8,7 +8,13 @@ URI create_classURI(const URI& prefix)
   return URI{prefix.uri + "#" + generate_uuid_v4()};
 }
 
-std::string get_display_value(const UBOL& l)
+std::string get_display_value(const RDFPredicate& p)
+{
+  string ret = asURI(p).uri;
+  return ret;
+}
+
+std::string get_display_value(const RDFObject& l)
 {
   string ret;
   if (auto vv = get_if<URI>(&l)) {
