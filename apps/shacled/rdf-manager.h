@@ -13,8 +13,7 @@ private:
   Set<URI> all_user_classes; 
   Set<URI> all_user_objects;
   Dict<URI, std::vector<URI>> all_user_object_types; // s -> rdf:type -> [o]
-  typedef Dict<URI, std::vector<UBOL>> doubles_t;
-  Dict<UOB, doubles_t> triples; // s -> (p -> [o]), p != rdf:type
+  Dict<RDFSubject, Dict<RDFPredicate, std::vector<RDFObject>>> triples; // s -> (p -> [o]), p != rdf:type
   
 public:
   HTTPRawRequestHandler http_request_handler; 

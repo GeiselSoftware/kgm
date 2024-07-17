@@ -21,18 +21,21 @@ struct BNode {
   std::string bnode;
 };
 
-typedef std::variant<URI, BNode> UOB; // URI or BNode
-typedef std::variant<URI, BNode, Literal> UBOL; // URI, BNode or Literal
-std::string get_display_value(const UBOL& l);
+typedef std::variant<URI, BNode> RDFSubject; // URI or BNode
+typedef std::variant<URI> RDFPredicate;
+typedef std::variant<URI, BNode, Literal> RDFObject; // URI, BNode or Literal
+std::string get_display_value(const RDFPredicate& p);
+std::string get_display_value(const RDFObject& l);
 
-inline bool isURI(const UOB& uob) { return uob.index() == 0; }
-inline bool isURI(const UBOL& ubol) { return ubol.index() == 0; }
-inline bool isBNode(const UOB& uob) { return uob.index() == 1; }
-inline bool isBNode(const UBOL& ubol) { return ubol.index() == 1; }
-inline URI asURI(const UOB& uob) { assert(uob.index() == 0); return std::get<0>(uob); }
-inline URI asURI(const UBOL& ubol) { assert(ubol.index() == 0); return std::get<0>(ubol); }
-inline BNode asBNode(const UOB& uob) { assert(uob.index() == 1); return std::get<1>(uob); }
-inline BNode asBNode(const UBOL& ubol) { assert(ubol.index() == 1); return std::get<1>(ubol); }
+inline bool isURI(const RDFSubject& uob) { return uob.index() == 0; }
+inline bool isURI(const RDFObject& ubol) { return ubol.index() == 0; }
+inline bool isBNode(const RDFSubject& uob) { return uob.index() == 1; }
+inline bool isBNode(const RDFObject& ubol) { return ubol.index() == 1; }
+inline URI asURI(const RDFSubject& uob) { assert(uob.index() == 0); return std::get<0>(uob); }
+inline URI asURI(const RDFPredicate& p) { assert(p.index() == 0); return std::get<0>(p); }
+inline URI asURI(const RDFObject& ubol) { assert(ubol.index() == 0); return std::get<0>(ubol); }
+inline BNode asBNode(const RDFSubject& uob) { assert(uob.index() == 1); return std::get<1>(uob); }
+inline BNode asBNode(const RDFObject& ubol) { assert(ubol.index() == 1); return std::get<1>(ubol); }
 
 namespace std {
   template <> struct less<URI> {
@@ -43,18 +46,24 @@ namespace std {
     bool operator() (const BNode& l, const BNode& r) const { return l.bnode < r.bnode; }
   };
 
-  template <> struct less<UOB> {
-    bool operator() (const UOB& l, const UOB& r) const {
+  template <> struct less<RDFSubject> {
+    bool operator() (const RDFSubject& l, const RDFSubject& r) const {
       string l_s = isBNode(l) ? asBNode(l).bnode : asURI(l).uri;
       string r_s = isBNode(r) ? asBNode(r).bnode : asURI(r).uri;
       return l_s < r_s;
+    }
+  };
+
+  template <> struct less<RDFPredicate> {
+    bool operator() (const RDFPredicate& l, const RDFPredicate& r) const {
+      return asURI(l).uri < asURI(r).uri;
     }
   };
 }
 
 inline std::ostream& operator<<(std::ostream& out, const URI& uri) { out << "<" << uri.uri << ">"; return out; }
 		   
-inline std::ostream& operator<<(std::ostream& out, const UOB& uob) {
+inline std::ostream& operator<<(std::ostream& out, const RDFSubject& uob) {
   if (uob.index() == 0) {
     out << "<" << std::get<0>(uob).uri << ">";
   } else {
@@ -63,7 +72,13 @@ inline std::ostream& operator<<(std::ostream& out, const UOB& uob) {
   return out;
 }
 
-inline std::ostream& operator<<(std::ostream& out, const UBOL ubol) {
+inline std::ostream& operator<<(std::ostream& out, const RDFPredicate& p)
+{
+  out << "<" << std::get<0>(p).uri << ">";
+  return out;
+}
+
+inline std::ostream& operator<<(std::ostream& out, const RDFObject& ubol) {
   if (ubol.index() == 0) {
     out << "<" << std::get<0>(ubol).uri << ">";
   } else if (ubol.index() == 1) {
@@ -74,7 +89,7 @@ inline std::ostream& operator<<(std::ostream& out, const UBOL ubol) {
   return out;
 }
 
-struct RDFSPO { UOB s; URI p; UBOL o; };
+struct RDFSPO { RDFSubject s; RDFPredicate p; RDFObject o; };
 
 URI create_URI(const URI& class_uri);
 URI create_classURI(const URI& prefix);
