@@ -7,7 +7,7 @@ It focuses on RDF-based knowledge graph DBs databases and management of its data
 
 ```
 python3 -m venv ~/venv/kgm
-source ~/venv/kgm
+source ~/venv/kgm/bin/activate
 cd py-packages/kgm
 pip install .
 ```
