@@ -2,12 +2,26 @@ cmake_minimum_required(VERSION 3.12)
 
 project(KGM)
 
-# check src-packages/README.md to find out how to setup env vars used below
-#
-set(FMT_ROOT_DIR $ENV{FMT_ROOT_DIR})
-set(NLOHMANN_ROOT_DIR $ENV{NLOHMANN_ROOT_DIR})
-set(IMGUI_ROOT_DIR $ENV{IMGUI_ROOT_DIR})
-set(IMGUI_NODE_EDITOR_ROOT_DIR $ENV{IMGUI_NODE_EDITOR_ROOT_DIR})
+if(DEFINED ENV{FMT_ROOT_DIR})
+  set(FMT_ROOT_DIR $ENV{FMT_ROOT_DIR})
+else()
+  set(FMT_ROOT_DIR "${CMAKE_SOURCE_DIR}/external/fmt")
+endif()
+if(DEFINED ENV{NLOHMANN_ROOT_DIR})
+  set(NLOHMANN_ROOT_DIR $ENV{NLOHMANN_ROOT_DIR})
+else()
+  set(NLOHMANN_ROOT_DIR "${CMAKE_SOURCE_DIR}/external/json")
+endif()
+if(DEFINED ENV{IMGUI_ROOT_DIR})
+  set(IMGUI_ROOT_DIR $ENV{IMGUI_ROOT_DIR})
+else()
+  set(IMGUI_ROOT_DIR "${CMAKE_SOURCE_DIR}/external/imgui")
+endif()
+if(DEFINED ENV{IMGUI_NODE_EDITOR_ROOT_DIR})
+  set(IMGUI_NODE_EDITOR_ROOT_DIR $ENV{IMGUI_NODE_EDITOR_ROOT_DIR})
+else()
+  set(IMGUI_NODE_EDITOR_ROOT_DIR "${CMAKE_SOURCE_DIR}/external/imgui-node-editor")
+endif()
 
 set(CMAKE_BUILD_TYPE Debug)
 # if build is debug use this plugin to remap source pathes: https://chromewebstore.google.com/detail/cc++-devtools-support-dwa/pdcpmagijalfljmkmjngeonclgbbannb
