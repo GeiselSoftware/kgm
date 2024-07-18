@@ -24,16 +24,13 @@ mkdocs server -a 0.0.0.0:8001
 
 # build - ubuntu 22.04
 
+Pull all the submodules to use as dependencies
+
 ```
-mkdir -p ~/local/cloned
-cd ~/local/cloned
-git clone https://github.com/fmtlib/fmt.git
-git clone https://github.com/nlohmann/json.git
-git clone https://github.com/ocornut/imgui.git
-git clone https://github.com/thedmd/imgui-node-editor.git
+git submodule update --init --recursive
 ```
 
-Have env vars defined as below:
+Or link to your own local dependency clones with these environment variables
 
 ```
 export FMT_ROOT_DIR=${HOME}/local/cloned/fmt
