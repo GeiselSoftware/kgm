@@ -16,6 +16,8 @@ private:
   Dict<RDFSubject, Dict<RDFPredicate, std::vector<RDFObject>>> triples; // s -> (p -> [o]), p != rdf:type
   
 public:
+  RDFManager();
+
   HTTPRawRequestHandler http_request_handler; 
   bool in_progress_load_graph_f = false;
   bool in_progress_load_graph() { return this->in_progress_load_graph_f; }

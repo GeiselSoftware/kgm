@@ -11,6 +11,21 @@
 
 using namespace std;
 
+RDFManager::RDFManager()
+{
+  this->known_dataclasses.add(xsd::string);
+  this->known_dataclasses.add(xsd::boolean);
+  this->known_dataclasses.add(xsd::decimal);
+  this->known_dataclasses.add(xsd::float_);
+  this->known_dataclasses.add(xsd::double_);
+  this->known_dataclasses.add(xsd::integer);
+  this->known_dataclasses.add(xsd::long_);
+  this->known_dataclasses.add(xsd::int_);
+  this->known_dataclasses.add(xsd::short_);
+  this->known_dataclasses.add(xsd::byte_);
+}
+  
+
 void RDFManager::process_raw_response(const std::string& raw_response)
 {
   auto j = nlohmann::json::parse(raw_response);

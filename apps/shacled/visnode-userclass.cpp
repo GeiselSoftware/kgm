@@ -59,8 +59,38 @@ void VisNode_UserClass::make_frame()
     auto& member = this->members[i];
     ImGui::Checkbox("##checkbox_", &member.checkbox_value); ImGui::SameLine();
     ImGui::SetNextItemWidth(100.0f); ImGui::InputText("##edit_k_", &member.member_name); ImGui::SameLine();
-    ImGui::SetNextItemWidth(100.0f); ImGui::InputText("##edit_v_", &member.member_type); ImGui::SameLine();
-    ed::BeginPin(member.out_pin_id, ed::PinKind::Output); ImGui::Text("->>>"); ed::EndPin();
+
+    if (1) {
+      // imgui-demo.cpp IMGUI_DEMO_MARKER Widget/Combo
+      //ImGui::SetNextItemWidth(100.0f); ImGui::InputText("##edit_v_", &member.member_type);
+      ImGui::SetNextItemWidth(100.0f);
+#if 1
+      ImGui::InputText("##edit_v_", &member.member_type);
+#else
+      // member type comboc box - testing
+      static ImGuiComboFlags combo_flags = 0;
+      if (ImGui::BeginCombo("##member_type_", member.get_member_type_at(member.combo_selected_index))) {
+      //if (ImGui::BeginCombo("##member_type_", "HREN")) {
+	for (int nn = 0; nn < 3; nn++) {
+	  //ImGui::PushID(nn);
+	  bool is_selected = member.combo_selected_index == nn;
+	  if (ImGui::Selectable(member.get_member_type_at(nn), is_selected)) {
+	    member.combo_selected_index = nn;
+	  }
+	  if (is_selected) {
+	    cout << "SELECTED " << nn << endl;
+	    ImGui::SetItemDefaultFocus();
+	  }
+	  //ImGui::PopID();
+	}
+	ImGui::EndCombo();
+      }
+#endif
+      if (member.is_member_type_dataclass == false) {
+	ImGui::SameLine();
+	ed::BeginPin(member.out_pin_id, ed::PinKind::Output); ImGui::Text("->>>"); ed::EndPin();
+      }
+    }
     ImGui::PopID();
   }
 

@@ -27,7 +27,11 @@ void VisManager::build(RDFManager* rdf_man)
 	      //cout << "   >>>> display: " << get_display_value(prop_v[0]) << endl;
 	      if (asURI(prop_p) == sh::path) {
 		m.member_name = get_display_value(prop_v[0]);
-	      } else if (asURI(prop_p) == sh::class_ || asURI(prop_p) == sh::dataclass) {
+	      } else if (asURI(prop_p) == sh::class_) {
+		m.is_member_type_dataclass = false;
+		m.member_type = get_display_value(prop_v[0]);
+	      } else if (asURI(prop_p) == sh::dataclass) {
+		m.is_member_type_dataclass = true;
 		m.member_type = get_display_value(prop_v[0]);
 	      }
 	    }
