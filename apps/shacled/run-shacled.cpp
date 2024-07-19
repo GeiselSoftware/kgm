@@ -12,13 +12,67 @@ namespace ed = ax::NodeEditor;
 #include <thread>
 using namespace std;
 
-struct Example: public LoopStep
+static bool Splitter(bool split_vertically, float thickness, float* size1, float* size2, float min_size1, float min_size2, float splitter_long_axis_size = -1.0f)
+{
+  using namespace ImGui;
+  ImGuiContext& g = *GImGui;
+  ImGuiWindow* window = g.CurrentWindow;
+  ImGuiID id = window->GetID("##Splitter");
+  ImRect bb;
+  bb.Min = window->DC.CursorPos + (split_vertically ? ImVec2(*size1, 0.0f) : ImVec2(0.0f, *size1));
+  bb.Max = bb.Min + CalcItemSize(split_vertically ? ImVec2(thickness, splitter_long_axis_size) : ImVec2(splitter_long_axis_size, thickness), 0.0f, 0.0f);
+  return SplitterBehavior(bb, id, split_vertically ? ImGuiAxis_X : ImGuiAxis_Y, size1, size2, min_size1, min_size2, 0.0f);
+}
+
+
+struct SHACLEditor: public LoopStep
 {
   string fuseki_server_url;
 
-  explicit Example(const string& fuseki_server_url) {
+  explicit SHACLEditor(const string& fuseki_server_url) {
     this->fuseki_server_url = fuseki_server_url;
   }
+
+  void ShowLeftPane(float paneWidth)
+{
+  auto& io = ImGui::GetIO();
+
+  ImGui::BeginChild("Selection", ImVec2(paneWidth, 0));
+
+  paneWidth = ImGui::GetContentRegionAvail().x;
+
+  if (ImGui::Button("Zoom to Content")) {
+    ed::NavigateToContent();
+  }
+
+  if (1) { // load graph
+    bool button_disabled = false;
+    if (rdf_manager.in_progress_load_graph()) {
+      button_disabled = true;
+      ImGui::BeginDisabled(true);
+    }
+
+    if (ImGui::Button("test load")) {
+      if (!rdf_manager.in_progress_load_graph()) {
+	auto kgm_path = "/alice-bob.shacl";
+	string kgm_shacl_path = "";
+	rdf_manager.start_load_graph(this->fuseki_server_url, kgm_path, kgm_shacl_path);
+      }
+    }
+
+    if (rdf_manager.in_progress_load_graph()) {
+      rdf_manager.finish_load_graph();
+      vis_manager.build(&rdf_manager);
+    }
+
+    if (button_disabled) {
+      ImGui::EndDisabled();
+    }
+  }
+  
+  ImGui::EndChild();
+}
+ 
   
   RDFManager rdf_manager;
   VisManager vis_manager;
@@ -37,110 +91,37 @@ struct Example: public LoopStep
   
   void make_frame() override {
     auto& io = ImGui::GetIO();
-	    
+
     // Get main viewport dimensions
     ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImVec2 viewportPos = viewport->Pos;
     ImVec2 viewportSize = viewport->Size;
-    
-    // Show left window
+
+    // Show main window occupying whole viewport    
     ImGui::SetNextWindowPos(viewportPos);
-    ImGui::SetNextWindowSize(ImVec2(viewportSize.x * 0.15f, viewportSize.y));
-    if (1) {
-      ImGui::Begin("Left Window", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
-      //double r_fps = double(round(io.Framerate / 10.0) * 10);
-      double r_fps = io.Framerate;
-      ImGui::Text("FPS: %.2f", r_fps);
-      ImGui::Separator();	
+    ImGui::SetNextWindowSize(viewportSize);
 
-#if 0
-      if (ImGui::Button("add new class")) {
-	cout << "add new class pressed" << endl;
-	auto new_class_uri = create_classURI(URI{"test"});
-	node_manager.nodes.set(new_class_uri, make_shared<RDFSClassNode>(new_class_uri));
-      }
-#endif
-      
-      if (ImGui::Button("dump shacl")) {
-	cout << "dump shacl" << endl;
-	rdf_manager.do_dump_shacl();
-      }
+    
+    ImGui::Begin("Main", 0, ImGuiWindowFlags_NoDecoration);
+    
+    ImGui::Text("%s", this->fuseki_server_url.c_str());
+    ImGui::SameLine(); ImGui::Text("FPS: %.2f (%.2gms)", io.Framerate, io.Framerate ? 1000.0f / io.Framerate : 0.0f);
+    
+    ed::SetCurrentEditor(m_Editor);
+    
+    static float leftPaneWidth  = 400.0f;
+    static float rightPaneWidth = 800.0f;
+    Splitter(true, 4.0f, &leftPaneWidth, &rightPaneWidth, 50.0f, 50.0f);
 
-      { // list of kgm graphs
-	ImGui::Text("kgm graphs");
-	vector<string> items = { "/alice-bob", "/alice-bob.shacl" };
-        static int item_current_idx = 0; // Here we store our selection data as an index.
-        if (ImGui::BeginListBox("##kgm-graphs")) {
-	  for (int n = 0; n < items.size(); n++) {
-	    const bool is_selected = (item_current_idx == n);
-	    if (ImGui::Selectable(items[n].c_str(), is_selected)) {
-	      item_current_idx = n;
-	      cout << "selected: " << items[item_current_idx] << endl;
-	    }
+    ShowLeftPane(leftPaneWidth - 4.0f);
+    ImGui::SameLine(0.0f, 12.0f);
 
-	    // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
-	    if (is_selected) {
-	      ImGui::SetItemDefaultFocus();
-	    }
-	  }
-	  ImGui::EndListBox();
-        }
+    ed::Begin("My Editor", ImVec2(0.0, 0.0f));
+    this->vis_manager.make_frame();
+    ed::End();
 
-	if (ImGui::Button("refresh\nlist")) {
-	  
-	}
-	
-	ImGui::SameLine();
-
-	{ // load graph
-	  bool button_disabled = false;
-	  if (rdf_manager.in_progress_load_graph()) {
-	    button_disabled = true;
-	    ImGui::BeginDisabled(true);
-	  }
-
-	  if (ImGui::Button("load")) {
-	    if (!rdf_manager.in_progress_load_graph()) {
-	      auto kgm_path = items[item_current_idx];
-	      string kgm_shacl_path = "";
-	      rdf_manager.start_load_graph(this->fuseki_server_url, kgm_path, kgm_shacl_path);
-	    }
-	  }
-	  
-	  if (rdf_manager.in_progress_load_graph()) {
-	    rdf_manager.finish_load_graph();
-	    vis_manager.build(&rdf_manager);
-	  }
-	  
-	  if (button_disabled) {
-	    ImGui::EndDisabled();
-	  }
-	}
-      }
-      
-      ImGui::End();
-    }
-
-    // show right window
-    if (1) {
-      ImGui::SetNextWindowPos(ImVec2(viewportPos.x + viewportSize.x * 0.15f, viewportPos.y));
-      ImGui::SetNextWindowSize(ImVec2(viewportSize.x * 0.85f, viewportSize.y));
-      ImGui::Begin("Right Window", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
-      ImGui::Text("%s", this->fuseki_server_url.c_str());
-
-      ed::SetCurrentEditor(m_Editor);
-
-      ed::Begin("My Editor", ImVec2(0.0, 0.0f));
-      this->vis_manager.make_frame();
-      ed::End();
-
-      //ed::NavigateToContent(0.0f);     
-
-      ed::SetCurrentEditor(nullptr);
-      
-      ImGui::End();
-    }
-    // ImGui::ShowMetricsWindow();
+    //ImGui::ShowMetricsWindow();
+    ImGui::End();
   }
 
 };
@@ -203,7 +184,7 @@ int main(int argc, char** argv)
   }
   
   cout << "fuseki url: " << fuseki_url << endl;
-  Example e(fuseki_url);
+  SHACLEditor e(fuseki_url);
   LoopRunner lr(&e);
 
   if (init(&lr) != 0) return 1;
