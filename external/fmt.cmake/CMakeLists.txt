@@ -1,5 +1,7 @@
 project(fmt)
 
+set(FMT_ROOT_DIR "${CMAKE_SOURCE_DIR}/external/fmt")
+
 set(_fmt_Sources
   #${FMT_ROOT_DIR}/src/fmt.cc
   ${FMT_ROOT_DIR}/src/format.cc

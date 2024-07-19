@@ -20,11 +20,9 @@ public:
     bool is_member_type_dataclass = true; // sh:class or sh:dataclass
     ax::NodeEditor::PinId out_pin_id;
 
-#if 0 // testing of combobox
     std::vector<std::string> member_types = { "option 1", "option 2", "option 3" };
     const char* get_member_type_at(int idx) { return member_types[idx].c_str(); }
     int combo_selected_index = 1;
-#endif
 
     Member();
     Member(const std::string& member_name, const std::string& member_type);

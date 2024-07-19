@@ -30,15 +30,6 @@ Pull all the submodules to use as dependencies
 git submodule update --init --recursive
 ```
 
-Or link to your own local dependency clones with these environment variables
-
-```
-export FMT_ROOT_DIR=${HOME}/local/cloned/fmt
-export NLOHMANN_ROOT_DIR=${HOME}/local/cloned/json
-export IMGUI_ROOT_DIR=${HOME}/local/cloned/imgui
-export IMGUI_NODE_EDITOR_ROOT_DIR=${HOME}/local/cloned/imgui-node-editor
-```
-
 to build desktop version:
 
 ```

@@ -1,5 +1,7 @@
 project(imgui VERSION 1.76)
 
+set(IMGUI_ROOT_DIR "${CMAKE_SOURCE_DIR}/external/imgui")
+
 include_directories(${PROJECT_NAME} PUBLIC ${IMGUI_ROOT_DIR})
 
 set(_imgui_Sources
