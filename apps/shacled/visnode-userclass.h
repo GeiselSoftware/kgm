@@ -7,7 +7,7 @@
 
 #include <lib-utils/rdf-utils.h>
 #include "visnode.h"
-
+#include "widgets/toggle-lock.h"
 
 class URI;
 
@@ -33,6 +33,7 @@ public:
   explicit VisNode_UserClass(const URI& class_uri);
   
   bool is_editable = true;
+  ImGui::ToggleLock toggle_lock;
   
   std::string label;
   std::vector<Member> members;
