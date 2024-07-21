@@ -92,17 +92,20 @@ struct SHACLEditor: public LoopStep
   void make_frame() override {
     auto& io = ImGui::GetIO();
 
+#if 1
     // Get main viewport dimensions
     ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImVec2 viewportPos = viewport->Pos;
     ImVec2 viewportSize = viewport->Size;
-
     // Show main window occupying whole viewport    
     ImGui::SetNextWindowPos(viewportPos);
-    ImGui::SetNextWindowSize(viewportSize);
-
-    
+    ImGui::SetNextWindowSize(viewportSize);    
     ImGui::Begin("Main", 0, ImGuiWindowFlags_NoDecoration);
+#else
+    ImGui::SetNextWindowPos(ImVec2(0, 0));
+    ImGui::SetNextWindowSize(ImVec2(800, 600));
+    ImGui::Begin("Main");
+#endif
     
     ImGui::Text("%s", this->fuseki_server_url.c_str());
     ImGui::SameLine(); ImGui::Text("FPS: %.2f (%.2gms)", io.Framerate, io.Framerate ? 1000.0f / io.Framerate : 0.0f);
@@ -120,8 +123,15 @@ struct SHACLEditor: public LoopStep
     this->vis_manager.make_frame();
     ed::End();
 
-    //ImGui::ShowMetricsWindow();
     ImGui::End();
+
+    // second window
+    //ImGui::SetNextWindowFocus();
+    ImGui::Begin("Aux");
+    ImGui::BringWindowToDisplayFront(ImGui::GetCurrentWindow());
+    ImGui::ShowMetricsWindow();
+    ImGui::End();
+
   }
 
 };

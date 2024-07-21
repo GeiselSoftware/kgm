@@ -10,11 +10,11 @@ VisNode_UserClass::Member::Member() {
   this->out_pin_id = VisNode::last_node_id++;
 }
 
-VisNode_UserClass::Member::Member(const std::string &member_name,
-                                  const std::string &member_type) {
+VisNode_UserClass::Member::Member(const URI& member_name_uri, const URI& member_type_uri)
+{
+  this->member_name_rep.update(member_name_uri);
+  this->member_type_rep.update(member_type_uri);
   this->out_pin_id = VisNode::last_node_id++;
-  this->member_name = member_name;
-  this->member_type = member_type;
 }
 
 VisNode_UserClass::VisNode_UserClass(const URI &class_uri)
@@ -60,10 +60,11 @@ void VisNode_UserClass::make_frame() {
     ImGui::Checkbox("##checkbox_", &member.checkbox_value);
     ImGui::SameLine();
     ImGui::SetNextItemWidth(100.0f);
-    ImGui::InputText("##edit_k_", &member.member_name);
+    ImGui::InputText("##edit_k_", &member.member_name_rep.uri_rep);
     ImGui::SameLine();
 
     ImGui::SetNextItemWidth(100.0f);
+#if 0
     // Combo box positioning is broken using imgui-node-editor
     // Use popups instead
     const char* current = member.get_member_type_at(member.combo_selected_index);
@@ -85,7 +86,10 @@ void VisNode_UserClass::make_frame() {
       ImGui::EndPopup();
     }
     ed::Resume();
-
+#else
+    ImGui::InputText("##member_type_", &member.member_type_rep.uri_rep);
+#endif
+    
     if (member.is_member_type_dataclass == false) {
       ImGui::SameLine();
       ed::BeginPin(member.out_pin_id, ed::PinKind::Output);

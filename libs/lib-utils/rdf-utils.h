@@ -93,3 +93,11 @@ struct RDFSPO { RDFSubject s; RDFPredicate p; RDFObject o; };
 
 URI create_URI(const URI& class_uri);
 URI create_classURI(const URI& prefix);
+
+class URIRep
+{
+public:
+  std::string uri_rep;
+  void update(const URI& uri);
+  static std::string expand_curie(const std::string& curie);
+};
