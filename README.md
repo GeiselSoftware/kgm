@@ -19,7 +19,7 @@ python3 -m venv ~/venv/kgm-docs
 source ~/venv/kgm-docs
 cd docs
 pip install -r ./requirements.txt
-mkdocs server -a 0.0.0.0:8001
+mkdocs serve -a 0.0.0.0:8001
 ```
 
 # build - ubuntu 22.04

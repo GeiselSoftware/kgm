@@ -26,13 +26,16 @@ void VisManager::build(RDFManager* rdf_man)
 	      //cout << "prop_v: " << prop_p << " " <<  endl;
 	      //cout << "   >>>> display: " << get_display_value(prop_v[0]) << endl;
 	      if (asURI(prop_p) == sh::path) {
-		m.member_name = get_display_value(prop_v[0]);
+		assert(prop_v.size() >= 1 && isURI(prop_v[0]));
+		m.member_name_rep.update(asURI(prop_v[0]));
 	      } else if (asURI(prop_p) == sh::class_) {
+		assert(prop_v.size() >= 1 && isURI(prop_v[0]));
 		m.is_member_type_dataclass = false;
-		m.member_type = get_display_value(prop_v[0]);
+		m.member_type_rep.update(asURI(prop_v[0]));
 	      } else if (asURI(prop_p) == sh::dataclass) {
+		assert(prop_v.size() >= 1 && isURI(prop_v[0]));
 		m.is_member_type_dataclass = true;
-		m.member_type = get_display_value(prop_v[0]);
+		m.member_type_rep.update(asURI(prop_v[0]));
 	      }
 	    }
 	    v_n->members.push_back(m);

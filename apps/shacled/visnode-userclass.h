@@ -16,7 +16,7 @@ class VisNode_UserClass : public VisNode
 public:
   struct Member {
     bool checkbox_value = false;
-    std::string member_name, member_type;
+    URIRep member_name_rep, member_type_rep;
     bool is_member_type_dataclass = true; // sh:class or sh:dataclass
     ax::NodeEditor::PinId out_pin_id;
 
@@ -25,7 +25,7 @@ public:
     int combo_selected_index = 1;
 
     Member();
-    Member(const std::string& member_name, const std::string& member_type);
+    Member(const URI& member_name, const URI& member_type);
   };
 
   explicit VisNode_UserClass(const URI& class_uri);
