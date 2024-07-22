@@ -85,30 +85,6 @@ void RDFManager::process_raw_response(const std::string& raw_response)
   }
 }
 
-void RDFManager::do_dump_shacl()
-{
-  throw runtime_error("not implemented");
-#if 0
-  cout << "SHACL" << endl;
-  for (auto [_, n]: this->nodes) {
-    if (auto node = dynamic_pointer_cast<RDFSClassNode>(n); node) {
-      cout << "rdfs class " << node->uri << " " << node->label << endl;
-      for (auto& m: node->members) {
-	cout << m.member_name << ": " << m.member_type << endl;
-      }
-    } else {
-      cout << "unknown node" << endl;
-    }
-  }
-
-  for (auto link: this->links) {
-    cout << "link: " << link->ID.Get() << endl;
-  }
-
-  cout << "----" << endl;
-#endif
-}
-
 void RDFManager::start_load_graph(const string& fuseki_server_url, const string& kgm_path, const string& kgm_shacl_path)
 {
   string rq;
