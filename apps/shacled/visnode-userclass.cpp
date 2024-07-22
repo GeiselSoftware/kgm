@@ -50,10 +50,20 @@ void VisNode_UserClass::make_frame() {
   if (ImGui::Button(" + ")) {
     this->members.push_back(Member());
   }
-  ImGui::BeginDisabled();
-  ImGui::SameLine();
-  ImGui::Button(" - ");
-  ImGui::EndDisabled();
+
+  {
+    auto disabled = find_if(this->members.begin(), this->members.end(), [](const Member& m) -> bool { return m.checkbox_value; }) == this->members.end();
+    if (disabled) {
+      ImGui::BeginDisabled();
+    }
+    ImGui::SameLine();
+    if (ImGui::Button(" - ")) {      
+      this->members.erase(remove_if(this->members.begin(), this->members.end(), [](const Member& m) -> bool { return m.checkbox_value; }), this->members.end());
+    }
+    if (disabled) {
+      ImGui::EndDisabled();
+    }
+  }
 
   for (size_t i = 0; i < this->members.size(); i++) {
     ImGui::PushID(i);
