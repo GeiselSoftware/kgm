@@ -3,6 +3,7 @@
 #include <misc/cpp/imgui_stdlib.h>
 #include <lib-utils/image.h>
 
+#include "vis-manager.h"
 #include "visnode-userclass.h"
 #include <iostream>
 using namespace std;
@@ -13,8 +14,8 @@ VisNode_UserClass::Member::Member() {
 
 VisNode_UserClass::Member::Member(const URI& member_name_uri, const URI& member_type_uri)
 {
-  this->member_name_rep.update(member_name_uri);
-  this->member_type_rep.update(member_type_uri);
+  this->member_name_rep = asCURIE(member_name_uri);
+  this->member_type_rep = asCURIE(member_type_uri);
   this->out_pin_id = VisNode::last_node_id++;
 }
 
@@ -61,7 +62,7 @@ void VisNode_UserClass::make_frame() {
     ImGui::Checkbox("##checkbox_", &member.checkbox_value);
     ImGui::SameLine();
     ImGui::SetNextItemWidth(100.0f);
-    ImGui::InputText("##edit_k_", &member.member_name_rep.uri_rep);
+    ImGui::InputText("##edit_k_", &member.member_name_rep);
     ImGui::SameLine();
 
     ImGui::SetNextItemWidth(100.0f);
@@ -88,7 +89,7 @@ void VisNode_UserClass::make_frame() {
     }
     ed::Resume();
 #else
-    ImGui::InputText("##member_type_", &member.member_type_rep.uri_rep);
+    ImGui::InputText("##member_type_", &member.member_type_rep);
 #endif
     
     if (member.is_member_type_dataclass == false) {

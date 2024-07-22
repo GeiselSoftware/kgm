@@ -21,5 +21,8 @@ public:
   void dump_shacl();
   
   void make_frame();
+  std::string shacl_dump;
 };
 
+URI expand_curie(const std::string& curie);
+std::string asCURIE(const URI&);

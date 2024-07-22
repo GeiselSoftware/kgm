@@ -1,6 +1,8 @@
 #include "vis-manager.h"
 #include <memory>
-#include <iostream>
+//#include <iostream>
+#include <sstream>
+#include <fmt/format.h>
 #include <imgui_node_editor.h>
 #include <lib-utils/known-prefixes.h>
 #include "visnode.h"
@@ -27,15 +29,15 @@ void VisManager::build(RDFManager* rdf_man)
 	      //cout << "   >>>> display: " << get_display_value(prop_v[0]) << endl;
 	      if (asURI(prop_p) == sh::path) {
 		assert(prop_v.size() >= 1 && isURI(prop_v[0]));
-		m.member_name_rep.update(asURI(prop_v[0]));
+		m.member_name_rep = asCURIE(asURI(prop_v[0]));
 	      } else if (asURI(prop_p) == sh::class_) {
 		assert(prop_v.size() >= 1 && isURI(prop_v[0]));
 		m.is_member_type_dataclass = false;
-		m.member_type_rep.update(asURI(prop_v[0]));
+		m.member_type_rep = asCURIE(asURI(prop_v[0]));
 	      } else if (asURI(prop_p) == sh::dataclass) {
 		assert(prop_v.size() >= 1 && isURI(prop_v[0]));
 		m.is_member_type_dataclass = true;
-		m.member_type_rep.update(asURI(prop_v[0]));
+		m.member_type_rep = asCURIE(asURI(prop_v[0]));
 	      }
 	    }
 	    v_n->members.push_back(m);
@@ -59,36 +61,39 @@ void VisManager::build(RDFManager* rdf_man)
 
 void VisManager::dump_shacl()
 {
-  cout << "prefix " << rdf::__prefix << " " << rdf::__prefix_uri << " ." << endl;
-  cout << "prefix " << rdfs::__prefix << " " << rdfs::__prefix_uri << " ." << endl;
-  cout << "prefix " << xsd::__prefix << " " << xsd::__prefix_uri << " ." << endl;
-  cout << "prefix " << sh::__prefix << " " << sh::__prefix_uri << " ." << endl;
-  cout << endl;
+  ostringstream out;
+  out << "prefix " << rdf::__prefix << " " << rdf::__prefix_uri << " ." << endl;
+  out << "prefix " << rdfs::__prefix << " " << rdfs::__prefix_uri << " ." << endl;
+  out << "prefix " << xsd::__prefix << " " << xsd::__prefix_uri << " ." << endl;
+  out << "prefix " << sh::__prefix << " " << sh::__prefix_uri << " ." << endl;
+  out << endl;
   
   for (auto [_, n]: this->nodes) {
     if (auto node = dynamic_pointer_cast<VisNode_UserClass>(n); node) {
-      cout << asCURIE(node->node_uri) << " "
-	   << asCURIE(rdf::type) << " " << asCURIE(rdfs::Class) << "; ";
-      cout << asCURIE(rdf::type) << " " << asCURIE(sh::NodeShape) << ";" << endl;
+      out << asCURIE(node->node_uri) << " "
+	  << asCURIE(rdf::type) << " " << asCURIE(rdfs::Class) << "; ";
+      out << asCURIE(rdf::type) << " " << asCURIE(sh::NodeShape) << ";" << endl;
       for (auto& m: node->members) {
-	cout << "  " << asCURIE(sh::property) << " ["
-	     << asCURIE(sh::path) << " " << asCURIE(m.member_name_rep.uri) << "; ";
-	cout << asCURIE(sh::minCount) << " " << "1" << "; "
-	     << asCURIE(sh::maxCount) << " " << "1" << "; ";
+	out << "  " << asCURIE(sh::property) << " ["
+	    << asCURIE(sh::path) << " " << m.member_name_rep << "; ";
+	out << asCURIE(sh::minCount) << " " << "1" << "; "
+	    << asCURIE(sh::maxCount) << " " << "1" << "; ";
 	if (m.is_member_type_dataclass) {
-	  cout << asCURIE(sh::dataclass) << " " << asCURIE(m.member_type_rep.uri);
+	  out << asCURIE(sh::dataclass) << " " << m.member_type_rep;
 	} else {
-	  cout << asCURIE(sh::class_) << " " << asCURIE(m.member_type_rep.uri);
+	  out << asCURIE(sh::class_) << " " << m.member_type_rep;
 	}
-	cout << "];" << endl;
+	out << "];" << endl;
       }
-      cout << "." << endl << endl;
+      out << "." << endl << endl;
     }
   }
 
   for (auto link: this->links) {
     //cout << "link: " << link->ID.Get() << endl;
   }
+
+  this->shacl_dump = out.str();
 }
 
 void VisManager::make_frame()
@@ -160,4 +165,49 @@ void VisManager::make_frame()
     }
   }
   ed::EndDelete(); // Wrap up deletion action  
+}
+
+std::string asCURIE(const URI& uri)
+{
+  std::tuple<std::string, URI> prefixes[] = {
+    {rdf::__prefix, rdf::__prefix_uri}, {rdfs::__prefix, rdfs::__prefix_uri},
+    {xsd::__prefix, xsd::__prefix_uri}, {sh::__prefix, sh::__prefix_uri}
+  };
+  bool found = false;
+  std::string ret;
+  for (auto& [prefix, prefix_uri]: prefixes) {
+    auto idx = uri.uri.find(prefix_uri.uri);
+    if (idx == 0) {
+      ret = prefix + ":" + uri.uri.substr(idx + prefix_uri.uri.size());
+      found = true;
+      break;
+    }
+  }
+  
+  if (!found) {
+    ret = uri.uri;
+  }
+  
+  return ret;
+}
+
+URI expand_CURIE(const std::string& curie)
+{
+  std::tuple<std::string, URI> prefixes[] = {{rdf::__prefix, rdf::__prefix_uri}, {rdfs::__prefix, rdfs::__prefix_uri}};
+  bool found = false;
+  std::string ret;
+  for (auto& [prefix, prefix_uri]: prefixes) {
+    auto idx = curie.find(":");
+    if (idx != std::string::npos && curie.substr(0, idx) == prefix) {
+      ret = prefix_uri.uri + curie.substr(idx + 1);
+      found = true;
+      break;
+    }
+  }
+  
+  if (!found) {
+    throw std::runtime_error(fmt::format("can't expand curie {}", curie));
+  }
+  
+  return URI{ret};
 }

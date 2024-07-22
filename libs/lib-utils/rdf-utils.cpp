@@ -1,6 +1,5 @@
 #include "rdf-utils.h"
 
-#include <fmt/format.h>
 #include "uuid.h"
 #include "known-prefixes.h"
 
@@ -37,66 +36,20 @@ void URIRep::update(const URI& uri)
 {
   this->uri = uri;
   std::tuple<std::string, URI> prefixes[] = {{rdf::__prefix, rdf::__prefix_uri}, {rdfs::__prefix, rdfs::__prefix_uri}, {xsd::__prefix, xsd::__prefix_uri}};
-    bool found = false;
-    std::string ret;
-    for (auto& [prefix, prefix_uri]: prefixes) {
-      auto idx = uri.uri.find(prefix_uri.uri);
-      if (idx == 0) {
-	ret = prefix + ":" + uri.uri.substr(prefix_uri.uri.size());
-	found = true;
-	break;
-      }
-    }
-    
-    if (found) {
-      this->uri_rep = ret;
-    } else {
-      this->uri_rep = uri.uri;
-    }
-  }
-  
-std::string URIRep::expand_curie(const std::string& curie)
-{
-  std::tuple<std::string, URI> prefixes[] = {{rdf::__prefix, rdf::__prefix_uri}, {rdfs::__prefix, rdfs::__prefix_uri}};
-  bool found = false;
-  std::string ret;
-  for (auto& [prefix, prefix_uri]: prefixes) {
-    auto idx = curie.find(":");
-    if (idx != std::string::npos && curie.substr(0, idx) == prefix) {
-      ret = prefix_uri.uri + curie.substr(idx + 1);
-      found = true;
-      break;
-    }
-  }
-  
-  if (!found) {
-    throw std::runtime_error(fmt::format("can't expand curie {}", curie));
-  }
-  
-  return ret;
-}
-
-std::string asCURIE(const URI& uri)
-{
-  std::tuple<std::string, URI> prefixes[] = {
-    {rdf::__prefix, rdf::__prefix_uri}, {rdfs::__prefix, rdfs::__prefix_uri},
-    {xsd::__prefix, xsd::__prefix_uri}, {sh::__prefix, sh::__prefix_uri}
-  };
   bool found = false;
   std::string ret;
   for (auto& [prefix, prefix_uri]: prefixes) {
     auto idx = uri.uri.find(prefix_uri.uri);
     if (idx == 0) {
-      ret = prefix + ":" + uri.uri.substr(idx + prefix_uri.uri.size());
+      ret = prefix + ":" + uri.uri.substr(prefix_uri.uri.size());
       found = true;
       break;
     }
   }
-  
-  if (!found) {
-    ret = uri.uri;
+    
+  if (found) {
+    this->uri_rep = ret;
+  } else {
+    this->uri_rep = uri.uri;
   }
-  
-  return ret;
 }
-

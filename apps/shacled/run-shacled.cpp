@@ -135,7 +135,8 @@ struct SHACLEditor: public LoopStep
     //ImGui::SetNextWindowFocus();
     ImGui::Begin("Aux");
     ImGui::BringWindowToDisplayFront(ImGui::GetCurrentWindow());
-    ImGui::ShowMetricsWindow();
+    ImGui::Text("%s", vis_manager.shacl_dump.c_str());
+    //ImGui::ShowMetricsWindow();
     ImGui::End();
 
   }
