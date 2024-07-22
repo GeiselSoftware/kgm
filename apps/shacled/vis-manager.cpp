@@ -57,6 +57,40 @@ void VisManager::build(RDFManager* rdf_man)
   }
 }
 
+void VisManager::dump_shacl()
+{
+  cout << "prefix " << rdf::__prefix << " " << rdf::__prefix_uri << " ." << endl;
+  cout << "prefix " << rdfs::__prefix << " " << rdfs::__prefix_uri << " ." << endl;
+  cout << "prefix " << xsd::__prefix << " " << xsd::__prefix_uri << " ." << endl;
+  cout << "prefix " << sh::__prefix << " " << sh::__prefix_uri << " ." << endl;
+  cout << endl;
+  
+  for (auto [_, n]: this->nodes) {
+    if (auto node = dynamic_pointer_cast<VisNode_UserClass>(n); node) {
+      cout << asCURIE(node->node_uri) << " "
+	   << asCURIE(rdf::type) << " " << asCURIE(rdfs::Class) << "; ";
+      cout << asCURIE(rdf::type) << " " << asCURIE(sh::NodeShape) << ";" << endl;
+      for (auto& m: node->members) {
+	cout << "  " << asCURIE(sh::property) << " ["
+	     << asCURIE(sh::path) << " " << asCURIE(m.member_name_rep.uri) << "; ";
+	cout << asCURIE(sh::minCount) << " " << "1" << "; "
+	     << asCURIE(sh::maxCount) << " " << "1" << "; ";
+	if (m.is_member_type_dataclass) {
+	  cout << asCURIE(sh::dataclass) << " " << asCURIE(m.member_type_rep.uri);
+	} else {
+	  cout << asCURIE(sh::class_) << " " << asCURIE(m.member_type_rep.uri);
+	}
+	cout << "];" << endl;
+      }
+      cout << "." << endl << endl;
+    }
+  }
+
+  for (auto link: this->links) {
+    //cout << "link: " << link->ID.Get() << endl;
+  }
+}
+
 void VisManager::make_frame()
 {
   // show all nodes

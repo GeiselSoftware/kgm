@@ -97,7 +97,10 @@ URI create_classURI(const URI& prefix);
 class URIRep
 {
 public:
+  URI uri;
   std::string uri_rep;
   void update(const URI& uri);
   static std::string expand_curie(const std::string& curie);
 };
+
+std::string asCURIE(const URI&);

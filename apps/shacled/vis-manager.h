@@ -18,7 +18,8 @@ public:
   
 public:  
   void build(RDFManager*);
-
+  void dump_shacl();
+  
   void make_frame();
 };
 

@@ -69,6 +69,12 @@ struct SHACLEditor: public LoopStep
       ImGui::EndDisabled();
     }
   }
+
+  if (1) { // dump shacl
+    if (ImGui::Button("dump shacl")) {
+      vis_manager.dump_shacl();
+    }
+  }
   
   ImGui::EndChild();
 }
