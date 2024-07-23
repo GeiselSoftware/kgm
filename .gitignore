@@ -15,3 +15,4 @@ build/
 build.wasm/
 
 imgui.ini
+Simple.json
