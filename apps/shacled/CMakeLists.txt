@@ -6,6 +6,6 @@ target_link_libraries(run-shacled lib-apploops lib-utils imgui-node-editor imgui
 if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
   target_link_options(run-shacled PUBLIC --shell-file ${CMAKE_CURRENT_SOURCE_DIR}/shell.html --embed-file ${CMAKE_SOURCE_DIR}/resource@.)
 else()
-  file(COPY ${CMAKE_SOURCE_DIR}/fonts DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-  file(COPY ${CMAKE_SOURCE_DIR}/img DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+  file(COPY ${CMAKE_SOURCE_DIR}/resource/fonts DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+  file(COPY ${CMAKE_SOURCE_DIR}/resource/img DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 endif()

@@ -20,8 +20,8 @@ VisNode_UserClass::Member::Member(const URI& member_name_uri, const URI& member_
 }
 
 VisNode_UserClass::VisNode_UserClass(const URI& class_uri)
-  : VisNode{get_next_id(), class_uri},
-    toggle_lock("img/lock.png", "img/unlock.png") {
+  : VisNode{get_next_id(), class_uri}, toggle_lock("img/lock.png", "img/unlock.png")
+{
   this->node_InputPinId = last_node_id++;
   this->node_OutputPinId = last_node_id++;
   this->node_bottom_pin = last_node_id++;
@@ -127,7 +127,8 @@ void VisNode_UserClass::make_frame() {
     ed::EndPin();
 
     ImGui::SetCursorPos(ImVec2(curr_cursor.x + node_w, curr_cursor.y));
-    ImGui::Checkbox("##is_editable", &this->is_editable);
+    //ImGui::Checkbox("##is_editable", &this->is_editable);
+    toggle_lock("##is_editable", &this->is_editable);
 
     ImGui::SetCursorPos(ImVec2(end_cur_pos.x + node_w / 2, end_cur_pos.y));
     ed::BeginPin(this->node_bottom_pin, ed::PinKind::Input);
