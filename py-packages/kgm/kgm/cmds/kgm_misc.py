@@ -1,6 +1,6 @@
-def do_misc_gv(args):
-    print("args:", args)
-    ttl_file = args.ttl_file
+from .. import graphviz_utils
+
+def do_misc_gv(ttl_file):
     output_png_file = ttl_file + ".png"
     
     g = rdflib.Graph()
@@ -27,10 +27,7 @@ def do_misc_gv(args):
 
     print("all done.")        
 
-def do_misc_select(args):
-    print("args:", args)
-    ttl_file = args.ttl_file
-    
+def do_misc_select(ttl_file):
     g = rdflib.Graph()
     g.parse(ttl_file)
     print("loaded", len(g), "triples")

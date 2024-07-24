@@ -1,12 +1,16 @@
+import ipdb
+import uuid
+import rdflib
+from ..sparql_utils import rq_select, rq_insert_graph, rq_update, to_rdfw, kgm_prefix
+
 def create_uri(rdfs_class):
     uri_s = rdfs_class + "##" + str(uuid.uuid4())
     return rdflib.URIRef(uri_s)
 
-def do_upload_graph(args):
-    turtle_file_path = args.ttl_file
-    kgm_path = args.kgm_path
-    add_f = args.add
-    #ipdb.set_trace()
+def do_add_graph(ttl_file, kgm_path, add_f):
+    turtle_file_path = ttl_file
+    kgm_path = kgm_path
+    ipdb.set_trace()
 
     g = rdflib.Graph()
     g.parse(turtle_file_path, format="turtle")
@@ -33,7 +37,7 @@ def do_upload_graph(args):
 
     print(kgm_path, graph_uri)
     
-def do_remove_kgm_graph(args):
+def do_remove_graph(args):
     kgm_graph_uri = args.kgm_graph_uri
     rq_queries = [f"drop graph <{kgm_graph_uri}>",
                   f'delete {{ ?s ?p ?o }} where {{ bind(<{kgm_graph_uri}> as ?s) {{ ?s ?p ?o }} }}']

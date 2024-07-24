@@ -16,7 +16,7 @@ authors = [
   {name = "Andrei Smirnov", email = "asmirnov@geisel-software.com"}
 ]
 
-dependencies = ["rdflib", "sparqlwrapper", "pandas", "graphviz"]
+dependencies = ["click", "rdflib", "sparqlwrapper", "pandas", "graphviz"]
 
 [project.urls]
 "Source" = "https://github.com/GeiselSoftware/KGM/py-packages/kgm"
@@ -31,4 +31,4 @@ kgm = "kgm.__main__:main"
 [tool.setuptools]
 # If there are data files included in your packages that need to be
 # installed, specify them here.
-package-data = {"kgm" = ["examples/*/*.ttl"]}
+#package-data = {"kgm" = ["examples/*/*.ttl"]}
