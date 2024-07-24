@@ -136,10 +136,10 @@ int init_imgui(LoopRunner* lr)
   // Setup style
   ImGui::StyleColorsDark();
 
-  io.Fonts->AddFontFromFileTTF("fonts/xkcd-script.ttf", 23.0f);
-  io.Fonts->AddFontFromFileTTF("fonts/xkcd-script.ttf", 18.0f);
-  io.Fonts->AddFontFromFileTTF("fonts/xkcd-script.ttf", 26.0f);
-  io.Fonts->AddFontFromFileTTF("fonts/xkcd-script.ttf", 32.0f);
+  io.Fonts->AddFontFromFileTTF("resource/fonts/xkcd-script.ttf", 23.0f);
+  io.Fonts->AddFontFromFileTTF("resource/fonts/xkcd-script.ttf", 18.0f);
+  io.Fonts->AddFontFromFileTTF("resource/fonts/xkcd-script.ttf", 26.0f);
+  io.Fonts->AddFontFromFileTTF("resource/fonts/xkcd-script.ttf", 32.0f);
   io.Fonts->AddFontDefault();
 
   lr->loop_step->before_loop_starts();
