@@ -13,6 +13,7 @@ dist/
 
 build/
 build.wasm/
+docs/site
 
 imgui.ini
 Simple.json
