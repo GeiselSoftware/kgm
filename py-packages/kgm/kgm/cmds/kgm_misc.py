@@ -1,9 +1,10 @@
 import ipdb
+import os.path
 import rdflib
 from .. import graphviz_utils
 
 def do_misc_gv(ttl_file, construct_query):
-    output_png_file = ttl_file + ".png"
+    output_png_file = os.path.basename(ttl_file) + ".png"
     
     g = rdflib.Graph()
     g.parse(ttl_file)
