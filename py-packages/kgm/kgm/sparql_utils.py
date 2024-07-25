@@ -1,9 +1,19 @@
+import io
 from rdflib import Graph
-from SPARQLWrapper import SPARQLWrapper, JSON
+from SPARQLWrapper import SPARQLWrapper, JSON, TURTLE
 from SPARQLWrapper import POST, BASIC
 
 kgm_prefix = "https://www.geisel-software.com/RDFPrefix/kgm#"
 fuseki_url = "http://localhost:3030/kgm-default-dataset"
+
+def make_rq(rq):
+    res = """
+    prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+    prefix kgm: <kgm:>
+    """
+    res += rq
+    return res
 
 class uri:
     def __init__(self, s):
@@ -75,6 +85,20 @@ def rq_select(rq):
 
     return results
 
+def rq_construct(rq):
+    fuseki_query_url = f"{fuseki_url}/query"
+    sparql = SPARQLWrapper(fuseki_query_url)
+
+    # Set the query and the return format
+    sparql.setQuery(rq)
+    sparql.setReturnFormat(TURTLE)
+
+    results = sparql.query().convert()
+    g = Graph()
+    g.parse(io.BytesIO(results))
+            
+    return g
+
 def rq_update(rq):
     fuseki_query_url = f"{fuseki_url}/update"
     sparql = SPARQLWrapper(fuseki_query_url)
@@ -89,10 +113,3 @@ def rq_update(rq):
 
     return results
     
-def make_rq_select(rq):
-    res = """
-    prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-    prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-    """
-    res += rq
-    return res
