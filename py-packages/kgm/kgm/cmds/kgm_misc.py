@@ -1,6 +1,8 @@
+import ipdb
+import rdflib
 from .. import graphviz_utils
 
-def do_misc_gv(ttl_file):
+def do_misc_gv(ttl_file, construct_query):
     output_png_file = ttl_file + ".png"
     
     g = rdflib.Graph()
@@ -8,8 +10,8 @@ def do_misc_gv(ttl_file):
     print("loaded", len(g), "triples")
 
     #ipdb.set_trace()
-    if 'construct_query' in args and not args.construct_query is None:
-        with open(args.construct_query) as fd:
+    if not construct_query is None:
+        with open(construct_query) as fd:
             query_text = fd.read()
             print("got query:")
             print(query_text)
@@ -27,12 +29,12 @@ def do_misc_gv(ttl_file):
 
     print("all done.")        
 
-def do_misc_select(ttl_file):
+def do_misc_select(ttl_file, select_query):
     g = rdflib.Graph()
     g.parse(ttl_file)
     print("loaded", len(g), "triples")
 
-    with open(args.select_query) as fd:
+    with open(select_query) as fd:
         query_text = fd.read()
         print("got query:")
         print(query_text)

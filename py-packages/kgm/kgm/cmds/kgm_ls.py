@@ -1,12 +1,12 @@
 import pandas as pd
-from ..sparql_utils import rq_select, kgm_prefix
+from ..sparql_utils import make_rq_select, rq_select, to_rdfw
 
-def do_ls_kgm_graphs():
-    query = """
+def do_ls_kgm_graphs(kgm_path):
+    query = make_rq_select("""
     PREFIX kgm: <kgm:>
     PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-    select ?kgm_path ?g { kgm:GraphSystem kgm:graph ?g . ?g rdf:type kgm:Graph; kgm:path ?kgm_path } 
-    """.replace("%kgm_prefix%", kgm_prefix)
+    select ?kgm_path ?g { ?g rdf:type ?gt filter(?gt = kgm:DataGraph || ?gt = kgm:SHACLGrpah). ?g kgm:path ?kgm_path } 
+    """)
     #print(query)
     
     res = rq_select(query)

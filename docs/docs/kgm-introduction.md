@@ -20,7 +20,7 @@ ab:bob rdf:type ab:Human .
 ab:bob ab:name "Bob" .
 ...
 ```
-It is the data about ubiquitous [Alice-Bob pair](https://en.wikipedia.org/wiki/Alice_and_Bob). Note that it is only a fragment of Alice-Bob RDF/turtle file [ab.data.ttl](/kgm/sparql-example/ab.data.ttl). In plain english it is possible to interpret as:
+It is the data about ubiquitous [Alice-Bob pair](https://en.wikipedia.org/wiki/Alice_and_Bob). Note that it is only a fragment of Alice-Bob RDF/turtle file [ab.data.ttl](/KGM-docs/examples/alice-bob/ab.data.ttl). In plain english it is possible to interpret as:
 
  - there is a human named Alice identified using URI `<ab:alice>`
  - there is a human named Bob identified using URI `<ab:bob>`
@@ -96,8 +96,8 @@ RDF makes two changes to key-value pairs idea:
 
 Set of RDF triples can be thought of as [Knowledge Graph](https://en.wikipedia.org/wiki/Knowledge_graph) like this one below:
 
-[![image](sparql-example/ab.data.ttl.png)][file sparql-example/ab.data.ttl.png]
-[file sparql-example/ab.data.ttl.png]: sparql-example/ab.data.ttl.png
+[![image](examples/alice-bob/ab.data.ttl.png)][file examples/alice-bob/ab.data.ttl.png]
+[file examples/alice-bob/ab.data.ttl.png]: examples/alice-bob/ab.data.ttl.png
 
 As before precise content of the graph is avaible in [ab.data.ttl](/kgm/sparql-example/ab.data.ttl) file. In plain english the KG tells us about Alice and Bob:
 
@@ -133,13 +133,13 @@ If you want to experiment with this simple query you can install python package 
 === "short"
 
     ```python
-    {% include 'sparql-example/rdflib-sparql-short.py' %}
+    {% include 'examples/rdflib/rdflib-sparql-short.py' %}
     ```
 
 === "long"
 
     ```python
-    {% include 'sparql-example/rdflib-sparql.py' %}
+    {% include 'examples/rdflib/rdflib-sparql.py' %}
     ```
 
 

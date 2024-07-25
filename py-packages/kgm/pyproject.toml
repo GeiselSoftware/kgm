@@ -31,4 +31,4 @@ kgm = "kgm.__main__:main"
 [tool.setuptools]
 # If there are data files included in your packages that need to be
 # installed, specify them here.
-#package-data = {"kgm" = ["examples/*/*.ttl"]}
+package-data = {"kgm" = ["kgm.shacl.ttl"]}

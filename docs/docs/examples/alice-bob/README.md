@@ -1,6 +1,17 @@
+To generate .png files used in KGM docs use commands below:
+
+```
+kgm misc graphviz --ttl-file ../alice-bob/ab.data.ttl
+kgm misc graphviz --ttl-file ../alice-bob/ab.shacl.ttl --construct-query construct-shacl-viz-graph.rq
+kgm misc sparql-select --ttl-file ./ab.shacl.ttl --select-query show-shacl.rq
+```
+
+SHACL validation run:
 ```
 sh ~/local/shacl-1.4.3/bin/shaclvalidate.sh -datafile ./ab.data.ttl -shapesfile ./ab.shacl.ttl
 ```
+
+Misc queries:
 
 ```
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -18,9 +29,3 @@ select ?s ?s_name ?pet_name where {
 }
 ```
 
-```
-python -m rdflib.tools.rdf2dot ./ab.ttl | xdot -
-python -m rdflib.tools.rdf2dot ./ab.ttl | dot -Tpdf -oab.pdf
-python show-shacl.py  | dot -Tpdf -o ab.shacl.pdf
-python show-shacl.py ab:alice | dot -Tpdf -o ab.pdf
-```
