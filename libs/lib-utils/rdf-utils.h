@@ -93,12 +93,7 @@ struct RDFSPO { RDFSubject s; RDFPredicate p; RDFObject o; };
 
 URI create_URI(const URI& class_uri);
 URI create_classURI(const URI& prefix);
-
-class URIRep
-{
-public:
-  URI uri;
-  std::string uri_rep;
-  void update(const URI& uri);
-};
-
+std::string make_turtle_prefixes(bool is_sparql_style);
+std::string make_rq(const char* rq);
+URI expand_curie(const std::string& curie);
+std::string asCURIE(const URI&);

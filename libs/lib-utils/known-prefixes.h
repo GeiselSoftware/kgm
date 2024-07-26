@@ -57,3 +57,22 @@ struct sh {
   static inline URI minCount{__prefix_uri.uri + "minCount"};
   static inline URI maxCount{__prefix_uri.uri + "maxCount"};
 };
+
+struct kgm {
+  static inline std::string __prefix{"kgm"};
+  static inline URI __prefix_uri{"http://www.geisel-software.com/RDF/KGM#"};
+  static inline URI path{__prefix_uri.uri + "path"};
+};
+
+// example prefixes
+
+struct ab {
+  static inline std::string __prefix{"ab"};
+  static inline URI __prefix_uri{"http://www.geisel-software.com/RDF/alice-bob#"};
+  
+};
+
+struct nw {
+  static inline std::string __prefix{"nw"};
+  static inline URI __prefix_uri{"http://www.geisel-software.com/RDF/NorthWind#"};
+};

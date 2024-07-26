@@ -1,13 +1,49 @@
 #include "rdf-utils.h"
-
 #include "uuid.h"
 #include "known-prefixes.h"
 
+#include <sstream>
+#include <fmt/format.h>
+
 using namespace std;
+
 
 URI create_classURI(const URI& prefix)
 {
-  return URI{prefix.uri + "#" + generate_uuid_v4()};
+  return URI{prefix.uri + "--" + generate_uuid_v4()};
+}
+
+static std::tuple<std::string, URI> prefixes[] = {
+  {rdf::__prefix, rdf::__prefix_uri},
+  {rdfs::__prefix, rdfs::__prefix_uri},
+  {xsd::__prefix, xsd::__prefix_uri},
+  {sh::__prefix, sh::__prefix_uri},
+
+  {kgm::__prefix, kgm::__prefix_uri},
+  {ab::__prefix, ab::__prefix_uri},
+  {nw::__prefix, nw::__prefix_uri}
+};
+
+
+std::string make_turtle_prefixes(bool is_sparql_style)
+{
+  ostringstream out;
+  string prefix_directive = is_sparql_style ? "prefix" : "@prefix";
+  string end_of_line = is_sparql_style ? "\n" : " .\n";
+  
+  for (auto& [prefix, prefix_uri]: prefixes) {
+    out << prefix_directive << " " << prefix << ": " << prefix_uri << end_of_line;
+  }
+  out << "\n";
+  
+  return out.str();
+}
+
+std::string make_rq(const char* rq)
+{
+  std::string res = make_turtle_prefixes(true);
+  res += rq;
+  return res;
 }
 
 std::string get_display_value(const RDFPredicate& p)
@@ -32,24 +68,42 @@ std::string get_display_value(const RDFObject& l)
   return ret;
 }
 
-void URIRep::update(const URI& uri)
+std::string asCURIE(const URI& uri)
 {
-  this->uri = uri;
-  std::tuple<std::string, URI> prefixes[] = {{rdf::__prefix, rdf::__prefix_uri}, {rdfs::__prefix, rdfs::__prefix_uri}, {xsd::__prefix, xsd::__prefix_uri}};
   bool found = false;
   std::string ret;
   for (auto& [prefix, prefix_uri]: prefixes) {
     auto idx = uri.uri.find(prefix_uri.uri);
     if (idx == 0) {
-      ret = prefix + ":" + uri.uri.substr(prefix_uri.uri.size());
+      ret = prefix + ":" + uri.uri.substr(idx + prefix_uri.uri.size());
       found = true;
       break;
     }
   }
-    
-  if (found) {
-    this->uri_rep = ret;
-  } else {
-    this->uri_rep = uri.uri;
+  
+  if (!found) {
+    ret = uri.uri;
   }
+  
+  return ret;
+}
+
+URI expand_CURIE(const std::string& curie)
+{
+  bool found = false;
+  std::string ret;
+  for (auto& [prefix, prefix_uri]: prefixes) {
+    auto idx = curie.find(":");
+    if (idx != std::string::npos && curie.substr(0, idx) == prefix) {
+      ret = prefix_uri.uri + curie.substr(idx + 1);
+      found = true;
+      break;
+    }
+  }
+  
+  if (!found) {
+    throw std::runtime_error(fmt::format("can't expand curie {}", curie));
+  }
+  
+  return URI{ret};
 }

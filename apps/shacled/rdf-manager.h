@@ -25,5 +25,4 @@ public:
   bool finish_load_graph();
 
   void process_raw_response(const std::string& raw_response);
-  void do_dump_shacl();
 };

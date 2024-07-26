@@ -24,5 +24,3 @@ public:
   std::string shacl_dump;
 };
 
-URI expand_curie(const std::string& curie);
-std::string asCURIE(const URI&);

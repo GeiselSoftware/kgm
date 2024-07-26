@@ -87,13 +87,10 @@ void RDFManager::process_raw_response(const std::string& raw_response)
 
 void RDFManager::start_load_graph(const string& fuseki_server_url, const string& kgm_path, const string& kgm_shacl_path)
 {
-  string rq;
+  string rq = make_turtle_prefixes(true);
   // sparql query to flatten sh:property
   if (kgm_shacl_path.size() > 0) {
     constexpr auto rq_fmt = R"(
-  prefix sh: <http://www.w3.org/ns/shacl#>
-  prefix kgm: <kgm:>
-
   select ?s ?p ?o where {{
    ?g kgm:path "{}". 
    ?g_shacl kgm:path "{}".
@@ -104,18 +101,15 @@ void RDFManager::start_load_graph(const string& fuseki_server_url, const string&
    }}
   }}
   )";  
-    rq = fmt::format(rq_fmt, kgm_path, kgm_shacl_path);
+    rq += fmt::format(rq_fmt, kgm_path, kgm_shacl_path);
   } else {
     constexpr auto rq_fmt = R"(
-  prefix sh: <http://www.w3.org/ns/shacl#>
-  prefix kgm: <kgm:>
-
   select ?s ?p ?o where {{
    ?g kgm:path "{}".
    graph ?g {{ ?s ?p ?o }}
   }}
   )";  
-    rq = fmt::format(rq_fmt, kgm_path);
+    rq += fmt::format(rq_fmt, kgm_path);
   }
   
   cout << "sending rq: " << rq << endl;

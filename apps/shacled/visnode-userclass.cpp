@@ -22,6 +22,7 @@ VisNode_UserClass::Member::Member(const URI& member_name_uri, const URI& member_
 VisNode_UserClass::VisNode_UserClass(const URI& class_uri)
   : VisNode{get_next_id(), class_uri}, toggle_lock("img/lock.png", "img/unlock.png")
 {
+  this->class_uri_rep = asCURIE(class_uri);
   this->node_InputPinId = last_node_id++;
   this->node_OutputPinId = last_node_id++;
   this->node_bottom_pin = last_node_id++;
@@ -40,10 +41,10 @@ void VisNode_UserClass::make_frame() {
   
   if (this->is_editable) {
     ImGui::SetNextItemWidth(100);
-    ImGui::InputText("##uri", &this->node_uri.uri);
+    ImGui::InputText("##uri", &this->class_uri_rep);
   } else {
     ImGui::SetNextItemWidth(100);
-    ImGui::InputText("##uri", &this->node_uri.uri,
+    ImGui::InputText("##uri", &this->class_uri_rep,
                      ImGuiInputTextFlags_ReadOnly);
   }
 

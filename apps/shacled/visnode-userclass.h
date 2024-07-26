@@ -34,6 +34,7 @@ public:
   ImGui::ToggleLock toggle_lock;
   
   std::string label;
+  std::string class_uri_rep;
   std::vector<Member> members;
   
   ed::PinId node_InputPinId, node_OutputPinId;
