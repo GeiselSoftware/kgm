@@ -1,3 +1,5 @@
 # KGM (Knowledge Graph Management)
 
-KGM is front-end command-line utilities and applications which should help with managing of KGM-controlled knowledge graphs stored in graph database. KGM provides frontend functionality for some graph database SPARQL servers.
+KGM is front-end command-line utilities and applications to browse and manage the knowledge graphs stored in graph databases. KGM provides frontend functionality for the following list of graph database SPARQL servers:
+
+- Jena Fuseki

@@ -1,6 +1,6 @@
-PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX ab: <ab:>
-prefix kgm: <kgm:>
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix kgm: <http://www.geisel-software.com/RDF/KGM#> .
+@prefix ab: <http://www.geisel-software.com/RDF/alice-bob#>.
 
 ab:alice rdf:type ab:Human.
 ab:bob rdf:type ab:Human.

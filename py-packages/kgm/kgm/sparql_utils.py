@@ -10,7 +10,7 @@ def make_rq(rq):
     res = """
     prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
     prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-    prefix kgm: <kgm:>
+    prefix kgm: <http://www.geisel-software.com/RDF/KGM#>
     """
     res += rq
     return res

@@ -4,7 +4,7 @@
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix dash: <http://datashapes.org/dash#> .
 
-@prefix ab: <ab:> .
+@prefix ab: <http://www.geisel-software.com/RDF/alice-bob#> .
 
 ab:Human rdf:type rdfs:Class; rdf:type sh:NodeShape;
          sh:property [sh:path ab:name;

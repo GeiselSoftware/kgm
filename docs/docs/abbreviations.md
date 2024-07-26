@@ -1,4 +1,5 @@
 *[RDF/turtle]: https://www.w3.org/TR/rdf12-turtle/ "Resource Description Framework - Turtle"
+*[turtle]: https://www.w3.org/TR/rdf12-turtle/ "Resource Description Framework - Turtle"
 *[RDF triples]: https://www.w3.org/TR/rdf12-concepts/#section-triples
 *[RDF triple]: https://www.w3.org/TR/rdf12-concepts/#section-triples
 *[RDF]: https://www.w3.org/TR/rdf12-turtle/ "Resource Description Framework - Turtle"
@@ -13,3 +14,6 @@
 
 [R<span/>DF]: https://en.wikipedia.org/wiki/Resource_Description_Framework
 [R<span/>DF Literal]: https://www.w3.org/TR/rdf12-turtle/#literals
+
+[ab.data.ttl]: examples/alice-bob/ab.data.ttl
+[ab.shacl.ttl]: examples/alice-bob/ab.shacl.ttl

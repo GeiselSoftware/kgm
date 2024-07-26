@@ -4,8 +4,8 @@
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix dash: <http://datashapes.org/dash#> .
 
-@prefix kgm: <kgm:> .
-@prefix ab: <ab:> .
+@prefix kgm: <http://www.geisel-software.com/RDF/KGM#> .
+@prefix ab: <http://www.geisel-software.com/RDF/alice-bob#>.
 
 ab:Human rdf:type rdfs:Class; rdf:type sh:NodeShape;
        sh:property [sh:path ab:name; sh:minCount 1; sh:maxCount 1; sh:dataclass xsd:string];

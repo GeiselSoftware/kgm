@@ -5,14 +5,12 @@ import urllib
 import pandas as pd
 from ..sparql_utils import make_rq, rq_select, rq_insert_graph, rq_update, to_rdfw, kgm_prefix
 
-def create_uri(rdfs_class):
-    uri_s = rdfs_class + "--" + str(uuid.uuid4())
+def create_uri(rdfs_class: rdflib.URIRef) -> rdflib.URIRef:
+    uri_s = rdfs_class.toPython() + "--" + str(uuid.uuid4())
     return rdflib.URIRef(uri_s)
 
 def do_ls_kgm_graphs(kgm_path):
     query = make_rq("""
-    PREFIX kgm: <kgm:>
-    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
     select ?kgm_path ?g { ?g rdf:type ?gt filter(?gt = kgm:DataGraph || ?gt = kgm:SHACLGraph). ?g kgm:path ?kgm_path } 
     """)
     #print(query)
@@ -23,6 +21,14 @@ def do_ls_kgm_graphs(kgm_path):
 def do_add_graph(ttl_file, kgm_path, kgm_graph_type, add_f):
     print("do_add_graph:", ttl_file, kgm_path, kgm_graph_type, add_f)
 
+    kgm_g_class = None
+    if kgm_graph_type == "data":
+        kgm_g_class = rdflib.URIRef("http://www.geisel-software.com/RDF/KGM#DataGraph")
+    elif kgm_graph_type == "shacl":
+        kgm_g_class = rdflib.URIRef("http://www.geisel-software.com/RDF/KGM#SHACLGraph")
+    else:
+        raise Exception(f"unexpected value of graph-type: {kgm_graph_type}")
+    
     g = rdflib.Graph()    
     if ttl_file.startswith("http"):
         ttl_file_url = ttl_file
@@ -49,23 +55,16 @@ def do_add_graph(ttl_file, kgm_path, kgm_graph_type, add_f):
                 return
             graph_uri = s_uri
         else:
-            graph_uri = create_uri("kgm:Graph")
+            graph_uri = create_uri(kgm_g_class)
     else:
         raise Exception(f"path leads to multiple kgm graphs: {rq_res}")
 
-    kgm_g_class = None
-    if kgm_graph_type == "data":
-        kgm_g_class = rdflib.URIRef("kgm:DataGraph")
-    elif kgm_graph_type == "shacl":
-        kgm_g_class = rdflib.URIRef("kgm:SHACLGraph")
-    else:
-        raise Exception(f"unexpected value of graph-type: {kgm_graph_type}")
     
     ipdb.set_trace()
     descr_g = rdflib.Graph()
     graph_uri = create_uri(kgm_g_class)
     descr_g.add((graph_uri, rdflib.RDF.type, kgm_g_class))
-    descr_g.add((graph_uri, rdflib.URIRef("kgm:path"), rdflib.Literal(kgm_path)))
+    descr_g.add((graph_uri, rdflib.URIRef("http://www.geisel-software.com/RDF/KGM#path"), rdflib.Literal(kgm_path)))
 
     rq_insert_graph(descr_g, None)
     rq_insert_graph(g, graph_uri)

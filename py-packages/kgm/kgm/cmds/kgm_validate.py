@@ -6,7 +6,7 @@ from ..sparql_utils import rq_construct, rq_select, make_rq
 def do_validate(shacl_kgm_path, kgm_path):
     #ipdb.set_trace()
     print("do_validate:", shacl_kgm_path, kgm_path)
-    shacl_g = rq_construct(f'prefix kgm: <kgm:> construct {{ ?s ?p ?o }} where {{ ?g kgm:path "{shacl_kgm_path}". graph ?g {{?s ?p ?o }} }}')
+    shacl_g = rq_construct(make_rq(f'construct {{ ?s ?p ?o }} where {{ ?g kgm:path "{shacl_kgm_path}". graph ?g {{?s ?p ?o }} }}'))
     print(len(shacl_g))
 
     temp_fn = tempfile.mkstemp("shacl.ttl.")[1]

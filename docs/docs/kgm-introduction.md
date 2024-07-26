@@ -2,9 +2,9 @@
 
 ## Preface
 
-Knowledge Graph and related technologies were introduced by practitioners in the area of [knowledge representation](https://en.wikipedia.org/wiki/Knowledge_representation_and_reasoning). Historically KG technologies were used by data analysts and designers with purpose to build various ontologies and taxonomies to cover very wide areas of business and science. [Wikidata](https://www.wikidata.org/wiki/Wikidata:Main_Page) could be considered as famous example of such efforts. This project provides [SPARQL interface](https://www.wikidata.org/wiki/Wikidata:Request_a_query#Help_with_a_query) to allow queries using wikipedia data.
+Knowledge Graph and related technologies were introduced by practitioners in the area of [knowledge representation](https://en.wikipedia.org/wiki/Knowledge_representation_and_reasoning). Historically KG technologies were used by data analysts and designers with purpose to build various ontologies and taxonomies to cover very wide areas of business and science. [Wikidata](https://www.wikidata.org/wiki/Wikidata:Main_Page) could be considered as famous example of such efforts - the project provides [SPARQL interface](https://www.wikidata.org/wiki/Wikidata:Request_a_query#Help_with_a_query) to allow queries using wikipedia data.
 
-This document purpose is to provide practical alternative to the mainstream KG tutorials. After minimalistic introduction we are going to concentrate on few examples of purely technical utilization of **available** KG tech tools. In most cases it will be possible to easily reproduce this document scripts and queries using only python's [rdflib](https://pypi.org/project/rdflib/) and [graphviz](https://pypi.org/project/graphviz/) packages.
+This document purpose is to provide practical alternative to the mainstream KG tutorials. After minimalistic introduction we are going to concentrate on few examples of purely technical utilization of **available** KG tech tools. In most cases it will be possible to easily reproduce this document scripts and queries using only python's [rdflib](https://pypi.org/project/rdflib/) and [graphviz](https://pypi.org/project/graphviz/) packages - i.e. no DB server install would be necessary.
 
 ## [R<span/>DF] and RDF/turtle
 
@@ -12,7 +12,7 @@ This document purpose is to provide practical alternative to the mainstream KG t
 
 ```
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-@prefix ab: <ab:> .
+@prefix ab: <http://www.geisel-software.com/RDF/alice-bob#> .
 
 ab:alice rdf:type ab:Human .
 ab:alice ab:name "Alice".
@@ -20,36 +20,36 @@ ab:bob rdf:type ab:Human .
 ab:bob ab:name "Bob" .
 ...
 ```
-It is the data about ubiquitous [Alice-Bob pair](https://en.wikipedia.org/wiki/Alice_and_Bob). Note that it is only a fragment of Alice-Bob RDF/turtle file [ab.data.ttl](/KGM-docs/examples/alice-bob/ab.data.ttl). In plain english it is possible to interpret as:
+It is the data fragment from [ab.data.ttl] describing our version of ubiquitous [Alice-Bob pair](https://en.wikipedia.org/wiki/Alice_and_Bob). In plain english it is possible to interpret as:
 
- - there is a human named Alice identified using URI `<ab:alice>`
- - there is a human named Bob identified using URI `<ab:bob>`
+ - there is a human named Alice identified as `ab:alice`
+ - there is a human named Bob identified as `ab:bob`
 
-URI is Uniform Resource Identifier. You can quickly glance to to [few examples](https://datatracker.ietf.org/doc/html/rfc3986#section-1.1.2) - as you see URI is quite practical and familiar notation often used in various web services. E.g. well-known URLs used in web browsers are special kind of URI.
+URI is Uniform Resource Identifier. You can quickly glance to [few U<span/>RI examples](https://datatracker.ietf.org/doc/html/rfc3986#section-1.1.2) - as you see URI is quite practical and familiar notation often used in various web services. E.g. well-known URLs used in web browsers are special kind of URI.
 
-In the example above `ab:alice` is equivalent to URI `<ab:alice>`. They both can be used to identify the same person: Alice. `ab:alice` is an example of CURIE (compact <span>U</span>RI). RDF/turtle allows to use compact URIs by supplying `@prefix` directive. The same example where all statements with prefixes applied:
+In the example above `ab:alice` is equivalent to URI `<http://www.geisel-software.com/RDF/alice-bob#alice>`. They both can be used to identify the same person: Alice. `ab:alice` is an example of CURIE (compact <span>U</span>RI). RDF/turtle (or just turtle) allows to use compact U<span/>RIs via use of turtle `@prefix` directive. The same example where all statements are shown with prefixes applied:
 
 ```
-<ab:alice> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <ab:Human> .
-<ab:alice> <ab:name> "Alice" .
-<ab:bob> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <ab:Human> .
-<ab:bob> <ab:name> "Bob" .
+<http://www.geisel-software.com/RDF/alice-bob#alice> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.geisel-software.com/RDF/alice-bob#Human> .
+<http://www.geisel-software.com/RDF/alice-bob#alice> <http://www.geisel-software.com/RDF/alice-bob#name> "Alice" .
+<http://www.geisel-software.com/RDF/alice-bob#bob> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.geisel-software.com/RDF/alice-bob#Human> .
+<http://www.geisel-software.com/RDF/alice-bob#bob> <http://www.geisel-software.com/RDF/alice-bob#name> "Bob" .
 ```
 
-Note what happen with compact URI `rdf:type`. It was expanded to &lt;http://www.w3.org/1999/02/22-rdf-syntax-ns#type&gt; which is URI in RDF/turtle syntax.
+As you see `ab:` was replaced *in verbatim* with corresponding prefix URI, the same opertaion was done for prefix `rdf`: all using `@prefix` directives found at the begining of turtle file.
 
-RDF/turtle prescribe to enclose URIs inside of angle brackets to designate the string between brackets as URI. The angle brackets themselves are not part of URI. E.g. first line *predicate* is URI `http://www.w3.org/1999/02/22-rdf-syntax-ns#type`.
+turtle rules prescribe to enclose URIs inside of angle brackets to designate the string between brackets as URI. The angle brackets themselves are not part of URI. E.g. first line *predicate* is URI `http://www.w3.org/1999/02/22-rdf-syntax-ns#type`.
 
 In the second line of the example you've seen that *object* could also be [R<span/>DF Literal]. In RDF/turtle the string l<span>iterals are in double-quotes to distibguish them from URIs. E.g. the third statement *object* is string *Alice*.
 
-There are other ways to represent RDF triples: e.g. [R<span/>DF/XML](https://en.wikipedia.org/wiki/RDF/XML). However [RDF/turtle](https://en.wikipedia.org/wiki/Turtle_(syntax)) syntax plays special role. It used as important part of query language SPARQL. It is also main RDF representation in various W3C and similar formal documents.
+There are other ways to represent RDF triples: e.g. [R<span/>DF/XML](https://en.wikipedia.org/wiki/RDF/XML). However [RDF/turtle](https://en.wikipedia.org/wiki/Turtle_(syntax)) syntax plays special role. It used as important part of the query language called SPARQL. It is also main RDF representation in various W3C and similar formal documents.
 
 So from this point:
 
  - any mention of [R<span/>DF] would assume RDF/turtle unless stated otherwise.
  - any literal is [R<span/>DF Literal] as defined by RDF/turtle document.
 
-One more important wide-spread assumption is introduction of small list of well-known prefixes. It leads to situation when CURIE are often called URI assuming it is always possible to apply prefix expansion. Such expansion will be based on either well-known prefixes (often omit in the documents) and introduction locally defined prefixes for particular RDF file or SPARQL query.
+One more important wide-spread assumption is introduction of small list of well-known prefixes. It leads to situation when CURIEs are often called URIs assuming it is always possible to apply prefix expansion. Such expansion will be based on either well-known prefixes (often omit in the documents) or locally defined prefixes for particular RDF file or SPARQL query.
 
 Most well-known prefixes are:
 ```
@@ -60,7 +60,8 @@ Most well-known prefixes are:
 @prefix dash: <http://datashapes.org/dash#> .
 ```
 
-In many cases less known prefixes (e.g. [foaf:](https://prefix.cc/foaf)) can be easily checked via special website [https://prefix.cc](https://prefix.cc). In most cases it gives precise prefix definition.
+The same list is also given in addendum section [Well-known prefixes](/KGM-docs/addendum/#well-known-prefixes).
+You can also lookup prefixes at [https://prefix.cc](https://prefix.cc). E.g. Friend-Of-A-Friend prefix link [foaf:](https://prefix.cc/foaf) will give you details of prefix and related defitions.
 
 ## RDF triples
 
@@ -99,7 +100,7 @@ Set of RDF triples can be thought of as [Knowledge Graph](https://en.wikipedia.o
 [![image](examples/alice-bob/ab.data.ttl.png)][file examples/alice-bob/ab.data.ttl.png]
 [file examples/alice-bob/ab.data.ttl.png]: examples/alice-bob/ab.data.ttl.png
 
-As before precise content of the graph is avaible in [ab.data.ttl](/kgm/sparql-example/ab.data.ttl) file. In plain english the KG tells us about Alice and Bob:
+This is graph view on data from [ab.data.ttl] file. In plain english the KG tells us about Alice and Bob:
 
  - they are friends.
  - Alice lives in the location `ab:worcester` which is clearly [Worcester, MA](https://en.wikipedia.org/wiki/Worcester,_Massachusetts) based on provided county name and country code.
@@ -122,13 +123,12 @@ where {
    ?owner ab:name ?owner_name .
 }
 ```
-[![image](sparql-example/ab-rq-result.png)][file sparql-example/ab-rq-result.png]
-[file sparql-example/ab-rq-result.png]: sparql-example/ab-rq-result.png
+[![image](examples/alice-bob/adhoc-ab-rq-result.png)][file examples/alice-bob/adhoc-ab-rq-result.png]
+[file examples/alice-bob/adhoc-ab-rq-result.png]: examples/alice-bob/adhoc-ab-rq-result.png
 
 The idea of SPARQL is based on **variables binding**. When the query is executed, the RDF triples are searched for triples that match the patterns in the WHERE clause. For each match, the values are bound to the variables specified in the patterns. The SELECT clause then determines which of these variables are included in the result set.
 
 If you want to experiment with this simple query you can install python package rdflib and use python script below:
-[rdflib-sparql.py](/kgm/sparql-example/rdflib-sparql.py)
 
 === "short"
 
@@ -141,7 +141,8 @@ If you want to experiment with this simple query you can install python package 
     ```python
     {% include 'examples/rdflib/rdflib-sparql.py' %}
     ```
-
+    
+The script are available via [rdflib-sparql-short.py](examples/rdflib/rdflib-sparql-short.py) and [rdflib-sparql.py](examples/rdflib/rdflib-sparql.py) links.
 
 Expected result:
 ```
@@ -149,17 +150,19 @@ Expected result:
 ['Luna', 'Bob', 'ab:Cat']
 ```
 
-[S<span/>PARQL playground](https://atomgraph.github.io/SPARQL-Playground/)
+Besides locally installed python with rdflib you can use [S<span/>PARQL playground](https://atomgraph.github.io/SPARQL-Playground/) for more experimentation with Alice-Bob data.
 
 
 ## SHACL
 
 SHACL is W3C standard. SHACL was designed as the mean to describe RDF knowledge graphs structure. It can be thought as graph database analog of 'database schema'.
 
-SHACL specify constraint to graph dabase nodes.
+SHACL specify constraint to graph dabase nodes. Graph below presents SHACL defitions from [ab.shacl.ttl] file.
 
- - [ab.shacl.ttl](/kgm/sparql-example/ab.shacl.ttl)
- - [S<span/>HACL playground](https://shacl.org/playground/)
+[![image](examples/alice-bob/ab.shacl.ttl.png)][file examples/alice-bob/ab.shacl.ttl.png]
+[file examples/alice-bob/ab.shacl.ttl.png]: examples/alice-bob/ab.shacl.ttl.png
 
-[![image](sparql-example/ab.shacl.ttl.png)][file sparql-example/ab.shacl.ttl.png]
-[file sparql-example/ab.shacl.ttl.png]: sparql-example/ab.shacl.ttl.png
+[S<span/>HACL playground](https://shacl.org/playground/)
+
+<hr>
+
