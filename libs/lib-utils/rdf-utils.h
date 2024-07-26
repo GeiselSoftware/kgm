@@ -10,6 +10,7 @@
 struct URI {
   std::string uri;
   bool operator==(const URI& u) const { return this->uri == u.uri; }
+  bool operator<(const URI& u) const { return this->uri < u.uri; }
 };
 
 struct Literal {

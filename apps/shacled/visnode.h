@@ -16,7 +16,7 @@ public:
   URI node_uri;
   ed::NodeId ID;
 
-  explicit VisNode(int new_node_id, const URI&);
+  explicit VisNode(ed::NodeId new_node_id, const URI&);
   std::shared_ptr<VisNode> get_ptr() { return shared_from_this(); }
   
   virtual ~VisNode() = 0;
@@ -40,7 +40,7 @@ struct VisLink
 
   ImColor Color;
   
-  VisLink(ed::LinkId id, ed::PinId startPinId, ed::PinId endPinId):
+  explicit VisLink(ed::LinkId id, ed::PinId startPinId, ed::PinId endPinId):
     ID(id), StartPinID(startPinId), EndPinID(endPinId), Color(255, 255, 255)
   {
   }

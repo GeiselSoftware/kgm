@@ -7,7 +7,7 @@ int VisNode::get_next_id()
   return last_node_id++;
 }
 
-VisNode::VisNode(int new_node_id, const URI& node_uri)
+VisNode::VisNode(ed::NodeId new_node_id, const URI& node_uri)
 {
   this->node_uri = node_uri;
   this->ID = new_node_id;

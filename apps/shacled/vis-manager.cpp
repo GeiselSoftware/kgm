@@ -2,6 +2,7 @@
 #include <memory>
 //#include <iostream>
 #include <sstream>
+#include <utility>
 #include <fmt/format.h>
 #include <imgui_node_editor.h>
 #include <lib-utils/known-prefixes.h>
@@ -14,6 +15,9 @@ using namespace std;
 
 void VisManager::build(RDFManager* rdf_man)
 {
+  Dict<std::pair<URI, URI>, ax::NodeEditor::PinId> member_out_pin_ids;
+  
+  // first pass - creating all nodes for user classes
   for (const RDFSubject& user_class: rdf_man->all_user_classes) {
     auto v_n = make_shared<VisNode_UserClass>(asURI(user_class));
     Dict<RDFPredicate, vector<RDFObject>>* user_class_doubles = rdf_man->triples.get(user_class);
@@ -29,6 +33,7 @@ void VisManager::build(RDFManager* rdf_man)
 	      //cout << "   >>>> display: " << get_display_value(prop_v[0]) << endl;
 	      if (asURI(prop_p) == sh::path) {
 		assert(prop_v.size() >= 1 && isURI(prop_v[0]));
+		m.member_pred_uri = asURI(prop_v[0]);
 		m.member_name_rep = asCURIE(asURI(prop_v[0]));
 	      } else if (asURI(prop_p) == sh::class_) {
 		assert(prop_v.size() >= 1 && isURI(prop_v[0]));
@@ -41,6 +46,8 @@ void VisManager::build(RDFManager* rdf_man)
 	      }
 	    }
 	    v_n->members.push_back(m);
+	    auto out_pin_key = make_pair(asURI(user_class), m.member_pred_uri);
+	    member_out_pin_ids.set(out_pin_key, m.out_pin_id);
 	  }
 	}
       }
@@ -48,6 +55,7 @@ void VisManager::build(RDFManager* rdf_man)
     this->nodes.set(asURI(user_class), v_n);
   }
 
+  // first pass for all user objects
   for (const RDFSubject& user_object: rdf_man->all_user_objects) {
     auto v_n = make_shared<VisNode_UserObject>(asURI(user_object));
     for (auto [p, O]: *rdf_man->triples.get(user_object)) {
@@ -56,6 +64,41 @@ void VisManager::build(RDFManager* rdf_man)
       }
     }
     this->nodes.set(asURI(user_object), v_n);
+  }
+
+  // second pass for all user classes
+  for (const RDFSubject& user_class: rdf_man->all_user_classes) {
+    Dict<RDFPredicate, vector<RDFObject>>* user_class_doubles = rdf_man->triples.get(user_class);
+    if (user_class_doubles) {
+      vector<RDFObject>* sh_props_oo = user_class_doubles->get(RDFPredicate(sh::property));
+      if (sh_props_oo) {
+	for (RDFObject& sh_props_o: *sh_props_oo) {
+	  Dict<RDFPredicate, vector<RDFObject>>* sh_props_o_doubles = rdf_man->triples.get(RDFSubject(asBNode(sh_props_o)));
+	  if (sh_props_o_doubles) {
+	    URI m_pred_uri, to_uc_uri;
+	    for (auto& [prop_p, prop_v]: *sh_props_o_doubles) {
+	      //cout << "prop_v: " << prop_p << " " <<  endl;
+	      //cout << "   >>>> display: " << get_display_value(prop_v[0]) << endl;
+	      if (asURI(prop_p) == sh::path) {
+		assert(prop_v.size() >= 1 && isURI(prop_v[0]));
+		m_pred_uri = asURI(prop_v[0]);
+	      } else if (asURI(prop_p) == sh::class_) {
+		assert(prop_v.size() >= 1 && isURI(prop_v[0]));
+		to_uc_uri = asURI(prop_v[0]);
+	      } else if (asURI(prop_p) == sh::dataclass) {
+		assert(prop_v.size() >= 1 && isURI(prop_v[0]));
+	      }
+	    }	  
+	  
+	    ax::NodeEditor::PinId from_uc_node_port_pin_id = *member_out_pin_ids.get(make_pair(asURI(user_class), m_pred_uri));
+	    auto to_uc = dynamic_pointer_cast<VisNode_UserClass>(this->nodes.get(to_uc_uri));	    
+	    ax::NodeEditor::PinId to_uc_node_id = to_uc->node_InputPinId;
+	    shared_ptr<VisLink> v_l = make_shared<VisLink>(VisNode::get_next_id(), from_uc_node_port_pin_id, to_uc_node_id);
+	    this->links.push_back(v_l);
+	  }
+	}
+      }
+    }
   }
 }
 
@@ -160,6 +203,6 @@ void VisManager::make_frame()
       // ed::RejectDeletedItem();
     }
   }
-  ed::EndDelete(); // Wrap up deletion action  
+  ed::EndDelete(); // Wrap up deletion action
 }
 
