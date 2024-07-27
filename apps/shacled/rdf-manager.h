@@ -25,4 +25,6 @@ public:
   bool finish_load_graph();
 
   void process_raw_response(const std::string& raw_response);
+
+  bool is_valid_curie(const std::string&);
 };

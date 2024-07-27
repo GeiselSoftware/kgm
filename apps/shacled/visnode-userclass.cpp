@@ -5,6 +5,8 @@
 
 #include "vis-manager.h"
 #include "visnode-userclass.h"
+#include "rdf-manager.h"
+
 #include <iostream>
 using namespace std;
 
@@ -19,8 +21,8 @@ VisNode_UserClass::Member::Member(const URI& member_name_uri, const URI& member_
   this->out_pin_id = VisNode::last_node_id++;
 }
 
-VisNode_UserClass::VisNode_UserClass(const URI& class_uri)
-  : VisNode{get_next_id(), class_uri}, toggle_lock("img/lock.png", "img/unlock.png")
+VisNode_UserClass::VisNode_UserClass(const URI& class_uri, RDFManager* rdf_man)
+  : VisNode{get_next_id(), class_uri, rdf_man}, toggle_lock("img/lock.png", "img/unlock.png")
 {
   this->class_uri_rep = asCURIE(class_uri);
   this->node_InputPinId = last_node_id++;
@@ -74,7 +76,19 @@ void VisNode_UserClass::make_frame() {
     ImGui::Checkbox("##checkbox_", &member.checkbox_value);
     ImGui::SameLine();
     ImGui::SetNextItemWidth(100.0f);
-    ImGui::InputText("##edit_k_", &member.member_name_rep);
+    {
+      bool need_pop_style = false;
+      if (!rdf_man->is_valid_curie(member.member_name_rep)) {
+	ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0,0,255,255));
+	ImGui::PushStyleColor(ImGuiCol_FrameBg, IM_COL32(0,255,0,255));
+	need_pop_style = true;
+      }
+      ImGui::InputText("##edit_k_", &member.member_name_rep);
+      if (need_pop_style) {
+	ImGui::PopStyleColor();
+	ImGui::PopStyleColor();
+      }
+    }
     ImGui::SameLine();
 
     ImGui::SetNextItemWidth(100.0f);
@@ -101,7 +115,19 @@ void VisNode_UserClass::make_frame() {
     }
     ed::Resume();
 #else
-    ImGui::InputText("##member_type_", &member.member_type_rep);
+    {
+      bool need_pop_style = false;
+      if (!rdf_man->is_valid_curie(member.member_type_rep)) {
+	ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0,0,255,255));
+	ImGui::PushStyleColor(ImGuiCol_FrameBg, IM_COL32(0,255,0,255));
+	need_pop_style = true;
+      }
+      ImGui::InputText("##member_type_", &member.member_type_rep);
+      if (need_pop_style) {
+	ImGui::PopStyleColor();
+	ImGui::PopStyleColor();
+      }
+    }
 #endif
     
     if (member.is_member_type_dataclass == false) {

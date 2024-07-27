@@ -134,3 +134,17 @@ bool RDFManager::finish_load_graph()
   return true;
 }
 
+bool RDFManager::is_valid_curie(const string& s)
+{
+  int first_colon_idx = s.find(":");
+  bool ret = false;
+
+  do {
+    if (first_colon_idx == string::npos) {
+      break;
+    }
+    ret = true;
+  } while (false);
+
+  return ret;
+}

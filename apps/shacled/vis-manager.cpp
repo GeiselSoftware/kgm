@@ -19,7 +19,7 @@ void VisManager::build(RDFManager* rdf_man)
   
   // first pass - creating all nodes for user classes
   for (const RDFSubject& user_class: rdf_man->all_user_classes) {
-    auto v_n = make_shared<VisNode_UserClass>(asURI(user_class));
+    auto v_n = make_shared<VisNode_UserClass>(asURI(user_class), rdf_man);
     Dict<RDFPredicate, vector<RDFObject>>* user_class_doubles = rdf_man->triples.get(user_class);
     if (user_class_doubles) {
       vector<RDFObject>* sh_props_oo = user_class_doubles->get(RDFPredicate(sh::property));
@@ -57,7 +57,7 @@ void VisManager::build(RDFManager* rdf_man)
 
   // first pass for all user objects
   for (const RDFSubject& user_object: rdf_man->all_user_objects) {
-    auto v_n = make_shared<VisNode_UserObject>(asURI(user_object));
+    auto v_n = make_shared<VisNode_UserObject>(asURI(user_object), rdf_man);
     for (auto [p, O]: *rdf_man->triples.get(user_object)) {
       for (RDFObject& o: O) {
 	v_n->members.push_back(VisNode_UserObject::Member{get_display_value(p), get_display_value(o)});      
@@ -147,6 +147,7 @@ void VisManager::make_frame()
     ed::Link(link->ID, link->StartPinID, link->EndPinID);
   }
 
+#if 1
   // Handle creation action, returns true if editor want to create new object (node or link)
   if (ed::BeginCreate()) {
     ed::PinId inputPinId, outputPinId;
@@ -204,5 +205,6 @@ void VisManager::make_frame()
     }
   }
   ed::EndDelete(); // Wrap up deletion action
+#endif
 }
 

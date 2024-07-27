@@ -29,7 +29,7 @@ public:
     Member(const URI& member_name, const URI& member_type);
   };
 
-  explicit VisNode_UserClass(const URI& class_uri);
+  explicit VisNode_UserClass(const URI& class_uri, RDFManager* rdf_man);
   
   bool is_editable = true;
   ImGui::ToggleLock toggle_lock;

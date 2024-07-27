@@ -1,8 +1,8 @@
 #include "visnode-userobject.h"
 #include <misc/cpp/imgui_stdlib.h>
 
-VisNode_UserObject::VisNode_UserObject(const URI& uri) :
-  VisNode{get_next_id(), uri}
+VisNode_UserObject::VisNode_UserObject(const URI& uri, RDFManager* rdf_man) :
+  VisNode{get_next_id(), uri, rdf_man}
 {
 }
 
