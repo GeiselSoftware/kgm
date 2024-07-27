@@ -60,6 +60,41 @@ where {
 }
 ```
 
-### northwind
+### NorthWind
 
+[NorthWind](https://en.wikiversity.org/wiki/Database_Examples/Northwind) is sample SQL database we will convert to RDF and then load into KGM-controlled Fuseki server.
 
+Commands below assume that your current working directory is `docs/docs/examples/northwind`
+
+```
+sqlite3 northwind.sqlitedb < ./northwind-sqlite.sql
+python build-rdf.py > northwind.data.ttl
+```
+
+```
+kgm graph add /NorthWind ./northwind.data.ttl 
+kgm graph add --kgm-graph-type=shacl /NorthWind.shacl ./northwind.shacl.ttl
+
+kgm graph replace /NorthWind ./northwind.data.ttl
+kgm graph replace /NorthWind.shacl ./northwind.shacl.ttl
+
+kgm validate /NorthWind.shacl /NorthWind
+```
+
+Query examples:
+```
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix kgm: <http://www.geisel-software.com/RDF/KGM#>
+prefix nw: <http://www.geisel-software.com/RDF/NorthWind#>
+
+select ?order (count(?od) as ?c)
+where {
+  ?g kgm:path "/NorthWind" .
+  graph ?g {
+    ?order rdf:type nw:Order;
+    	   nw:order_detail ?od
+  }
+}
+group by ?order
+order by desc(?c)
+```

@@ -1,4 +1,4 @@
-import ipdb
+#import ipdb
 import uuid
 import rdflib
 import urllib
@@ -59,8 +59,7 @@ def do_add_graph(ttl_file, kgm_path, kgm_graph_type, add_f):
     else:
         raise Exception(f"path leads to multiple kgm graphs: {rq_res}")
 
-    
-    ipdb.set_trace()
+    #ipdb.set_trace()
     descr_g = rdflib.Graph()
     graph_uri = create_uri(kgm_g_class)
     descr_g.add((graph_uri, rdflib.RDF.type, kgm_g_class))
@@ -85,7 +84,7 @@ def do_remove_graph(kgm_path):
         rq_update(rq)
 
 def do_graph_replace(kgm_path, ttl_file):
-    ipdb.set_trace()
+    #ipdb.set_trace()
     rq = make_rq(f"""
     select ?s where {{ 
       #?s rdf:type/rdfs:subClassOf kgm:Graph; 

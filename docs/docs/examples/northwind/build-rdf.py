@@ -1,3 +1,4 @@
+#import ipdb
 import sys
 import pandas as pd
 import sqlite3
@@ -5,11 +6,10 @@ import sqlite3
 def make_URI(prefix, keys):
     ret = []
     for k in keys:
-        ret.append(prefix + "\#" + str(k))
+        ret.append(prefix + "--" + str(k))
     return ret
 
-
-def dump_node_members(df, prefix, rdfs_classname, node_uri_col, obj_cols, exclude_cols = None):    
+def dump_node_members(df, prefix, rdfs_classname, node_uri_col, obj_cols, exclude_cols):
     if exclude_cols:
         df = df.drop(exclude_cols, axis = 1)    
     literal_cols = list(set(df.columns) - set([node_uri_col]) - set(obj_cols))
@@ -19,7 +19,7 @@ def dump_node_members(df, prefix, rdfs_classname, node_uri_col, obj_cols, exclud
 
     output_cols = []
     for obj_col in obj_cols:        
-        classname = prefix + ":" + obj_col.replace("ID", "s")
+        classname = prefix + ":" + obj_col.replace("ID", "")
         pred = prefix + ":" + obj_col.replace("ID", "").lower()
         df[pred] = make_URI(classname, df[obj_col])
         output_cols.append(pred)
@@ -29,6 +29,9 @@ def dump_node_members(df, prefix, rdfs_classname, node_uri_col, obj_cols, exclud
         df[pred] = df[col].apply(lambda x: f'"{x}"^^xsd:string')
         output_cols.append(pred)
 
+    #if "nw:customer" in output_cols:
+    #    ipdb.set_trace()
+        
     rdf = []
     rdf.append(f"{rdfs_classname} rdf:type rdfs:Class .")
     for ii, r in df.iterrows():
@@ -40,61 +43,54 @@ def dump_node_members(df, prefix, rdfs_classname, node_uri_col, obj_cols, exclud
     
 def dump_triples(df, prefix, pred):
     #print(df.head())
-    subj_col = df.columns[0]; subj_classname = prefix + ":" + subj_col.replace("ID", "s")
-    obj_col = df.columns[1]; obj_classname = prefix + ":" + obj_col.replace("ID", "s")
+    #if pred == "nw:customer":
+    #    ipdb.set_trace()
+        
+    subj_col = df.columns[0]; subj_classname = prefix + ":" + subj_col.replace("IDs", "").replace("ID", "")
+    obj_col = df.columns[1]; obj_classname = prefix + ":" + obj_col.replace("IDs", "").replace("ID", "")
     triples = []
     for ii, r in df.iterrows():
-        triples.append(f"{subj_classname}\#{r[subj_col]} {pred} {obj_classname}\#{r[obj_col]} .")
+        triples.append(f"{subj_classname}--{r[subj_col]} {pred} {obj_classname}--{r[obj_col]} .")
     return triples        
     
 if __name__ == "__main__":
-    conn = sqlite3.connect('./NW.sqlitedb')
+    conn = sqlite3.connect('./northwind.sqlitedb')
 
     # output prefixes
     print("prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>")
     print("prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>")
     print("prefix xsd: <http://www.w3.org/2001/XMLSchema#>")
-    print("prefix NW: <NW:>")
+    print("prefix nw: <http://www.geisel-software.com/RDF/NorthWind#>")
     
-    # nodes
-    n_triples = []
+    # nodes and links
+    triples = []
+    
     df = pd.read_sql("select * from Orders", conn)
-    n_triples.extend(dump_node_members(df, "NW", "NW:Orders", "OrderID", ["CustomerID", "EmployeeID", "ShipperID"]))
+    triples.extend(dump_node_members(df, "nw", "nw:Order", "OrderID", ["CustomerID", "EmployeeID", "ShipperID"], None))
+
     df = pd.read_sql("select * from OrderDetails", conn)
-    n_triples.extend(dump_node_members(df, "NW", "NW:OrderDetails", "OrderDetailID", ["ProductID"], ["OrderID"]))
-    df = pd.read_sql("select * from Products", conn)
-    n_triples.extend(dump_node_members(df, "NW", "NW:Products", "ProductID", ["SupplierID", "CategoryID"]))
-    df = pd.read_sql("select * from Suppliers", conn)
-    n_triples.extend(dump_node_members(df, "NW", "NW:Suppliers", "SupplierID", []))
-    df = pd.read_sql("select * from Categories", conn)
-    n_triples.extend(dump_node_members(df, "NW", "NW:Categories", "CategoryID", []))
-    df = pd.read_sql("select * from Customers", conn)
-    n_triples.extend(dump_node_members(df, "NW", "NW:Customers", "CustomerID", []))
-    df = pd.read_sql("select * from Employees", conn)
-    n_triples.extend(dump_node_members(df, "NW", "NW:Employees", "EmployeeID", []))
-    df = pd.read_sql("select * from Shippers", conn)
-    n_triples.extend(dump_node_members(df, "NW", "NW:Shippers", "ShipperID", []))
-
-    for t in n_triples:
-        print(t)
-
-    # links
-    l_triples = []
+    triples.extend(dump_node_members(df, "nw", "nw:OrderDetail", "OrderDetailID", ["ProductID"], ["OrderID"]))
     df = pd.read_sql("select o.OrderID, od.OrderDetailID from Orders o join OrderDetails od on o.orderID = od.orderID", conn)
-    l_triples.extend(dump_triples(df, prefix = "NW", pred = "NW:order_detail"))
-    df = pd.read_sql("select od.OrderDetailID, p.ProductID from OrderDetails od join Products p on od.ProductID = p.ProductID", conn)
-    l_triples.extend(dump_triples(df, prefix = "NW", pred = "NW:product"))
-    df = pd.read_sql("select s.SupplierID, p.ProductID from Suppliers s join Products p on s.SupplierID = p.SupplierID", conn)
-    l_triples.extend(dump_triples(df, prefix = "NW", pred = "NW:supplierOf"))
-    df = pd.read_sql("select p.ProductID, c.CategoryID from Products p join Categories c on p.CategoryID = c.CategoryID", conn)
-    l_triples.extend(dump_triples(df, prefix = "NW", pred = "NW:belongsToCategory"))
-    df = pd.read_sql("select o.OrderID, c.CustomerID from Orders o join Customers c on o.CustomerID = c.CustomerID", conn)
-    l_triples.extend(dump_triples(df, prefix = "NW", pred = "NW:customer"))
-    df = pd.read_sql("select o.OrderID, e.EmployeeID from Orders o join Employees e on o.EmployeeID = e.EmployeeID", conn)
-    l_triples.extend(dump_triples(df, prefix = "NW", pred = "NW:employee"))
-    df = pd.read_sql("select o.OrderID, s.ShipperID from Shippers s join Orders o on s.ShipperID = o.ShipperID", conn)
-    l_triples.extend(dump_triples(df, prefix = "NW", pred = "NW:shipper"))
+    triples.extend(dump_triples(df, prefix = "nw", pred = "nw:order_detail"))
 
-    for t in l_triples:
+    df = pd.read_sql("select * from Products", conn)
+    triples.extend(dump_node_members(df, "nw", "nw:Product", "ProductID", ["SupplierID", "CategoryID"], None))
+
+    df = pd.read_sql("select * from Suppliers", conn)
+    triples.extend(dump_node_members(df, "nw", "nw:Supplier", "SupplierID", [], None))
+
+    df = pd.read_sql("select * from Categories", conn)
+    triples.extend(dump_node_members(df, "nw", "nw:Category", "CategoryID", [], None))
+
+    df = pd.read_sql("select * from Customers", conn)
+    triples.extend(dump_node_members(df, "nw", "nw:Customer", "CustomerID", [], None))
+
+    df = pd.read_sql("select * from Employees", conn)
+    triples.extend(dump_node_members(df, "nw", "nw:Employee", "EmployeeID", [], None))
+
+    df = pd.read_sql("select * from Shippers", conn)
+    triples.extend(dump_node_members(df, "nw", "nw:Shipper", "ShipperID", [], None))
+
+    for t in triples:
         print(t)
     

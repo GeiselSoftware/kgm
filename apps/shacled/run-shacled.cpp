@@ -54,7 +54,8 @@ struct SHACLEditor: public LoopStep
 
     if (ImGui::Button("test load")) {
       if (!rdf_manager.in_progress_load_graph()) {
-        auto kgm_path = "/alice-bob.shacl";
+        //auto kgm_path = "/alice-bob.shacl";
+	auto kgm_path = "/NorthWind.shacl";
         string kgm_shacl_path = "";
         rdf_manager.start_load_graph(this->fuseki_server_url, kgm_path, kgm_shacl_path);
       }
