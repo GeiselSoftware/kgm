@@ -134,17 +134,36 @@ bool RDFManager::finish_load_graph()
   return true;
 }
 
-bool RDFManager::is_valid_curie(const string& s)
+curie_kind RDFManager::check_curie(const string& s)
 {
-  int first_colon_idx = s.find(":");
-  bool ret = false;
-
+  curie_kind ret = curie_kind::invalid_curie;
   do {
+    int first_colon_idx = s.find(":");
     if (first_colon_idx == string::npos) {
+      ret = curie_kind::invalid_curie;
       break;
     }
-    ret = true;
-  } while (false);
 
+    string prefix = s.substr(0, first_colon_idx);
+    string tail = s.substr(first_colon_idx + 1);
+
+    if (!(is_known_prefix(prefix) || prefix == xsd::__prefix)) {
+      ret = curie_kind::invalid_curie;
+      break;
+    }
+
+    if (prefix == xsd::__prefix) {
+      ret = curie_kind::valid_curie_dataclass;
+      break;
+    }
+
+    auto uri = expand_curie(s);
+    if (this->all_user_classes.s.find(uri) != this->all_user_classes.s.end()) {
+      ret = curie_kind::valid_curie_class;
+      break;
+    }
+    
+    ret = curie_kind::valid_curie;
+  } while(false);
   return ret;
 }

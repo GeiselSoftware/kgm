@@ -6,6 +6,8 @@
 #include <lib-utils/rdf-utils.h>
 #include <lib-utils/http-utils.h>
 
+enum curie_kind { invalid_curie, valid_curie, valid_curie_dataclass, valid_curie_class };
+
 class RDFManager {
 private:
   friend class VisManager;
@@ -26,5 +28,5 @@ public:
 
   void process_raw_response(const std::string& raw_response);
 
-  bool is_valid_curie(const std::string&);
+  curie_kind check_curie(const std::string&);
 };

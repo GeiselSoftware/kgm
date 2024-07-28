@@ -88,13 +88,18 @@ std::string asCURIE(const URI& uri)
   return ret;
 }
 
-URI expand_CURIE(const std::string& curie)
+URI expand_curie(const std::string& curie)
 {
+  auto idx = curie.find(":");
+  if (idx == std::string::npos) {
+    throw std::runtime_error(fmt::format("expand_curie failed: {}", curie));
+  }  
+  auto curie_prefix = curie.substr(0, idx);
+
   bool found = false;
   std::string ret;
   for (auto& [prefix, prefix_uri]: prefixes) {
-    auto idx = curie.find(":");
-    if (idx != std::string::npos && curie.substr(0, idx) == prefix) {
+    if (curie_prefix == prefix) {
       ret = prefix_uri.uri + curie.substr(idx + 1);
       found = true;
       break;

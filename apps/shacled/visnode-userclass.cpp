@@ -73,16 +73,28 @@ void VisNode_UserClass::make_frame() {
   for (size_t i = 0; i < this->members.size(); i++) {
     ImGui::PushID(i);
     auto &member = this->members[i];
+
     ImGui::Checkbox("##checkbox_", &member.checkbox_value);
     ImGui::SameLine();
-    ImGui::SetNextItemWidth(100.0f);
+
+    auto member_name_check = rdf_man->check_curie(member.member_name_rep);
+    auto member_type_check = rdf_man->check_curie(member.member_type_rep);
+    
     {
       bool need_pop_style = false;
-      if (!rdf_man->is_valid_curie(member.member_name_rep)) {
+      switch (member_name_check) {
+      case curie_kind::invalid_curie:
+      case curie_kind::valid_curie_dataclass:
+      case curie_kind::valid_curie_class:
 	ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0,0,255,255));
 	ImGui::PushStyleColor(ImGuiCol_FrameBg, IM_COL32(0,255,0,255));
 	need_pop_style = true;
+	break;
+      case curie_kind::valid_curie:
+	break;
       }
+      
+      ImGui::SetNextItemWidth(100.0f);
       ImGui::InputText("##edit_k_", &member.member_name_rep);
       if (need_pop_style) {
 	ImGui::PopStyleColor();
@@ -91,8 +103,9 @@ void VisNode_UserClass::make_frame() {
     }
     ImGui::SameLine();
 
-    ImGui::SetNextItemWidth(100.0f);
 #if 0
+    ImGui::SetNextItemWidth(100.0f);
+    
     // Combo box positioning is broken using imgui-node-editor
     // Use popups instead
     const char* current = member.get_member_type_at(member.combo_selected_index);
@@ -117,11 +130,21 @@ void VisNode_UserClass::make_frame() {
 #else
     {
       bool need_pop_style = false;
-      if (!rdf_man->is_valid_curie(member.member_type_rep)) {
+      switch (member_type_check) {
+      case curie_kind::invalid_curie:
+      case curie_kind::valid_curie:
 	ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0,0,255,255));
 	ImGui::PushStyleColor(ImGuiCol_FrameBg, IM_COL32(0,255,0,255));
 	need_pop_style = true;
+	break;
+      case curie_kind::valid_curie_dataclass:
+	member.is_member_type_dataclass = true;
+	break;
+      case curie_kind::valid_curie_class:
+	member.is_member_type_dataclass = false;
+	break;
       }
+      ImGui::SetNextItemWidth(100.0f);
       ImGui::InputText("##member_type_", &member.member_type_rep);
       if (need_pop_style) {
 	ImGui::PopStyleColor();

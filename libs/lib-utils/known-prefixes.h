@@ -49,7 +49,7 @@ struct xsd {
 struct sh {
   static inline std::string __prefix{"sh"};
   static inline URI __prefix_uri{"http://www.w3.org/ns/shacl#"};
-  static inline URI NodeShape{__prefix_uri.uri + "NodeSHAPE"};
+  static inline URI NodeShape{__prefix_uri.uri + "NodeShape"};
   static inline URI property{__prefix_uri.uri + "property"};
   static inline URI path{__prefix_uri.uri + "path"};
   static inline URI class_{__prefix_uri.uri + "class"};
@@ -76,3 +76,9 @@ struct nw {
   static inline std::string __prefix{"nw"};
   static inline URI __prefix_uri{"http://www.geisel-software.com/RDF/NorthWind#"};
 };
+
+inline bool is_known_prefix(const std::string& s) {
+  return s == rdf::__prefix || s == rdfs::__prefix || s == sh::__prefix
+    || s == kgm::__prefix
+    || s == ab::__prefix || s == nw::__prefix;
+}
