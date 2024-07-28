@@ -13,13 +13,100 @@
 
 using namespace std;
 
-void VisManager::build(RDFManager* rdf_man)
+std::string VisManager::asCURIE(const URI& uri)
+{
+  bool found = false;
+  std::string ret;
+  for (auto& [prefix, prefix_uri]: prefixes::known_prefixes) {
+    auto idx = uri.uri.find(prefix_uri.uri);
+    if (idx == 0) {
+      ret = prefix + ":" + uri.uri.substr(idx + prefix_uri.uri.size());
+      found = true;
+      break;
+    }
+  }
+  
+  if (!found) {
+    ret = uri.uri;
+  }
+  
+  return ret;
+}
+
+URI VisManager::expand_curie(const std::string& curie)
+{
+  URI res;
+  auto idx = curie.find(":");
+  if (idx == std::string::npos) {
+    //throw std::runtime_error(fmt::format("expand_curie failed: {}", curie));
+    return URI{kgm::__prefix_uri.uri + "#error#" + curie};
+  }  
+  auto curie_prefix = curie.substr(0, idx);
+
+  bool found = false;
+  std::string ret;
+  for (auto& [prefix, prefix_uri]: prefixes::known_prefixes) {
+    if (curie_prefix == prefix) {
+      ret = prefix_uri.uri + curie.substr(idx + 1);
+      found = true;
+      break;
+    }
+  }
+  
+  if (!found) {
+    //throw std::runtime_error(fmt::format("can't expand curie {}", curie));
+    return URI{kgm::__prefix_uri.uri + "#error#" + curie};
+  }
+  
+  return URI{ret};
+}
+
+curie_kind VisManager::check_curie(const string& s)
+{
+  curie_kind ret = curie_kind::invalid_curie;
+  do {
+    int first_colon_idx = s.find(":");
+    if (first_colon_idx == string::npos) {
+      ret = curie_kind::invalid_curie;
+      break;
+    }
+
+    string prefix = s.substr(0, first_colon_idx);
+    string tail = s.substr(first_colon_idx + 1);
+
+    if (!(prefixes::is_prefix(prefix) || prefix == xsd::__prefix)) {
+      ret = curie_kind::invalid_curie;
+      break;
+    }
+
+    if (prefix == xsd::__prefix) {
+      ret = curie_kind::valid_curie_dataclass;
+      break;
+    }
+
+    auto uri = expand_curie(s);
+    if (rdf_man->all_user_classes.s.find(uri) != rdf_man->all_user_classes.s.end()) {
+      ret = curie_kind::valid_curie_class;
+      break;
+    }
+    
+    ret = curie_kind::valid_curie;
+  } while(false);
+  return ret;
+}
+
+VisManager::VisManager(RDFManager* rdf_man)
+{
+  this->rdf_man = rdf_man;
+}
+
+void VisManager::build()
 {
   Dict<std::pair<URI, URI>, ax::NodeEditor::PinId> member_out_pin_ids;
   
   // first pass - creating all nodes for user classes
   for (const RDFSubject& user_class: rdf_man->all_user_classes) {
-    auto v_n = make_shared<VisNode_UserClass>(asURI(user_class), rdf_man);
+    auto v_n = make_shared<VisNode_UserClass>(asURI(user_class), this);
     Dict<RDFPredicate, vector<RDFObject>>* user_class_doubles = rdf_man->triples.get(user_class);
     if (user_class_doubles) {
       vector<RDFObject>* sh_props_oo = user_class_doubles->get(RDFPredicate(sh::property));
@@ -57,7 +144,7 @@ void VisManager::build(RDFManager* rdf_man)
 
   // first pass for all user objects
   for (const RDFSubject& user_object: rdf_man->all_user_objects) {
-    auto v_n = make_shared<VisNode_UserObject>(asURI(user_object), rdf_man);
+    auto v_n = make_shared<VisNode_UserObject>(asURI(user_object), this);
     for (auto [p, O]: *rdf_man->triples.get(user_object)) {
       for (RDFObject& o: O) {
 	v_n->members.push_back(VisNode_UserObject::Member{get_display_value(p), get_display_value(o)});      
@@ -105,31 +192,27 @@ void VisManager::build(RDFManager* rdf_man)
 void VisManager::dump_shacl()
 {
   ostringstream out;
-  out << make_turtle_prefixes(false);
+  out << prefixes::make_turtle_prefixes(false);
   
   for (auto [_, n]: this->nodes) {
     if (auto node = dynamic_pointer_cast<VisNode_UserClass>(n); node) {
-      out << asCURIE(node->node_uri) << " "
+      out << node->node_uri << " "
 	  << asCURIE(rdf::type) << " " << asCURIE(rdfs::Class) << "; ";
       out << asCURIE(rdf::type) << " " << asCURIE(sh::NodeShape) << ";" << endl;
       for (auto& m: node->members) {
 	out << "  " << asCURIE(sh::property) << " ["
-	    << asCURIE(sh::path) << " " << m.member_name_rep << "; ";
+	    << asCURIE(sh::path) << " " << expand_curie(m.member_name_rep) << "; ";
 	out << asCURIE(sh::minCount) << " " << "1" << "; "
 	    << asCURIE(sh::maxCount) << " " << "1" << "; ";
 	if (m.is_member_type_dataclass) {
-	  out << asCURIE(sh::dataclass) << " " << m.member_type_rep;
+	  out << asCURIE(sh::dataclass) << " " << expand_curie(m.member_type_rep);
 	} else {
-	  out << asCURIE(sh::class_) << " " << m.member_type_rep;
+	  out << asCURIE(sh::class_) << " " << expand_curie(m.member_type_rep);
 	}
 	out << "];" << endl;
       }
       out << "." << endl << endl;
     }
-  }
-
-  for (auto link: this->links) {
-    //cout << "link: " << link->ID.Get() << endl;
   }
 
   this->shacl_dump = out.str();

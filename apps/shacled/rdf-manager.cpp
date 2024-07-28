@@ -87,7 +87,7 @@ void RDFManager::process_raw_response(const std::string& raw_response)
 
 void RDFManager::start_load_graph(const string& fuseki_server_url, const string& kgm_path, const string& kgm_shacl_path)
 {
-  string rq = make_turtle_prefixes(true);
+  string rq = prefixes::make_turtle_prefixes(true);
   // sparql query to flatten sh:property
   if (kgm_shacl_path.size() > 0) {
     constexpr auto rq_fmt = R"(
@@ -134,36 +134,3 @@ bool RDFManager::finish_load_graph()
   return true;
 }
 
-curie_kind RDFManager::check_curie(const string& s)
-{
-  curie_kind ret = curie_kind::invalid_curie;
-  do {
-    int first_colon_idx = s.find(":");
-    if (first_colon_idx == string::npos) {
-      ret = curie_kind::invalid_curie;
-      break;
-    }
-
-    string prefix = s.substr(0, first_colon_idx);
-    string tail = s.substr(first_colon_idx + 1);
-
-    if (!(is_known_prefix(prefix) || prefix == xsd::__prefix)) {
-      ret = curie_kind::invalid_curie;
-      break;
-    }
-
-    if (prefix == xsd::__prefix) {
-      ret = curie_kind::valid_curie_dataclass;
-      break;
-    }
-
-    auto uri = expand_curie(s);
-    if (this->all_user_classes.s.find(uri) != this->all_user_classes.s.end()) {
-      ret = curie_kind::valid_curie_class;
-      break;
-    }
-    
-    ret = curie_kind::valid_curie;
-  } while(false);
-  return ret;
-}

@@ -16,15 +16,15 @@ VisNode_UserClass::Member::Member() {
 
 VisNode_UserClass::Member::Member(const URI& member_name_uri, const URI& member_type_uri)
 {
-  this->member_name_rep = asCURIE(member_name_uri);
-  this->member_type_rep = asCURIE(member_type_uri);
+  this->member_name_rep = VisManager::asCURIE(member_name_uri);
+  this->member_type_rep = VisManager::asCURIE(member_type_uri);
   this->out_pin_id = VisNode::last_node_id++;
 }
 
-VisNode_UserClass::VisNode_UserClass(const URI& class_uri, RDFManager* rdf_man)
-  : VisNode{get_next_id(), class_uri, rdf_man}, toggle_lock("img/lock.png", "img/unlock.png")
+VisNode_UserClass::VisNode_UserClass(const URI& class_uri, VisManager* vis_man)
+  : VisNode{get_next_id(), class_uri, vis_man}, toggle_lock("img/lock.png", "img/unlock.png")
 {
-  this->class_uri_rep = asCURIE(class_uri);
+  this->class_uri_rep = VisManager::asCURIE(class_uri);
   this->node_InputPinId = last_node_id++;
   this->node_OutputPinId = last_node_id++;
   this->node_bottom_pin = last_node_id++;
@@ -77,8 +77,8 @@ void VisNode_UserClass::make_frame() {
     ImGui::Checkbox("##checkbox_", &member.checkbox_value);
     ImGui::SameLine();
 
-    auto member_name_check = rdf_man->check_curie(member.member_name_rep);
-    auto member_type_check = rdf_man->check_curie(member.member_type_rep);
+    auto member_name_check = vis_man->check_curie(member.member_name_rep);
+    auto member_type_check = vis_man->check_curie(member.member_type_rep);
     
     {
       bool need_pop_style = false;

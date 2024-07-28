@@ -77,8 +77,12 @@ struct nw {
   static inline URI __prefix_uri{"http://www.geisel-software.com/RDF/NorthWind#"};
 };
 
-inline bool is_known_prefix(const std::string& s) {
-  return s == rdf::__prefix || s == rdfs::__prefix || s == sh::__prefix
-    || s == kgm::__prefix
-    || s == ab::__prefix || s == nw::__prefix;
-}
+// ..............................
+
+struct prefixes
+{
+  static bool is_prefix(const std::string& s);
+  static std::vector<std::tuple<std::string, URI>> known_prefixes;
+  static std::string make_turtle_prefixes(bool is_sparql_style);
+  std::string make_sparql_query(const char* rq);
+};

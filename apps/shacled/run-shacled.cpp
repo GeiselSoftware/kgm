@@ -29,7 +29,9 @@ struct SHACLEditor: public LoopStep
 {
   string fuseki_server_url;
 
-  explicit SHACLEditor(const string& fuseki_server_url) {
+  explicit SHACLEditor(const string& fuseki_server_url) :
+    vis_manager(&rdf_manager)
+  {
     this->fuseki_server_url = fuseki_server_url;
   }
 
@@ -63,7 +65,7 @@ struct SHACLEditor: public LoopStep
 
     if (rdf_manager.in_progress_load_graph()) {
       rdf_manager.finish_load_graph();
-      vis_manager.build(&rdf_manager);
+      vis_manager.build();
     }
 
     if (button_disabled) {
