@@ -20,7 +20,7 @@ VisNode_UserClass::Member::Member(const URI& member_name_uri, const URI& member_
 }
 
 VisNode_UserClass::VisNode_UserClass(const URI& class_uri)
-  : VisNode{get_next_id(), class_uri}, toggle_lock("resource/img/lock.png", "resource/img/unlock.png")
+  : VisNode{get_next_id(), class_uri}, toggle_lock("resources/img/lock.png", "resources/img/unlock.png")
 {
   this->node_InputPinId = last_node_id++;
   this->node_OutputPinId = last_node_id++;

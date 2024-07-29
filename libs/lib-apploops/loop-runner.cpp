@@ -1,3 +1,7 @@
+#ifndef __EMSCRIPTEN__
+#include <resources/fonts/Play-Regular.h>
+#endif
+
 #include "loop-runner.h"
 #include <functional>
 #include <iostream>
@@ -136,12 +140,22 @@ int init_imgui(LoopRunner* lr)
   // Setup style
   ImGui::StyleColorsDark();
 
-  io.Fonts->AddFontFromFileTTF("resource/fonts/xkcd-script.ttf", 23.0f);
-  io.Fonts->AddFontFromFileTTF("resource/fonts/xkcd-script.ttf", 18.0f);
-  io.Fonts->AddFontFromFileTTF("resource/fonts/xkcd-script.ttf", 26.0f);
-  io.Fonts->AddFontFromFileTTF("resource/fonts/xkcd-script.ttf", 32.0f);
+#ifdef __EMSCRIPTEN__
+  io.Fonts->AddFontFromFileTTF("resources/fonts/Play-Regular.ttf", 23.0f);
+  io.Fonts->AddFontFromFileTTF("resources/fonts/Play-Regular.ttf", 18.0f);
+  io.Fonts->AddFontFromFileTTF("resources/fonts/Play-Regular.ttf", 26.0f);
+  io.Fonts->AddFontFromFileTTF("resources/fonts/Play-Regular.ttf", 32.0f);
+#else
+  ImFontConfig font_cfg;
+  font_cfg.FontDataOwnedByAtlas = false; // Prevent ImGui from freeing the font memory
+  io.Fonts->AddFontFromMemoryTTF(______resource_fonts_Play_Regular_ttf, ______resource_fonts_Play_Regular_ttf_len, 23.0f, &font_cfg);
+  io.Fonts->AddFontFromMemoryTTF(______resource_fonts_Play_Regular_ttf, ______resource_fonts_Play_Regular_ttf_len, 18.0f, &font_cfg);
+  io.Fonts->AddFontFromMemoryTTF(______resource_fonts_Play_Regular_ttf, ______resource_fonts_Play_Regular_ttf_len, 26.0f, &font_cfg);
+  io.Fonts->AddFontFromMemoryTTF(______resource_fonts_Play_Regular_ttf, ______resource_fonts_Play_Regular_ttf_len, 32.0f, &font_cfg);
+#endif
+  
   io.Fonts->AddFontDefault();
-
+  
   lr->loop_step->before_loop_starts();
   
 #ifdef __EMSCRIPTEN__
