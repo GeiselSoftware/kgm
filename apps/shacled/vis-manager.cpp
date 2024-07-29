@@ -218,6 +218,30 @@ void VisManager::dump_shacl()
   this->shacl_dump = out.str();
 }
 
+void VisManager::userclasses_to_triples(vector<RDFSPO>* triples_ptr)
+{
+  auto& triples = *triples_ptr;
+  for (auto [_, n]: this->nodes) {
+    if (auto node = dynamic_pointer_cast<VisNode_UserClass>(n); node) {
+      triples.push_back(RDFSPO(node->node_uri, rdf::type, rdfs::Class));
+      triples.push_back(RDFSPO(node->node_uri, rdf::type, sh::NodeShape));
+      
+      for (auto& m: node->members) {
+	BNode bn;
+	triples.push_back(RDFSPO(node->node_uri, sh::property, bn));
+	triples.push_back(RDFSPO(bn, sh::path, expand_curie(m.member_name_rep)));
+	triples.push_back(RDFSPO(bn, sh::minCount, Literal(1)));
+	triples.push_back(RDFSPO(bn, sh::maxCount, Literal(1)));
+	if (m.is_member_type_dataclass) {
+	  triples.push_back(RDFSPO(bn, sh::dataclass, expand_curie(m.member_type_rep)));
+	} else {
+	  triples.push_back(RDFSPO(bn, sh::class_, expand_curie(m.member_type_rep)));
+	}
+      }
+    }
+  }
+}
+
 void VisManager::make_frame()
 {
   // show all nodes

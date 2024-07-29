@@ -30,24 +30,14 @@ struct SHACLEditor: public LoopStep
   string fuseki_server_url;
 
   explicit SHACLEditor(const string& fuseki_server_url) :
+    rdf_manager(fuseki_server_url),
     vis_manager(&rdf_manager)
   {
     this->fuseki_server_url = fuseki_server_url;
   }
 
-  void ShowLeftPane(float paneWidth)
-{
-  auto& io = ImGui::GetIO();
-
-  ImGui::BeginChild("Selection", ImVec2(paneWidth, 0));
-
-  paneWidth = ImGui::GetContentRegionAvail().x;
-
-  if (ImGui::Button("Zoom to Content")) {
-    ed::NavigateToContent();
-  }
-
-  if (1) { // load graph
+  void load_graph()
+  {
     bool button_disabled = false;
     if (rdf_manager.in_progress_load_graph()) {
       button_disabled = true;
@@ -56,10 +46,10 @@ struct SHACLEditor: public LoopStep
 
     if (ImGui::Button("test load")) {
       if (!rdf_manager.in_progress_load_graph()) {
-        //auto kgm_path = "/alice-bob.shacl";
-	auto kgm_path = "/NorthWind.shacl";
+        auto kgm_path = "/alice-bob.shacl";
+	//auto kgm_path = "/NorthWind.shacl";
         string kgm_shacl_path = "";
-        rdf_manager.start_load_graph(this->fuseki_server_url, kgm_path, kgm_shacl_path);
+        rdf_manager.start_load_graph(kgm_path, kgm_shacl_path);
       }
     }
 
@@ -72,6 +62,45 @@ struct SHACLEditor: public LoopStep
       ImGui::EndDisabled();
     }
   }
+  
+  void ShowLeftPane(float paneWidth)
+{
+  auto& io = ImGui::GetIO();
+
+  ImGui::BeginChild("Selection", ImVec2(paneWidth, 0));
+
+  paneWidth = ImGui::GetContentRegionAvail().x;
+
+  if (ImGui::Button("Zoom to Content")) {
+    ed::NavigateToContent();
+  }
+
+  if (1) { // save graph
+    bool button_disabled = false;
+    if (rdf_manager.in_progress_save_graph_f) {
+      button_disabled = true;
+      ImGui::BeginDisabled(true);
+    }
+
+    if (ImGui::Button("save load")) {
+      if (!rdf_manager.in_progress_save_graph_f) {
+	vector<RDFSPO> triples;
+	vis_manager.userclasses_to_triples(&triples);
+        rdf_manager.start_save_graph(vis_manager.expand_curie("ab:test3"), triples);
+      }
+    }
+
+    if (rdf_manager.in_progress_save_graph_f) {
+      rdf_manager.finish_save_graph();
+    }
+
+    if (button_disabled) {
+      ImGui::EndDisabled();
+    }
+  }
+
+  load_graph();
+
 
   if (1) { // dump shacl
     if (ImGui::Button("dump shacl")) {

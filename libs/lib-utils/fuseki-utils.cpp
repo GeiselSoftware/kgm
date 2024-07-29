@@ -56,5 +56,5 @@ RDFSPO fuseki::rdf_parse_binding(const nlohmann::json& binding)
     }
   }
 
-  return RDFSPO{s, p, o};
+  return RDFSPO(s, p, o);
 }

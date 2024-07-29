@@ -9,6 +9,9 @@
 class RDFManager {
 private:
   friend class VisManager;
+
+  std::string fuseki_server_url;  
+  
   Set<URI> known_dataclasses;
   Set<URI> all_user_classes; 
   Set<URI> all_user_objects;
@@ -16,13 +19,17 @@ private:
   Dict<RDFSubject, Dict<RDFPredicate, std::vector<RDFObject>>> triples; // s -> (p -> [o]), p != rdf:type
   
 public:
-  RDFManager();
+  RDFManager(const std::string& fuseki_server_url);
 
   HTTPRawRequestHandler http_request_handler; 
   bool in_progress_load_graph_f = false;
   bool in_progress_load_graph() { return this->in_progress_load_graph_f; }
-  void start_load_graph(const std::string& fuseki_server_url, const std::string& kgm_path, const std::string& kgm_shacl_path);
+  void start_load_graph(const std::string& kgm_path, const std::string& kgm_shacl_path);
   bool finish_load_graph();
 
+  bool in_progress_save_graph_f = false;
+  void start_save_graph(const URI& g_uri, const std::vector<RDFSPO>& triples);
+  bool finish_save_graph();
+  
   void process_raw_response(const std::string& raw_response);
 };

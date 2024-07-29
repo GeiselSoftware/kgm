@@ -1,6 +1,7 @@
 // -*- c++ -*-
 #include "rdf-manager.h"
 #include <iostream>
+#include <sstream>
 
 #include <fmt/format.h>
 #include <nlohmann/json.hpp>
@@ -11,8 +12,10 @@
 
 using namespace std;
 
-RDFManager::RDFManager()
+RDFManager::RDFManager(const std::string& fuseki_server_url)
 {
+  this->fuseki_server_url = fuseki_server_url;
+  
   this->known_dataclasses.add(xsd::string);
   this->known_dataclasses.add(xsd::boolean);
   this->known_dataclasses.add(xsd::decimal);
@@ -85,7 +88,7 @@ void RDFManager::process_raw_response(const std::string& raw_response)
   }
 }
 
-void RDFManager::start_load_graph(const string& fuseki_server_url, const string& kgm_path, const string& kgm_shacl_path)
+void RDFManager::start_load_graph(const string& kgm_path, const string& kgm_shacl_path)
 {
   string rq = prefixes::make_turtle_prefixes(true);
   // sparql query to flatten sh:property
@@ -134,3 +137,55 @@ bool RDFManager::finish_load_graph()
   return true;
 }
 
+void RDFManager::start_save_graph(const URI& g_uri, const vector<RDFSPO>& triples)
+{
+  //throw runtime_error("RDFManager::save_graph - not implemented");
+  //cout << "RDFManager::save_graph - not implemented" << endl;
+  //HTTPPostRequest req{fuseki_server_url, req_headers, toUrlEncodedForm(map<string, string>({"update", rq}))};
+  //this->http_request_handler.send_http_request(req);
+  //...
+
+#pragma message("NB: hacking with fuseki URLs, remove that ASAP")
+  auto idx = fuseki_server_url.find("/query");
+  auto fuseki_server_update_url = this->fuseki_server_url.substr(0, idx) + "/update";
+  
+  ostringstream out;
+  out << "INSERT DATA { GRAPH " << g_uri << " {" << endl;
+  for (auto& spo: triples) {
+    out << spo.s << " " << spo.p << " " << spo.o << " ." << endl;
+  }
+  out << "} }" << endl;
+  cout << out.str() << endl;
+
+  decltype(HTTPPostRequest::request_headers) req_headers;
+  req_headers.push_back({"Content-Type", "application/x-www-form-urlencoded"});
+  //req_headers.push_back({"Accept", "application/n-triples"}); // this is for construct query output selection
+  HTTPPostRequest req{fuseki_server_update_url, req_headers, toUrlEncodedForm(map<string, string>{{"update", out.str()}})};
+  this->http_request_handler.send_http_request(req);
+  this->in_progress_save_graph_f = true;
+}
+
+bool RDFManager::finish_save_graph()
+{
+  string raw_response;
+  if (this->http_request_handler.get_response_non_blocking(&raw_response) == false) {
+    return false;
+  }
+
+  /*
+    <html>
+    <head>
+    </head>
+    <body>
+    <h1>Success</h1>
+    <p>
+    Update succeeded
+    </p>
+    </body>
+    </html>
+  */
+  
+  cout << raw_response << endl; // fuseki update returns html response as above
+  this->in_progress_save_graph_f = false;
+  return true;
+}

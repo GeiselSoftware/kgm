@@ -27,6 +27,7 @@ public:
 
   void build();
   void dump_shacl();
+  void userclasses_to_triples(std::vector<RDFSPO>* triples_ptr);
   
   void make_frame();
   std::string shacl_dump;

@@ -16,10 +16,16 @@ struct URI {
 struct Literal {
   std::string literal;  
   URI datatype;
+
+  explicit Literal(const std::string& literal, const URI& datatype);
+  explicit Literal(int);
 };
 
 struct BNode {
   std::string bnode;
+
+  explicit BNode();
+  explicit BNode(const std::string&);
 };
 
 typedef std::variant<URI, BNode> RDFSubject; // URI or BNode
@@ -90,7 +96,16 @@ inline std::ostream& operator<<(std::ostream& out, const RDFObject& ubol) {
   return out;
 }
 
-struct RDFSPO { RDFSubject s; RDFPredicate p; RDFObject o; };
+struct RDFSPO {
+  RDFSubject s; RDFPredicate p; RDFObject o;
+
+  RDFSPO(const RDFSubject&, const RDFPredicate&, const RDFObject&);
+  RDFSPO(const URI&, const URI&, const URI&);
+  RDFSPO(const URI&, const URI&, const Literal&);
+  RDFSPO(const URI&, const URI&, const BNode&);
+  RDFSPO(const BNode&, const URI&, const URI&);
+  RDFSPO(const BNode&, const URI&, const Literal&);
+};
 
 URI create_URI(const URI& class_uri);
 URI create_classURI(const URI& prefix);
