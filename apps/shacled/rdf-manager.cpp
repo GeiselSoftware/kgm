@@ -27,7 +27,6 @@ RDFManager::RDFManager(const std::string& fuseki_server_url)
   this->known_dataclasses.add(xsd::short_);
   this->known_dataclasses.add(xsd::byte_);
 }
-  
 
 void RDFManager::process_raw_response(const std::string& raw_response)
 {
@@ -88,32 +87,21 @@ void RDFManager::process_raw_response(const std::string& raw_response)
   }
 }
 
-void RDFManager::start_load_graph(const string& kgm_path, const string& kgm_shacl_path)
+void RDFManager::start_load_graph(const string& kgm_path)
 {
+  // reset
+  all_user_classes.clear();
+  all_user_objects.clear();
+  triples.clear();
+  
   string rq = prefixes::make_turtle_prefixes(true);
-  // sparql query to flatten sh:property
-  if (kgm_shacl_path.size() > 0) {
-    constexpr auto rq_fmt = R"(
-  select ?s ?p ?o where {{
-   ?g kgm:path "{}". 
-   ?g_shacl kgm:path "{}".
-   {{
-     {{ graph ?g {{ ?s ?p ?o }} }} 
-     union
-     {{ graph ?g_shacl {{ ?s ?p ?o }} }}
-   }}
-  }}
-  )";  
-    rq += fmt::format(rq_fmt, kgm_path, kgm_shacl_path);
-  } else {
-    constexpr auto rq_fmt = R"(
+  constexpr auto rq_fmt = R"(
   select ?s ?p ?o where {{
    ?g kgm:path "{}".
    graph ?g {{ ?s ?p ?o }}
   }}
   )";  
-    rq += fmt::format(rq_fmt, kgm_path);
-  }
+  rq += fmt::format(rq_fmt, kgm_path);  
   
   cout << "sending rq: " << rq << endl;
   decltype(HTTPPostRequest::request_headers) req_headers;
@@ -137,7 +125,7 @@ bool RDFManager::finish_load_graph()
   return true;
 }
 
-void RDFManager::start_save_graph(const URI& g_uri, const vector<RDFSPO>& triples)
+void RDFManager::start_save_graph(const string& kgm_path, const vector<RDFSPO>& triples)
 {
   //throw runtime_error("RDFManager::save_graph - not implemented");
   //cout << "RDFManager::save_graph - not implemented" << endl;
@@ -148,19 +136,41 @@ void RDFManager::start_save_graph(const URI& g_uri, const vector<RDFSPO>& triple
 #pragma message("NB: hacking with fuseki URLs, remove that ASAP")
   auto idx = fuseki_server_url.find("/query");
   auto fuseki_server_update_url = this->fuseki_server_url.substr(0, idx) + "/update";
-  
-  ostringstream out;
-  out << "INSERT DATA { GRAPH " << g_uri << " {" << endl;
-  for (auto& spo: triples) {
-    out << spo.s << " " << spo.p << " " << spo.o << " ." << endl;
+
+  ostringstream values;
+  for (auto& [s, p, o]: triples) {
+    values << "(" << s << " " << p << " " << o << ")\n";
   }
-  out << "} }" << endl;
-  cout << out.str() << endl;
+
+  string rq = prefixes::make_turtle_prefixes(true);
+  constexpr auto rq_fmt = R"(
+  delete {{
+    graph ?g {{
+      ?s ?p ?o
+    }}
+  }}
+  insert {{
+    graph ?g {{
+      ?ns ?np ?no
+    }}
+  }}
+  where {{
+    ?g kgm:path "{}"
+    graph ?g {{ ?s ?p ?o }}
+    values (?ns ?np ?no)
+    {{
+      {}
+    }}
+  }}
+  )";
+  rq += fmt::format(rq_fmt, kgm_path, values.str());
+  
+  cout << rq << endl;
 
   decltype(HTTPPostRequest::request_headers) req_headers;
   req_headers.push_back({"Content-Type", "application/x-www-form-urlencoded"});
   //req_headers.push_back({"Accept", "application/n-triples"}); // this is for construct query output selection
-  HTTPPostRequest req{fuseki_server_update_url, req_headers, toUrlEncodedForm(map<string, string>{{"update", out.str()}})};
+  HTTPPostRequest req{fuseki_server_update_url, req_headers, toUrlEncodedForm(map<string, string>{{"update", rq}})};
   this->http_request_handler.send_http_request(req);
   this->in_progress_save_graph_f = true;
 }

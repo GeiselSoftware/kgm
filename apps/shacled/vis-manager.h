@@ -18,6 +18,7 @@ public:
   RDFManager* rdf_man = 0;
   Dict<URI, std::shared_ptr<VisNode>> nodes;
   std::vector<std::shared_ptr<VisLink>> links;
+  std::string shacl_dump;
   
 public:
   VisManager(RDFManager*);
@@ -26,10 +27,10 @@ public:
   static URI expand_curie(const std::string& curie);
 
   void build();
+  void add_new_userclass();
   void dump_shacl();
   void userclasses_to_triples(std::vector<RDFSPO>* triples_ptr);
   
   void make_frame();
-  std::string shacl_dump;
 };
 

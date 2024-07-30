@@ -12,6 +12,7 @@ public:
   std::set<K> s;
 
 public:
+  void clear() { this->s.clear(); }
   void add(const K& k) { this->s.insert(k); }
   typename decltype(s)::iterator begin() { return this->s.begin(); }
   typename decltype(s)::iterator end() { return this->s.end(); }  
@@ -24,6 +25,7 @@ private:
   std::map<K, V> m;
   
 public:
+  void clear() { m.clear(); }
   bool has_key(const K& k) const { return m.find(k) != m.end(); }
   V* set(const K& k, const V& v) { auto [it, _] = this->m.insert_or_assign(k, v); return &(*it).second; }
   V* set(const K& k) { auto [it, _] = this->m.insert_or_assign(k, V()); return &(*it).second; }
@@ -43,6 +45,7 @@ private:
   std::map<K, V*> m;
 
 public:
+  void clear() { m.clear(); }
   bool has_key(const K& k) const { return m.find(k) != m.end(); }
   V* set(const K& k, V* v) { auto [it, _] = this->m.insert_or_assign(k, v); return (*it).second; }
   V* set(const K& k) { auto [it, _] = this->m.insert_or_assign(k, 0); return (*it).second; }
@@ -64,6 +67,7 @@ private:
   std::map<K, std::shared_ptr<V>> m;
   
 public:
+  void clear() { m.clear(); }
   bool has_key(const K& k) const { return m.find(k) != m.end(); }
   std::shared_ptr<V> set(const K& k, std::shared_ptr<V> v) { auto [it, _] = this->m.insert_or_assign(k, v); return (*it).second; }
   std::shared_ptr<V> set(const K& k) { auto [it, _] = this->m.insert_or_assign(k, std::shared_ptr<V>()); return (*it).second; }

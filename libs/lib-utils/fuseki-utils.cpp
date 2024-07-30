@@ -33,7 +33,12 @@ RDFSPO fuseki::rdf_parse_binding(const nlohmann::json& binding)
   assert(binding["s"]["type"] == "uri" || binding["s"]["type"] == "bnode");
   RDFSubject s;
   if (binding["s"]["type"] == "uri") {
-    s = RDFSubject(URI{binding["s"]["value"]});
+    string uri_string = binding["s"]["value"];
+    if (uri_string.find("dummy:") == 0) { // this custom bnode
+      s = RDFSubject(BNode("_:" + uri_string.substr(strlen("dummy:"))));
+    } else {
+      s = RDFSubject(URI{uri_string});
+    }
   } else {
     s = RDFSubject(BNode{binding["s"]["value"]});
   }
@@ -44,7 +49,12 @@ RDFSPO fuseki::rdf_parse_binding(const nlohmann::json& binding)
 
   RDFObject o;
   if (binding["o"]["type"] == "uri") {
-    o = RDFObject(URI{binding["o"]["value"]});
+    string uri_string = binding["o"]["value"];
+    if (uri_string.find("dummy:") == 0) { // this custom bnode
+      o = RDFObject(BNode("_:" + uri_string.substr(strlen("dummy:"))));
+    } else {
+      o = RDFObject(URI{uri_string});
+    }
   } else if (binding["o"]["type"] == "bnode") {
     o = RDFObject(BNode{binding["o"]["value"]});
   } else {

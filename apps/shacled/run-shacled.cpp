@@ -1,4 +1,5 @@
 #include <imgui_node_editor_internal.h>
+#include <misc/cpp/imgui_stdlib.h>
 #include <imgui.h>
 
 #include <lib-apploops/loop-runner.h>
@@ -28,14 +29,41 @@ static bool Splitter(bool split_vertically, float thickness, float* size1, float
 struct SHACLEditor: public LoopStep
 {
   string fuseki_server_url;
-
-  explicit SHACLEditor(const string& fuseki_server_url) :
+  string kgm_path;
+  
+  explicit SHACLEditor(const string& fuseki_server_url, const string& kgm_path) :
     rdf_manager(fuseki_server_url),
     vis_manager(&rdf_manager)
   {
     this->fuseki_server_url = fuseki_server_url;
+    this->kgm_path = kgm_path;
   }
 
+  void save_graph()
+  {
+    bool button_disabled = false;
+    if (rdf_manager.in_progress_save_graph_f) {
+      button_disabled = true;
+      ImGui::BeginDisabled(true);
+    }
+
+    if (ImGui::Button("test save")) {
+      if (!rdf_manager.in_progress_save_graph_f) {
+	vector<RDFSPO> triples;
+	vis_manager.userclasses_to_triples(&triples);
+        rdf_manager.start_save_graph(this->kgm_path, triples);
+      }
+    }
+
+    if (rdf_manager.in_progress_save_graph_f) {
+      rdf_manager.finish_save_graph();
+    }
+
+    if (button_disabled) {
+      ImGui::EndDisabled();
+    }
+  }
+  
   void load_graph()
   {
     bool button_disabled = false;
@@ -46,10 +74,7 @@ struct SHACLEditor: public LoopStep
 
     if (ImGui::Button("test load")) {
       if (!rdf_manager.in_progress_load_graph()) {
-        auto kgm_path = "/alice-bob.shacl";
-	//auto kgm_path = "/NorthWind.shacl";
-        string kgm_shacl_path = "";
-        rdf_manager.start_load_graph(kgm_path, kgm_shacl_path);
+        rdf_manager.start_load_graph(this->kgm_path);
       }
     }
 
@@ -64,53 +89,33 @@ struct SHACLEditor: public LoopStep
   }
   
   void ShowLeftPane(float paneWidth)
-{
-  auto& io = ImGui::GetIO();
+  {
+    auto& io = ImGui::GetIO();
+    ImGui::BeginChild("Selection", ImVec2(paneWidth, 0));
 
-  ImGui::BeginChild("Selection", ImVec2(paneWidth, 0));
+    paneWidth = ImGui::GetContentRegionAvail().x;
 
-  paneWidth = ImGui::GetContentRegionAvail().x;
-
-  if (ImGui::Button("Zoom to Content")) {
-    ed::NavigateToContent();
-  }
-
-  if (1) { // save graph
-    bool button_disabled = false;
-    if (rdf_manager.in_progress_save_graph_f) {
-      button_disabled = true;
-      ImGui::BeginDisabled(true);
+    if (ImGui::Button("Zoom to Content")) {
+      ed::NavigateToContent();
     }
 
-    if (ImGui::Button("save load")) {
-      if (!rdf_manager.in_progress_save_graph_f) {
-	vector<RDFSPO> triples;
-	vis_manager.userclasses_to_triples(&triples);
-        rdf_manager.start_save_graph(vis_manager.expand_curie("ab:test3"), triples);
+    if (1) { // add new userclass
+      if (ImGui::Button("Add new class")) {
+	vis_manager.add_new_userclass();
       }
     }
-
-    if (rdf_manager.in_progress_save_graph_f) {
-      rdf_manager.finish_save_graph();
+    
+    load_graph();
+    save_graph();
+    
+    if (1) { // dump shacl
+      if (ImGui::Button("dump shacl")) {
+	vis_manager.dump_shacl();
+      }
     }
-
-    if (button_disabled) {
-      ImGui::EndDisabled();
-    }
+    
+    ImGui::EndChild();
   }
-
-  load_graph();
-
-
-  if (1) { // dump shacl
-    if (ImGui::Button("dump shacl")) {
-      vis_manager.dump_shacl();
-    }
-  }
-  
-  ImGui::EndChild();
-}
- 
   
   RDFManager rdf_manager;
   VisManager vis_manager;
@@ -145,7 +150,7 @@ struct SHACLEditor: public LoopStep
     ImGui::Begin("Main");
 #endif
     
-    ImGui::Text("%s", this->fuseki_server_url.c_str());
+    ImGui::Text("%s %s", this->fuseki_server_url.c_str(), this->kgm_path.c_str());
     ImGui::SameLine(); ImGui::Text("FPS: %.2f (%.2gms)", io.Framerate, io.Framerate ? 1000.0f / io.Framerate : 0.0f);
     
     ed::SetCurrentEditor(m_Editor);
@@ -205,25 +210,27 @@ int main(int argc, char** argv)
   }
   cout << "--------------------" << endl;
 
-  string fuseki_url;
+  string fuseki_url, kgm_path;
   
 #ifdef __EMSCRIPTEN__
-  if (argc != 3) {
+  if (argc != 4) {
     cout << "error" << endl;
-    cout << "example: http://h1:8000/apps/shacled/run-shacled.html?fuseki-host=metis&fuseki-port=3030" << endl;
+    cout << "example: http://h1:8000/apps/shacled/run-shacled.html?fuseki-host=metis&fuseki-port=3030?kgm-path=/NorthWind.shacl" << endl;
     exit(2);
   } else {
     string fuseki_host = string_split(argv[1], '=')[1];
     string fuseki_port = string_split(argv[2], '=')[1];
+    kgm_path = string_split(argv[3], '=')[1];
     fuseki_url = string("http://") + fuseki_host + ":" + fuseki_port + "/kgm-default-dataset/query";
   }
 #else  
-  if (argc != 2) {
-    cout << "error, need suply url to fuseki server" << endl;
-    cout << "Example: " << argv[0] << " http://metis:3030/kgm-default-dataset/query" << endl;
+  if (argc != 3) {
+    cout << "error, need suply url to fuseki server and kgm path to existing graph" << endl;
+    cout << "Example: " << argv[0] << " http://metis:3030/kgm-default-dataset/query /NorthWind.shacl" << endl;
     exit(2);
   } else {
     fuseki_url = argv[1];
+    kgm_path = argv[2];
   }
 #endif
 
@@ -231,9 +238,14 @@ int main(int argc, char** argv)
     cout << "no fuseki url specified" << endl;
     exit(2);
   }
+
+  if (kgm_path.size() == 0) {
+    cout << "no path to graph is spcified" << endl;
+    exit(2);
+  }
   
   cout << "fuseki url: " << fuseki_url << endl;
-  SHACLEditor e(fuseki_url);
+  SHACLEditor e(fuseki_url, kgm_path);
   LoopRunner lr(&e);
 
   if (init(&lr) != 0) return 1;

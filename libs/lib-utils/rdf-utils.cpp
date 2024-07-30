@@ -45,7 +45,7 @@ Literal::Literal(const std::string& literal, const URI& datatype) : literal(lite
 Literal::Literal(int i) : literal(to_string(i)), datatype(xsd::integer) {}
 
 BNode::BNode() {
-  this->bnode = "_:" + generate_uuid_v4();
+  this->bnode = "dummy:" + generate_uuid_v4();
 }
 
 BNode::BNode(const std::string& s)

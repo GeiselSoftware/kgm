@@ -42,6 +42,7 @@ std::string prefixes::make_turtle_prefixes(bool is_sparql_style)
   for (auto& [prefix, prefix_uri]: known_prefixes) {
     out << prefix_directive << " " << prefix << ": " << prefix_uri << end_of_line;
   }
+  out << prefix_directive << " dummy: <dummy:>" << end_of_line;
   out << "\n";
   
   return out.str();

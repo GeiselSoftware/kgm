@@ -5,6 +5,7 @@
 #include <utility>
 #include <fmt/format.h>
 #include <imgui_node_editor.h>
+#include <lib-utils/uuid.h>
 #include <lib-utils/known-prefixes.h>
 #include "visnode.h"
 #include "rdf-manager.h"
@@ -100,8 +101,20 @@ VisManager::VisManager(RDFManager* rdf_man)
   this->rdf_man = rdf_man;
 }
 
+void VisManager::add_new_userclass()
+{
+  auto new_uri = this->expand_curie("ab:noname-" + generate_uuid_v4());
+  auto v_n = make_shared<VisNode_UserClass>(new_uri, this);
+  this->nodes.set(new_uri, v_n);  
+}
+
 void VisManager::build()
 {
+  // reset
+  this->nodes.clear();
+  this->links.clear();
+  this->shacl_dump.clear();
+  
   Dict<std::pair<URI, URI>, ax::NodeEditor::PinId> member_out_pin_ids;
   
   // first pass - creating all nodes for user classes

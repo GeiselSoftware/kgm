@@ -74,7 +74,7 @@ inline std::ostream& operator<<(std::ostream& out, const RDFSubject& uob) {
   if (uob.index() == 0) {
     out << "<" << std::get<0>(uob).uri << ">";
   } else {
-    out << std::get<1>(uob).bnode;
+    out << "<" << std::get<1>(uob).bnode << ">";
   }
   return out;
 }
@@ -89,7 +89,7 @@ inline std::ostream& operator<<(std::ostream& out, const RDFObject& ubol) {
   if (ubol.index() == 0) {
     out << "<" << std::get<0>(ubol).uri << ">";
   } else if (ubol.index() == 1) {
-    out << std::get<1>(ubol).bnode;
+    out << "<" << std::get<1>(ubol).bnode << ">";
   } else {
     out << "\"" << std::get<2>(ubol).literal << "\"^^<" << std::get<2>(ubol).datatype.uri << ">";
   }
