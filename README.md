@@ -5,12 +5,27 @@ It focuses on RDF-based knowledge graph DBs databases and management of its data
 
 # kgm python package
 
+editable install
+
 ```
 python3 -m venv ~/venv/kgm
 source ~/venv/kgm/bin/activate
 cd py-packages/kgm
-pip install .
+pip install -e .
 ```
+
+wheel distribution build. before this steps build.wasm must be build as described below (build wasm version):
+```
+python3 -m venv ~/venv/kgm-distrib
+source ~/venv/kgm-distrib/bin/activate
+cd py-packages/kgm
+pip install build
+python -m build
+cd dist
+```
+
+*.whl is binary distribution, *.tar.gz is source distribution.
+
 
 # mkdocs
 
