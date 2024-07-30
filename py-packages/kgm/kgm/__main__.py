@@ -75,6 +75,11 @@ def do_misc_graphvis(ttl_file, construct_rq):
 @click.option("--select-query", required = False, help = "select query file")
 def do_misc_select(ttl_file, select_query):
     kgm_misc.do_misc_select(ttl_file, select_query)
+
+@do_misc.command("wasm_test")
+def do_misc_wasmtest():
+    kgm_misc.do_misc_wasmtest()
+    
     
 def main():
     cli(max_content_width = 120)

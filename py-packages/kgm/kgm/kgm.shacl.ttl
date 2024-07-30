@@ -1,0 +1,19 @@
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix dash: <http://datashapes.org/dash#> .
+
+@prefix kgm: <kgm:> .
+
+kgm:Graph rdf:type rdfs:Class; rdf:type sh:NodeShape; dash:closedByType true;
+  sh:property [sh:path kgm:path; sh:minCount 1; sh:maxCount 1; sh:datatype xsd:string];
+.
+
+kgm:SHACLGraph rdf:type rdfs:Class; rdfs:subClassOf kgm:Graph; rdf:type sh:NodeShape; dash:closedByType true;
+.
+
+kgm:DataGraph rdf:type rdfs:Class; rdfs:subClassOf kgm:Graph; rdf:type sh:NodeShape; dash:closedByType true;
+  sh:property [sh:path kgm:shacl-graph; sh:minCount 0; sh:maxCount 1; sh:class kgm:SHACLGraph];
+.
+

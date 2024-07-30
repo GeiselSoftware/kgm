@@ -1,7 +1,11 @@
-import ipdb
+#import ipdb
 import os.path
 import rdflib
 from .. import graphviz_utils
+
+import http.server
+import socketserver
+import os
 
 def do_misc_gv(ttl_file, construct_query):
     output_png_file = os.path.basename(ttl_file) + ".png"
@@ -47,3 +51,21 @@ def do_misc_select(ttl_file, select_query):
         print("-------")
         for row in rq_res:
             print([str(x) for x in row], len(row))
+
+def do_misc_wasmtest():
+    #ipdb.set_trace()
+    HOST = "0.0.0.0"
+    PORT = 8000
+    DIRECTORY = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "kgm-wasm"))
+    print("DIRECTORY:", DIRECTORY)
+    
+    # Change the current working directory to the serve directory
+    os.chdir(DIRECTORY)
+
+    # Create the handler to serve files
+    Handler = http.server.SimpleHTTPRequestHandler
+
+    # Create and start the HTTP server
+    with socketserver.TCPServer((HOST, PORT), Handler) as httpd:
+        print(f"Serving HTTP on {HOST} port {PORT} (http://{HOST}:{PORT}/) ...")
+        httpd.serve_forever()
