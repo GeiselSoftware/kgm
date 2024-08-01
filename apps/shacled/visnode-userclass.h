@@ -16,28 +16,23 @@ class VisNode_UserClass : public VisNode
 public:
   struct Member {
     bool checkbox_value = false;
-    URI member_pred_uri;
-    std::string member_name_rep, member_type_rep;
-    bool is_member_type_dataclass = true; // sh:class or sh:dataclass
     ax::NodeEditor::PinId out_pin_id;
 
-    std::vector<std::string> member_types = { "option 1", "option 2", "option 3" };
-    const char* get_member_type_at(int idx) { return member_types[idx].c_str(); }
-    int combo_selected_index = 1;
+    URIVisRep member_name; // sh:property [ sh:path ?member_name ]
+    URIVisRep member_type; // sh:property [ sh:class ?member_type -- or -- sh:property [sh:dataclass ?member_type
+    enum class member_type_shacl_category_t { unknown, shacl_dataclass, shacl_class };
+    member_type_shacl_category_t member_type_shacl_category = member_type_shacl_category_t::unknown;
 
     Member();
-    Member(const URI& member_name, const URI& member_type);
   };
 
-  explicit VisNode_UserClass(const URI& class_uri, VisManager* vis_man);
-  
-  bool is_editable = true;
-  ImGui::ToggleLock toggle_lock;
-  
-  std::string label;
-  std::string class_uri_rep;
+  explicit VisNode_UserClass(const CURIE& class_curie, VisManager* vis_man);
+
+  URIVisRep class_curie;
   std::vector<Member> members;
   
+  bool is_editable = true;
+  ImGui::ToggleLock toggle_lock;  
   ed::PinId node_InputPinId, node_OutputPinId;
   ed::PinId node_bottom_pin;
     

@@ -8,17 +8,28 @@
 namespace ed = ax::NodeEditor;
 
 class VisManager;
+
+struct VisNodeID {
+  std::string vis_node_id;
+};
+
+struct URIVisRep
+{
+  CURIE curie, prev_curie;
+  void set(const CURIE&);
+};
+
 class VisNode : public std::enable_shared_from_this<VisNode>
 {
 public:
   static long unsigned int last_node_id;
   static long unsigned int get_next_id();
 
-  URI node_uri;
+  VisNodeID vis_node_id;
   ed::NodeId ID;
   VisManager* vis_man = 0;
 
-  explicit VisNode(ed::NodeId new_node_id, const URI&, VisManager*);
+  explicit VisNode(ed::NodeId new_node_id, VisManager*);
   std::shared_ptr<VisNode> get_ptr() { return shared_from_this(); }
   
   virtual ~VisNode() = 0;

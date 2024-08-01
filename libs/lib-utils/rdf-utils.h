@@ -13,6 +13,12 @@ struct URI {
   bool operator<(const URI& u) const { return this->uri < u.uri; }
 };
 
+struct CURIE {
+  std::string curie;
+  bool operator==(const CURIE& u) const { return this->curie == u.curie; }
+  bool operator<(const CURIE& u) const { return this->curie < u.curie; }
+};
+
 struct Literal {
   std::string literal;  
   URI datatype;
@@ -48,6 +54,9 @@ namespace std {
   template <> struct less<URI> {
     bool operator() (const URI& l, const URI& r) const { return l.uri < r.uri; }
   };
+  template <> struct less<CURIE> {
+    bool operator() (const CURIE& l, const CURIE& r) const { return l.curie < r.curie; }
+  };
 
   template <> struct less<BNode> {
     bool operator() (const BNode& l, const BNode& r) const { return l.bnode < r.bnode; }
@@ -69,7 +78,8 @@ namespace std {
 }
 
 inline std::ostream& operator<<(std::ostream& out, const URI& uri) { out << "<" << uri.uri << ">"; return out; }
-		   
+inline std::ostream& operator<<(std::ostream& out, const CURIE& curie) { out << curie.curie; return out; }
+
 inline std::ostream& operator<<(std::ostream& out, const RDFSubject& uob) {
   if (uob.index() == 0) {
     out << "<" << std::get<0>(uob).uri << ">";

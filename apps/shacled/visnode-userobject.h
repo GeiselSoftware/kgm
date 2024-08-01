@@ -14,8 +14,9 @@ public:
     std::string name, value;
   };
 
-  explicit VisNode_UserObject(const URI& uri, VisManager*);
-  std::vector<std::string> rdfs_classes;
+  explicit VisNode_UserObject(const CURIE& curie, VisManager*);
+  URIVisRep user_object_curie;
+  std::vector<CURIE> rdfs_classes;
   std::string node_vis_color;
   std::vector<Member> members;
   
