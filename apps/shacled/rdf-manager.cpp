@@ -28,61 +28,6 @@ RDFManager::RDFManager(const std::string& fuseki_server_url)
   this->known_dataclasses.add(xsd::byte_);
 }
 
-CURIE RDFManager::asCURIE(const URI& uri)
-{
-  CURIE ret;
-
-  if (auto idx = uri.uri.find("#error#"); idx != string::npos) {
-    ret.curie = uri.uri.substr(idx + strlen("#error#"));
-    return ret;
-  }
-  
-  bool found = false;
-  for (auto& [prefix, prefix_uri]: prefixes::known_prefixes) {
-    auto idx = uri.uri.find(prefix_uri.uri);
-    if (idx == 0) {
-      ret = CURIE{prefix + ":" + uri.uri.substr(idx + prefix_uri.uri.size())};
-      found = true;
-      break;
-    }
-  }
-  
-  if (!found) {
-    ret = CURIE{"<" + uri.uri + ">"};
-  }
-  
-  return ret;
-}
-
-URI RDFManager::expand_curie(const CURIE& curie)
-{
-  URI res;
-  auto idx = curie.curie.find(":");
-  if (idx == std::string::npos) {
-    //throw std::runtime_error(fmt::format("expand_curie failed: {}", curie));
-    return URI{kgm::__prefix_uri.uri + "#error#" + curie.curie};
-  }  
-  auto curie_prefix = curie.curie.substr(0, idx);
-
-  bool found = false;
-  std::string ret;
-  for (auto& [prefix, prefix_uri]: prefixes::known_prefixes) {
-    if (curie_prefix == prefix) {
-      ret = prefix_uri.uri + curie.curie.substr(idx + 1);
-      found = true;
-      break;
-    }
-  }
-  
-  if (!found) {
-    //throw std::runtime_error(fmt::format("can't expand curie {}", curie));
-    return URI{kgm::__prefix_uri.uri + "#error#" + curie.curie};
-  }
-  
-  return URI{ret};
-}
-
-
 void RDFManager::process_raw_response(const std::string& raw_response)
 {
   auto j = nlohmann::json::parse(raw_response);

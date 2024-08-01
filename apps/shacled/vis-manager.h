@@ -6,6 +6,7 @@
 
 #include <lib-utils/dict.h>
 #include <lib-utils/rdf-utils.h>
+#include "visnode.h"
 
 class VisNode;
 class VisLink;
@@ -24,6 +25,9 @@ public:
   enum class curie_kind { invalid_curie, valid_curie, valid_curie_dataclass, valid_curie_class };
   curie_kind classify_curie(const CURIE&);
 
+  CURIE asCURIE(const URI& uri);
+  URI expand_curie(const CURIE& curie);
+  
   void build();
   void add_new_userclass();
   void dump_shacl();

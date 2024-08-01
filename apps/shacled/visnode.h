@@ -7,7 +7,19 @@
 
 namespace ed = ax::NodeEditor;
 
-class VisManager;
+struct CURIE {
+  std::string curie;
+  bool operator==(const CURIE& u) const { return this->curie == u.curie; }
+  bool operator<(const CURIE& u) const { return this->curie < u.curie; }
+};
+
+namespace std {
+  template <> struct less<CURIE> {
+    bool operator() (const CURIE& l, const CURIE& r) const { return l.curie < r.curie; }
+  };
+}
+
+inline std::ostream& operator<<(std::ostream& out, const CURIE& curie) { out << curie.curie; return out; }
 
 struct VisNodeID {
   std::string vis_node_id;
@@ -19,6 +31,7 @@ struct URIVisRep
   void set(const CURIE&);
 };
 
+class VisManager;
 class VisNode : public std::enable_shared_from_this<VisNode>
 {
 public:

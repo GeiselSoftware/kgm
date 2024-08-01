@@ -20,9 +20,6 @@ private:
   
 public:
   RDFManager(const std::string& fuseki_server_url);
-
-  CURIE asCURIE(const URI& uri);
-  URI expand_curie(const CURIE& curie);
   
   HTTPRawRequestHandler http_request_handler; 
   bool in_progress_load_graph_f = false;
