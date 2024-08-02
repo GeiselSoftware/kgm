@@ -8,7 +8,7 @@
 namespace ed = ax::NodeEditor;
 
 class VisManager;
-
+class RDFManager;
 class VisNode : public std::enable_shared_from_this<VisNode>
 {
 public:
@@ -17,7 +17,8 @@ public:
 
   ed::NodeId ID;
   VisManager* vis_man = 0;
-
+  RDFManager* rdf_man = 0;
+  
   explicit VisNode(ed::NodeId new_node_id, VisManager*);
   std::shared_ptr<VisNode> get_ptr() { return shared_from_this(); }
   

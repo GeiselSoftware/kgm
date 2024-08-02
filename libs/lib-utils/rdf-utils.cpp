@@ -62,3 +62,14 @@ bool CURIE::is_good_predicate() const
   auto prefix = this->curie.substr(0, idx);
   return prefixes::is_good_predicate_prefix(prefix);
 }
+
+bool CURIE::is_good_userclass_curie() const
+{
+  auto idx = this->curie.find(":");
+  if (idx == string::npos) {
+    return false;
+  }
+  auto prefix = this->curie.substr(0, idx);
+  return prefixes::is_good_predicate_prefix(prefix);  
+}
+

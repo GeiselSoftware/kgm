@@ -18,6 +18,7 @@ struct CURIE {
   bool operator==(const CURIE& u) const { return this->curie == u.curie; }
   bool operator<(const CURIE& u) const { return this->curie < u.curie; }
   bool is_good_predicate() const;
+  bool is_good_userclass_curie() const;
 };
 
 struct Literal {

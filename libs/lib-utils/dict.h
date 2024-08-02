@@ -19,6 +19,8 @@ public:
   V* get(const K& k) { auto it = m.find(k); return it == m.end() ? 0 : &(*it).second; }  
   //const V* get(const K& k) const;
 
+  bool remove(const K& k) { return m.erase(k) == 1; } // true if element was removed
+  
   std::vector<K> keys() const { std::vector<K> ret; for (const auto& [k, _]: m) { ret.push_back(k); } return ret; }
   
   typename decltype(m)::iterator begin() { return this->m.begin(); }
@@ -39,7 +41,9 @@ public:
   V* get(const K& k) { auto it = m.find(k); return it == m.end() ? 0 : (*it).second; }  
   //std::shared_ptr<V> get(const K&) const;
   template <class DV> DV* get(const K& k) { auto it = m.find(k); return dynamic_cast<DV*>(it == m.end() ? 0 : (*it).second); }
-  
+
+  bool remove(const K& k) { return m.erase(k) == 1; } // true if element was removed
+
   std::vector<K> keys() const { std::vector<K> ret; for (const auto& [k, _]: m) { ret.push_back(k); } return ret; }
   
   typename decltype(m)::iterator begin() { return this->m.begin(); }
@@ -61,6 +65,8 @@ public:
   std::shared_ptr<V> get(const K& k) { auto it = m.find(k); return it == m.end() ? std::shared_ptr<V>() : (*it).second; }  
   //std::shared_ptr<V> get(const K&) const;
   template <class DV> std::shared_ptr<DV> get(const K& k) { auto it = m.find(k); return std::dynamic_pointer_cast<DV>(it == m.end() ? std::shared_ptr<V>() : (*it).second); }
+
+  bool remove(const K& k) { return m.erase(k) == 1; } // true if element was removed
   
   std::vector<K> keys() const { std::vector<K> ret; for (const auto& [k, _]: m) { ret.push_back(k); } return ret; }
   
