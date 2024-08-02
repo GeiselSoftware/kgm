@@ -6,6 +6,8 @@ kgm misc graphviz --ttl-file ../alice-bob/ab.shacl.ttl --construct-query constru
 kgm misc sparql-select --ttl-file ./ab.shacl.ttl --select-query show-shacl.rq
 ```
 
+SHACL cli download: https://repo1.maven.org/maven2/org/topbraid/shacl/1.4.3/shacl-1.4.3-bin.zip
+
 SHACL validation run:
 ```
 sh ~/local/shacl-1.4.3/bin/shaclvalidate.sh -datafile ./ab.data.ttl -shapesfile ./ab.shacl.ttl

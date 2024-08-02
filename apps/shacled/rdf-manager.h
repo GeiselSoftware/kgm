@@ -21,7 +21,7 @@ private:
 public:
   RDFManager(const std::string& fuseki_server_url);
 
-  CURIE asCURIE(const URI& uri);
+  CURIE asCURIE(const URI& uri); // must always succeed, check all subjs/objs during initial load
   URI expand_curie(const CURIE& curie);
   
   HTTPRawRequestHandler http_request_handler; 

@@ -62,6 +62,9 @@ struct kgm {
   static inline std::string __prefix{"kgm"};
   static inline URI __prefix_uri{"http://www.geisel-software.com/RDF/KGM#"};
   static inline URI path{__prefix_uri.uri + "path"};
+  static inline URI placeholder{__prefix_uri.uri + "placeholder"};
+  static inline URI member_name{__prefix_uri.uri + "member_name"};
+  static inline URI member_type{__prefix_uri.uri + "member_type"};
 };
 
 // example prefixes

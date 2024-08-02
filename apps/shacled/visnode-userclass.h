@@ -11,24 +11,45 @@
 
 class URI;
 
-class VisNode_UserClass : public VisNode
+class VisNode_Class : public VisNode
+{
+public:
+  explicit VisNode_Class(long unsigned int, VisManager*);
+  virtual CURIE get_class_curie() = 0;
+};
+
+class VisNode_DataClass : public VisNode_Class
+{
+public:
+  const CURIE dataclass_curie;
+  CURIE get_class_curie() override { return dataclass_curie; }
+};
+
+class VisNode_UserClass : public VisNode_Class
 {
 public:
   struct Member {
     bool checkbox_value = false;
     ax::NodeEditor::PinId out_pin_id;
 
-    URIVisRep member_name; // sh:property [ sh:path ?member_name ]
-    URIVisRep member_type; // sh:property [ sh:class ?member_type -- or -- sh:property [sh:dataclass ?member_type
-    enum class member_type_shacl_category_t { unknown, shacl_dataclass, shacl_class };
-    member_type_shacl_category_t member_type_shacl_category = member_type_shacl_category_t::unknown;
+    CURIE member_name_input;
+    CURIE member_type_input;
+    
+    enum class member_type_shacl_category_t { kgm_member_type, shacl_dataclass, shacl_class };    
+    struct member_type_t {
+      member_type_shacl_category_t shacl_category;
+      std::shared_ptr<VisNode_Class> vis_class_ptr;
+      CURIE member_type_curie;
+    };
+    member_type_t member_type;
 
     Member();
   };
 
   explicit VisNode_UserClass(const CURIE& class_curie, VisManager* vis_man);
+  CURIE get_class_curie() override { return class_curie_input; }
 
-  URIVisRep class_curie;
+  CURIE class_curie_input;
   std::vector<Member> members;
   
   bool is_editable = true;

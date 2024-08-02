@@ -12,21 +12,23 @@
 using namespace std;
 
 
-VisNode_UserClass::Member::Member() {
+VisNode_UserClass::Member::Member()
+{
   this->out_pin_id = VisNode::last_node_id++;
 }
 
 VisNode_UserClass::VisNode_UserClass(const CURIE& class_curie, VisManager* vis_man) :
-  VisNode{get_next_id(), vis_man},
+  VisNode_Class{get_next_id(), vis_man},
   toggle_lock("img/lock.png", "img/unlock.png")
 {
-  this->class_curie.set(class_curie);
+  this->class_curie_input = class_curie;
   this->node_InputPinId = last_node_id++;
   this->node_OutputPinId = last_node_id++;
   this->node_bottom_pin = last_node_id++;
 }
 
-void VisNode_UserClass::make_frame() {
+void VisNode_UserClass::make_frame()
+{
   ed::BeginNode(this->ID);
   ImGui::PushID(this->ID.Get());
 
@@ -39,10 +41,13 @@ void VisNode_UserClass::make_frame() {
   
   if (this->is_editable) {
     ImGui::SetNextItemWidth(100);
-    ImGui::InputText("##uri", &this->class_curie.curie.curie);
+    bool mod = ImGui::InputText("##uri", &this->class_curie_input.curie);
+    if (mod) {
+#pragma message("implementation needed")
+    }
   } else {
     ImGui::SetNextItemWidth(100);
-    ImGui::InputText("##uri", &this->class_curie.curie.curie,
+    ImGui::InputText("##uri", &this->class_curie_input.curie,
                      ImGuiInputTextFlags_ReadOnly);
   }
 
@@ -73,25 +78,17 @@ void VisNode_UserClass::make_frame() {
     ImGui::Checkbox("##checkbox_", &member.checkbox_value);
     ImGui::SameLine();
 
-    auto member_name_check = vis_man->classify_curie(member.member_name.curie);
-    auto member_type_check = vis_man->classify_curie(member.member_type.curie);
-    
     {
+      auto member_name_check = member.member_name_input.is_wellformed();
       bool need_pop_style = false;
-      switch (member_name_check) {
-      case VisManager::curie_kind::invalid_curie:
-      case VisManager::curie_kind::valid_curie_dataclass:
-      case VisManager::curie_kind::valid_curie_class:
+      if (!member_name_check) {
 	ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0,0,255,255));
 	ImGui::PushStyleColor(ImGuiCol_FrameBg, IM_COL32(0,255,0,255));
 	need_pop_style = true;
-	break;
-      case VisManager::curie_kind::valid_curie:
-	break;
       }
       
       ImGui::SetNextItemWidth(100.0f);
-      ImGui::InputText("##edit_k_", &member.member_name.curie.curie);
+      ImGui::InputText("##edit_k_", &member.member_name_input.curie);
       if (need_pop_style) {
 	ImGui::PopStyleColor();
 	ImGui::PopStyleColor();
@@ -100,30 +97,37 @@ void VisNode_UserClass::make_frame() {
     ImGui::SameLine();
 
     {
+      auto member_type_check = vis_man->is_valid_member_type_curie(member.member_type_input);
       bool need_pop_style = false;
-      switch (member_type_check) {
-      case VisManager::curie_kind::invalid_curie:
-      case VisManager::curie_kind::valid_curie:
+      if (!member_type_check) {
 	ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0,0,255,255));
 	ImGui::PushStyleColor(ImGuiCol_FrameBg, IM_COL32(0,255,0,255));
 	need_pop_style = true;
-	break;
-      case VisManager::curie_kind::valid_curie_dataclass:
-	member.member_type_shacl_category = Member::member_type_shacl_category_t::shacl_dataclass;
-	break;
-      case VisManager::curie_kind::valid_curie_class:
-	member.member_type_shacl_category = Member::member_type_shacl_category_t::shacl_class;
-	break;
       }
+
       ImGui::SetNextItemWidth(100.0f);
-      ImGui::InputText("##member_type_", &member.member_type.curie.curie);
+      bool mod = ImGui::InputText("##member_type_", &member.member_type_input.curie);
       if (need_pop_style) {
 	ImGui::PopStyleColor();
 	ImGui::PopStyleColor();
       }
+
+      if (mod) {
+	// check if we need to change member_type to point to another userclass, or to another dataclass or just hold curie
+	if (auto uc = vis_man->find_userclass(member.member_type_input)) {
+	  member.member_type.shacl_category = Member::member_type_shacl_category_t::shacl_class;
+	  member.member_type.vis_class_ptr = uc;
+	} else if (auto dc = vis_man->find_dataclass(member.member_type_input)) {
+	  member.member_type.shacl_category = Member::member_type_shacl_category_t::shacl_dataclass;
+	  member.member_type.vis_class_ptr = dc;
+	} else {
+	  member.member_type.shacl_category = Member::member_type_shacl_category_t::kgm_member_type;
+	  member.member_type.member_type_curie = member.member_type_input;
+	}
+      }
     }
     
-    if (member.member_type_shacl_category == Member::member_type_shacl_category_t::shacl_class) {
+    if (member.member_type.shacl_category == Member::member_type_shacl_category_t::shacl_class) {
       ImGui::SameLine();
       ed::BeginPin(member.out_pin_id, ed::PinKind::Output);
       ImGui::Text("->>>");

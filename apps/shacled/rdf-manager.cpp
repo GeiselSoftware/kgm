@@ -30,6 +30,7 @@ RDFManager::RDFManager(const std::string& fuseki_server_url)
 
 CURIE RDFManager::asCURIE(const URI& uri)
 {
+#pragma message("this is WRONG implementation, fixit or will crash")
   CURIE ret;
 
   if (auto idx = uri.uri.find("#error#"); idx != string::npos) {

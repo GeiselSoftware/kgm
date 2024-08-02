@@ -17,6 +17,7 @@ struct CURIE {
   std::string curie;
   bool operator==(const CURIE& u) const { return this->curie == u.curie; }
   bool operator<(const CURIE& u) const { return this->curie < u.curie; }
+  bool is_wellformed() const;
 };
 
 struct Literal {
@@ -44,11 +45,13 @@ inline bool isURI(const RDFSubject& uob) { return uob.index() == 0; }
 inline bool isURI(const RDFObject& ubol) { return ubol.index() == 0; }
 inline bool isBNode(const RDFSubject& uob) { return uob.index() == 1; }
 inline bool isBNode(const RDFObject& ubol) { return ubol.index() == 1; }
+inline bool isLiteral(const RDFObject& ubol) { return ubol.index() == 2; }
 inline URI asURI(const RDFSubject& uob) { assert(uob.index() == 0); return std::get<0>(uob); }
 inline URI asURI(const RDFPredicate& p) { assert(p.index() == 0); return std::get<0>(p); }
 inline URI asURI(const RDFObject& ubol) { assert(ubol.index() == 0); return std::get<0>(ubol); }
 inline BNode asBNode(const RDFSubject& uob) { assert(uob.index() == 1); return std::get<1>(uob); }
 inline BNode asBNode(const RDFObject& ubol) { assert(ubol.index() == 1); return std::get<1>(ubol); }
+inline Literal asLiteral(const RDFObject& ubol) { assert(ubol.index() == 2); return std::get<2>(ubol); }
 
 namespace std {
   template <> struct less<URI> {

@@ -19,6 +19,7 @@ VisManager::VisManager(RDFManager* rdf_man)
   this->rdf_man = rdf_man;
 }
 
+#if 0
 VisManager::curie_kind VisManager::classify_curie(const CURIE& curie)
 {
   auto& s = curie.curie;
@@ -53,13 +54,14 @@ VisManager::curie_kind VisManager::classify_curie(const CURIE& curie)
   } while(false);
   return ret;
 }
-
+#endif
 
 void VisManager::add_new_userclass()
 {
-  auto new_class_curie = CURIE{"ab:noname-" + generate_uuid_v4()};
+  static int noname_c = 1;
+  auto new_class_curie = CURIE{"noname" + std::to_string(noname_c++)};
   auto v_n = make_shared<VisNode_UserClass>(new_class_curie, this);
-  this->nodes.set(new_class_curie, v_n);  
+  this->nodes.push_back(v_n);
 }
 
 void VisManager::build()
@@ -68,8 +70,6 @@ void VisManager::build()
   this->nodes.clear();
   this->links.clear();
   this->shacl_dump.clear();
-  
-  Dict<std::pair<CURIE, CURIE>, ax::NodeEditor::PinId> member_out_pin_ids;
   
   // first pass - creating all nodes for user classes
   for (const RDFSubject& uc: rdf_man->all_user_classes) {
@@ -88,25 +88,47 @@ void VisManager::build()
 	      //cout << "   >>>> display: " << get_display_value(prop_v[0]) << endl;
 	      if (asURI(prop_p) == sh::path) {
 		assert(prop_v.size() >= 1 && isURI(prop_v[0]));
-		m.member_name.set(rdf_man->asCURIE(asURI(prop_v[0])));
+		auto o_uri = asURI(prop_v[0]);
+		if (o_uri != kgm::placeholder) {
+		  m.member_name_input = rdf_man->asCURIE(o_uri);
+		}
+	      } else if (asURI(prop_p) == kgm::member_name) {
+		m.member_name_input.curie = asLiteral(prop_v[0]).literal;
 	      } else if (asURI(prop_p) == sh::class_) {
 		assert(prop_v.size() >= 1 && isURI(prop_v[0]));
-		m.member_type.set(rdf_man->asCURIE(asURI(prop_v[0])));
-		m.member_type_shacl_category = VisNode_UserClass::Member::member_type_shacl_category_t::shacl_class;
+		if (auto curie = rdf_man->asCURIE(asURI(prop_v[0]));
+		    auto uc = this->find_userclass(curie)) {
+		  m.member_type.shacl_category = VisNode_UserClass::Member::member_type_shacl_category_t::shacl_class;
+		  m.member_type.vis_class_ptr = uc;
+		  m.member_type_input = uc->class_curie_input;
+		} else { // userclass was not found, fallback to kgm_member_type
+		  m.member_type.shacl_category = VisNode_UserClass::Member::member_type_shacl_category_t::kgm_member_type;
+		  m.member_type.member_type_curie.curie = asLiteral(prop_v[0]).literal;
+		  m.member_type_input = m.member_type.member_type_curie;
+		}
 	      } else if (asURI(prop_p) == sh::dataclass) {
 		assert(prop_v.size() >= 1 && isURI(prop_v[0]));
-		m.member_type.set(rdf_man->asCURIE(asURI(prop_v[0])));
-		m.member_type_shacl_category = VisNode_UserClass::Member::member_type_shacl_category_t::shacl_dataclass;
+		if (auto curie = rdf_man->asCURIE(asURI(prop_v[0]));
+		    auto dc = this->find_dataclass(curie)) {
+		  m.member_type.shacl_category = VisNode_UserClass::Member::member_type_shacl_category_t::shacl_dataclass;
+		  m.member_type.vis_class_ptr = dc;
+		} else { // dataclass was not found, fallback to kgm_member_type
+		  m.member_type.shacl_category = VisNode_UserClass::Member::member_type_shacl_category_t::kgm_member_type;
+		  m.member_type.member_type_curie.curie = asLiteral(prop_v[0]).literal;
+		  m.member_type_input = m.member_type.member_type_curie;
+		}
+	      } else if (asURI(prop_p) == kgm::member_type) {
+		m.member_type.shacl_category = VisNode_UserClass::Member::member_type_shacl_category_t::kgm_member_type;
+		m.member_type.member_type_curie.curie = asLiteral(prop_v[0]).literal;
+		m.member_type_input = m.member_type.member_type_curie;
 	      }
 	    }
 	    v_n->members.push_back(m);
-	    auto out_pin_key = make_pair(user_class, m.member_name.curie);
-	    member_out_pin_ids.set(out_pin_key, m.out_pin_id);
 	  }
 	}
       }
     }
-    this->nodes.set(user_class, v_n);
+    this->nodes.push_back(v_n);
   }
 
   // first pass for all user objects
@@ -118,41 +140,23 @@ void VisManager::build()
 	v_n->members.push_back(VisNode_UserObject::Member{get_display_value(p), get_display_value(o)});
       }
     }
-    this->nodes.set(user_object, v_n);
+    this->nodes.push_back(v_n);
   }
 
-  // second pass for all user classes
-  for (const RDFSubject& uc: rdf_man->all_user_classes) {
-    auto user_class = rdf_man->asCURIE(asURI(uc));
-    Dict<RDFPredicate, vector<RDFObject>>* user_class_doubles = rdf_man->triples.get(uc);
-    if (user_class_doubles) {
-      vector<RDFObject>* sh_props_oo = user_class_doubles->get(RDFPredicate(sh::property));
-      if (sh_props_oo) {
-	for (RDFObject& sh_props_o: *sh_props_oo) {
-	  Dict<RDFPredicate, vector<RDFObject>>* sh_props_o_doubles = rdf_man->triples.get(RDFSubject(asBNode(sh_props_o)));
-	  if (sh_props_o_doubles) {
-	    CURIE m_name_curie, to_uc_curie;
-	    for (auto& [prop_p, prop_v]: *sh_props_o_doubles) {
-	      //cout << "prop_v: " << prop_p << " " <<  endl;
-	      //cout << "   >>>> display: " << get_display_value(prop_v[0]) << endl;
-	      if (asURI(prop_p) == sh::path) {
-		assert(prop_v.size() >= 1 && isURI(prop_v[0]));
-		m_name_curie = rdf_man->asCURIE(asURI(prop_v[0]));
-	      } else if (asURI(prop_p) == sh::class_) {
-		assert(prop_v.size() >= 1 && isURI(prop_v[0]));
-		to_uc_curie = rdf_man->asCURIE(asURI(prop_v[0]));
-	      } else if (asURI(prop_p) == sh::dataclass) {
-		assert(prop_v.size() >= 1 && isURI(prop_v[0]));
-	      }
-	    }	  
-	  
-	    ax::NodeEditor::PinId from_uc_node_port_pin_id = *member_out_pin_ids.get(make_pair(user_class, m_name_curie));
-	    auto to_uc = dynamic_pointer_cast<VisNode_UserClass>(this->nodes.get(to_uc_curie));
-	    ax::NodeEditor::PinId to_uc_node_id = to_uc->node_InputPinId;
-	    shared_ptr<VisLink> v_l = make_shared<VisLink>(VisNode::get_next_id(), from_uc_node_port_pin_id, to_uc_node_id);
-	    this->links.push_back(v_l);
-	  }
-	}
+  // second pass over all user classes using only stored information, no access to triples
+  // will set up all links
+  for (auto n: this->nodes) {
+    auto uc = std::dynamic_pointer_cast<VisNode_UserClass>(n);
+    if (!uc) {
+      continue;
+    }
+    for (auto& m: uc->members) {
+      if (m.member_type.shacl_category == VisNode_UserClass::Member::member_type_shacl_category_t::shacl_class) {
+	auto from_uc_node_port_pin_id = m.out_pin_id;
+	auto to_uc = dynamic_pointer_cast<VisNode_UserClass>(m.member_type.vis_class_ptr);
+	assert(to_uc);
+	shared_ptr<VisLink> v_l = make_shared<VisLink>(VisNode::get_next_id(), m.out_pin_id, to_uc->node_InputPinId);
+	this->links.push_back(v_l);
       }
     }
   }
@@ -163,25 +167,25 @@ void VisManager::dump_shacl()
   ostringstream out;
   out << prefixes::make_turtle_prefixes(false);
   
-  for (auto [_, n]: this->nodes) {
+  for (auto n: this->nodes) {
     if (auto node = dynamic_pointer_cast<VisNode_UserClass>(n); node) {
-      out << node->class_curie.curie << " "
+      out << node->class_curie_input << " "
 	  << rdf_man->asCURIE(rdf::type) << " " << rdf_man->asCURIE(rdfs::Class) << "; ";
       out << rdf_man->asCURIE(rdf::type) << " " << rdf_man->asCURIE(sh::NodeShape) << ";" << endl;
       for (auto& m: node->members) {
 	out << "  " << rdf_man->asCURIE(sh::property) << " ["
-	    << rdf_man->asCURIE(sh::path) << " " << rdf_man->expand_curie(m.member_name.curie) << "; ";
+	    << rdf_man->asCURIE(sh::path) << " " << rdf_man->expand_curie(m.member_name_input) << "; ";
 	out << rdf_man->asCURIE(sh::minCount) << " " << "1" << "; "
 	    << rdf_man->asCURIE(sh::maxCount) << " " << "1" << "; ";
-	switch (m.member_type_shacl_category) {
-	case VisNode_UserClass::Member::member_type_shacl_category_t::unknown:
-	  throw runtime_error("unexpected case statement");
+	switch (m.member_type.shacl_category) {
+	case VisNode_UserClass::Member::member_type_shacl_category_t::kgm_member_type:
+	  out << kgm::member_type << " " << m.member_type.member_type_curie << "; ";
 	  break;
 	case VisNode_UserClass::Member::member_type_shacl_category_t::shacl_dataclass:
-	  out << rdf_man->asCURIE(sh::dataclass) << " " << rdf_man->expand_curie(m.member_type.curie);
+	  out << rdf_man->asCURIE(sh::dataclass) << " " << rdf_man->expand_curie(m.member_type.vis_class_ptr->get_class_curie());
 	  break;
 	case VisNode_UserClass::Member::member_type_shacl_category_t::shacl_class:
-	  out << rdf_man->asCURIE(sh::class_) << " " << rdf_man->expand_curie(m.member_type.curie);
+	  out << rdf_man->asCURIE(sh::class_) << " " << rdf_man->expand_curie(m.member_type.vis_class_ptr->get_class_curie());
 	  break;
 	}
 	out << "];" << endl;
@@ -193,30 +197,41 @@ void VisManager::dump_shacl()
   this->shacl_dump = out.str();
 }
 
-void VisManager::userclasses_to_triples(vector<RDFSPO>* triples_ptr)
+void VisManager::userclasses_to_triples(vector<RDFSPO>* triples)
 {
-  auto& triples = *triples_ptr;
-  for (auto [_, n]: this->nodes) {
+  for (auto n: this->nodes) {
     if (auto node = dynamic_pointer_cast<VisNode_UserClass>(n); node) {
-      auto node_uri = rdf_man->expand_curie(node->class_curie.curie);
-      triples.push_back(RDFSPO(node_uri, rdf::type, rdfs::Class));
-      triples.push_back(RDFSPO(node_uri, rdf::type, sh::NodeShape));
+      if (is_wellformed_curie(node->class_curie)) {
+	auto node_uri = rdf_man->expand_curie(node->class_curie);
+	triples.push_back(RDFSPO(node_uri, rdf::type, rdfs::Class));
+	triples.push_back(RDFSPO(node_uri, rdf::type, sh::NodeShape));
+      } else {
+	auto node_uri = ...;
+	triples.push_back(RDFSPO(node_uri, rdf::type, rdfs::Class));
+	triples.push_back(RDFSPO(node_uri, rdf::type, sh::NodeShape));
+	triples.push_back(RDFSPO(node_uri, kgm::class_curie, Literal(node->class_curie.curie, xsd::string)));
+      }
       
       for (auto& m: node->members) {
 	BNode bn;
 	triples.push_back(RDFSPO(node_uri, sh::property, bn));
-	triples.push_back(RDFSPO(bn, sh::path, rdf_man->expand_curie(m.member_name.curie)));
+	if (this->is_wellformed_curie(m.member_name)) {
+	  triples.push_back(RDFSPO(bn, sh::path, rdf_man->expand_curie(m.member_name)));
+	} else {
+	  triples.push_back(RDFSPO(bn, sh::path, kgm::placeholder));
+	  triples.push_back(RDFSPO(bn, kgm::member_name, Literal(m.member_name.curie, xsd::string)));
+	}
 	triples.push_back(RDFSPO(bn, sh::minCount, Literal(1)));
 	triples.push_back(RDFSPO(bn, sh::maxCount, Literal(1)));
 	switch (m.member_type_shacl_category) {
 	case VisNode_UserClass::Member::member_type_shacl_category_t::unknown:
-	  throw runtime_error("unexpected case statement");
+	  triples.push_back(bn, kgm:member_type, Literal(m.member_type_curie, xsd::string));
 	  break;
 	case VisNode_UserClass::Member::member_type_shacl_category_t::shacl_dataclass:
-	  triples.push_back(RDFSPO(bn, sh::dataclass, rdf_man->expand_curie(m.member_type.curie)));
+	  triples.push_back(RDFSPO(bn, sh::dataclass, m.member_type.sh_dataclass_uri));
 	  break;
 	case VisNode_UserClass::Member::member_type_shacl_category_t::shacl_class:
-	  triples.push_back(RDFSPO(bn, sh::class_, rdf_man->expand_curie(m.member_type.curie)));
+	  triples.push_back(RDFSPO(bn, sh::class_, m.member_type.sh_class_ptr->...));
 	  break;
 	}
       }
@@ -227,7 +242,7 @@ void VisManager::userclasses_to_triples(vector<RDFSPO>* triples_ptr)
 void VisManager::make_frame()
 {
   // show all nodes
-  for (auto [_, node]: this->nodes) {
+  for (auto node: this->nodes) {
     node->make_frame();
   }
 

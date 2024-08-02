@@ -15,7 +15,7 @@ public:
   };
 
   explicit VisNode_UserObject(const CURIE& curie, VisManager*);
-  URIVisRep user_object_curie;
+  CURIE user_object_curie;
   std::vector<CURIE> rdfs_classes;
   std::string node_vis_color;
   std::vector<Member> members;
