@@ -11,6 +11,20 @@
 #include <iostream>
 using namespace std;
 
+VisNode_DataClass::VisNode_DataClass(const CURIE& curie, VisManager* vis_man) :
+  VisNode_Class(VisNode::get_next_id(), vis_man)
+{
+  this->dataclass_curie = curie;
+}
+
+std::pair<CURIE, URI> VisNode_DataClass::get_class_curie()
+{
+  return std::make_pair(dataclass_curie, vis_man->rdf_man->expand_curie(dataclass_curie).first);
+}
+void VisNode_DataClass::make_frame()
+{
+}
+
 
 VisNode_UserClass::Member::Member()
 {
@@ -25,6 +39,11 @@ VisNode_UserClass::VisNode_UserClass(const CURIE& class_curie, VisManager* vis_m
   this->node_InputPinId = last_node_id++;
   this->node_OutputPinId = last_node_id++;
   this->node_bottom_pin = last_node_id++;
+}
+
+std::pair<CURIE, URI> VisNode_UserClass::get_class_curie()
+{
+  return std::make_pair(class_curie_input, vis_man->rdf_man->expand_curie(class_curie_input).first);
 }
 
 void VisNode_UserClass::make_frame()
@@ -43,7 +62,7 @@ void VisNode_UserClass::make_frame()
     ImGui::SetNextItemWidth(100);
     bool mod = ImGui::InputText("##uri", &this->class_curie_input.curie);
     if (mod) {
-#pragma message("implementation needed")
+      vis_man->userclasses_by_curie.set(this->class_curie_input, dynamic_pointer_cast<VisNode_UserClass>(this->get_ptr()));
     }
   } else {
     ImGui::SetNextItemWidth(100);
@@ -79,7 +98,7 @@ void VisNode_UserClass::make_frame()
     ImGui::SameLine();
 
     {
-      auto member_name_check = member.member_name_input.is_wellformed();
+      auto member_name_check = member.member_name_input.is_good_predicate();
       bool need_pop_style = false;
       if (!member_name_check) {
 	ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0,0,255,255));
@@ -97,7 +116,9 @@ void VisNode_UserClass::make_frame()
     ImGui::SameLine();
 
     {
-      auto member_type_check = vis_man->is_valid_member_type_curie(member.member_type_input);
+      auto [_, member_type_check] = vis_man->rdf_man->expand_curie(member.member_type_input);
+      member_type_check = member_type_check && (vis_man->find_userclass(member.member_type_input) != 0 || vis_man->find_dataclass(member.member_type_input) != 0);
+      
       bool need_pop_style = false;
       if (!member_type_check) {
 	ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0,0,255,255));
@@ -113,6 +134,7 @@ void VisNode_UserClass::make_frame()
       }
 
       if (mod) {
+	cout << "mod " << member.member_type_input << endl;
 	// check if we need to change member_type to point to another userclass, or to another dataclass or just hold curie
 	if (auto uc = vis_man->find_userclass(member.member_type_input)) {
 	  member.member_type.shacl_category = Member::member_type_shacl_category_t::shacl_class;
@@ -122,6 +144,7 @@ void VisNode_UserClass::make_frame()
 	  member.member_type.vis_class_ptr = dc;
 	} else {
 	  member.member_type.shacl_category = Member::member_type_shacl_category_t::kgm_member_type;
+	  member.member_type.vis_class_ptr = 0;
 	  member.member_type.member_type_curie = member.member_type_input;
 	}
       }

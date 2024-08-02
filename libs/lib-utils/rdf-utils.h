@@ -17,7 +17,7 @@ struct CURIE {
   std::string curie;
   bool operator==(const CURIE& u) const { return this->curie == u.curie; }
   bool operator<(const CURIE& u) const { return this->curie < u.curie; }
-  bool is_wellformed() const;
+  bool is_good_predicate() const;
 };
 
 struct Literal {

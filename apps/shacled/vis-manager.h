@@ -21,15 +21,14 @@ public:
   std::vector<std::shared_ptr<VisLink>> links;
   std::string shacl_dump;
 
-  Dict<CURIE, std::shared_ptr<VisNode_Class>> all_classes;  
-  std::shared_ptr<VisNode_UserClass> find_userclass(const CURIE&);
-  std::shared_ptr<VisNode_DataClass> find_dataclass(const CURIE&);
+  Dict<CURIE, std::shared_ptr<VisNode_UserClass>> userclasses_by_curie;
+  std::shared_ptr<VisNode_UserClass> find_userclass(const CURIE& curie) { return userclasses_by_curie.get(curie); }
+  Dict<CURIE, std::shared_ptr<VisNode_DataClass>> dataclasses_by_curie;
+  std::shared_ptr<VisNode_DataClass> find_dataclass(const CURIE& curie) { return dataclasses_by_curie.get(curie); }
 
 public:
   VisManager(RDFManager*);
 
-  bool is_valid_member_type_curie(const CURIE&);
-  
   void build();
   void add_new_userclass();
   void dump_shacl();

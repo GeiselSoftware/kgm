@@ -1,22 +1,8 @@
 // -*- c++ -*-
 #pragma once
 
-#include <set>
 #include <map>
 #include <memory>
-
-// Set<string>
-template <class K> class Set
-{
-public:
-  std::set<K> s;
-
-public:
-  void clear() { this->s.clear(); }
-  void add(const K& k) { this->s.insert(k); }
-  typename decltype(s)::iterator begin() { return this->s.begin(); }
-  typename decltype(s)::iterator end() { return this->s.end(); }  
-};
 
 // Dict<string, string>
 template <class K, class V> class Dict

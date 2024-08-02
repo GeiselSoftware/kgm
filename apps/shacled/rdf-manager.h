@@ -1,6 +1,7 @@
 // -*- c++ -*-
 #pragma once
 
+#include <set>
 #include <vector>
 #include <lib-utils/dict.h>
 #include <lib-utils/rdf-utils.h>
@@ -12,17 +13,16 @@ private:
 
   std::string fuseki_server_url;  
   
-  Set<URI> known_dataclasses;
-  Set<URI> all_user_classes; 
-  Set<URI> all_user_objects;
   //Dict<URI, std::vector<URI>> all_user_object_types; // s -> rdf:type -> [o]
   Dict<RDFSubject, Dict<RDFPredicate, std::vector<RDFObject>>> triples; // s -> (p -> [o]), p != rdf:type
+  std::set<URI> all_userclasses;
+  std::set<URI> all_userobjects;
   
 public:
   RDFManager(const std::string& fuseki_server_url);
 
-  CURIE asCURIE(const URI& uri); // must always succeed, check all subjs/objs during initial load
-  URI expand_curie(const CURIE& curie);
+  CURIE asCURIE(const URI& uri);
+  std::pair<URI, bool> expand_curie(const CURIE& curie);
   
   HTTPRawRequestHandler http_request_handler; 
   bool in_progress_load_graph_f = false;

@@ -15,28 +15,12 @@ using namespace std;
 RDFManager::RDFManager(const std::string& fuseki_server_url)
 {
   this->fuseki_server_url = fuseki_server_url;
-  
-  this->known_dataclasses.add(xsd::string);
-  this->known_dataclasses.add(xsd::boolean);
-  this->known_dataclasses.add(xsd::decimal);
-  this->known_dataclasses.add(xsd::float_);
-  this->known_dataclasses.add(xsd::double_);
-  this->known_dataclasses.add(xsd::integer);
-  this->known_dataclasses.add(xsd::long_);
-  this->known_dataclasses.add(xsd::int_);
-  this->known_dataclasses.add(xsd::short_);
-  this->known_dataclasses.add(xsd::byte_);
 }
 
+#pragma message("asCURIE -- must always succeed???, check all subjs/objs during initial load")
 CURIE RDFManager::asCURIE(const URI& uri)
 {
-#pragma message("this is WRONG implementation, fixit or will crash")
   CURIE ret;
-
-  if (auto idx = uri.uri.find("#error#"); idx != string::npos) {
-    ret.curie = uri.uri.substr(idx + strlen("#error#"));
-    return ret;
-  }
   
   bool found = false;
   for (auto& [prefix, prefix_uri]: prefixes::known_prefixes) {
@@ -55,13 +39,13 @@ CURIE RDFManager::asCURIE(const URI& uri)
   return ret;
 }
 
-URI RDFManager::expand_curie(const CURIE& curie)
+pair<URI, bool> RDFManager::expand_curie(const CURIE& curie)
 {
   URI res;
   auto idx = curie.curie.find(":");
   if (idx == std::string::npos) {
     //throw std::runtime_error(fmt::format("expand_curie failed: {}", curie));
-    return URI{kgm::__prefix_uri.uri + "#error#" + curie.curie};
+    return make_pair(URI(), false);
   }  
   auto curie_prefix = curie.curie.substr(0, idx);
 
@@ -77,10 +61,10 @@ URI RDFManager::expand_curie(const CURIE& curie)
   
   if (!found) {
     //throw std::runtime_error(fmt::format("can't expand curie {}", curie));
-    return URI{kgm::__prefix_uri.uri + "#error#" + curie.curie};
+    return make_pair(URI(), false);
   }
   
-  return URI{ret};
+  return make_pair(URI{ret}, true);
 }
 
 
@@ -96,30 +80,28 @@ void RDFManager::process_raw_response(const std::string& raw_response)
     if (asURI(p) == rdf::type) {
       auto s_uri = asURI(s);
       auto o_uri = asURI(o);
-      if (o_uri == rdfs::Class) {
-	all_user_classes.add(s_uri);
-      } else if (o_uri == sh::NodeShape) {
-	all_user_classes.add(s_uri);
+      if (o_uri == sh::NodeShape) {
+	all_userclasses.insert(s_uri);
       } else {
-	all_user_objects.add(s_uri);
+	all_userobjects.insert(s_uri);
       }
     }
   }
 
-  // all_user_objects still have all_user_class, we need to calc all_user_objects - all_user_classes
-  Set<URI> new_all_user_objects;
-  std::set_difference(all_user_objects.s.begin(), all_user_objects.s.end(), all_user_classes.s.begin(), all_user_classes.s.end(),
-		      std::inserter(new_all_user_objects.s, new_all_user_objects.s.begin()),
+  // all_userobjects still have all_userclass, we need to calc all_userobjects MINUS all_userclasses
+  set<URI> new_all_user_objects;
+  std::set_difference(all_userobjects.begin(), all_userobjects.end(), all_userclasses.begin(), all_userclasses.end(),
+		      std::inserter(new_all_user_objects, new_all_user_objects.begin()),
 		      [](auto& a, auto& b) { return a.uri < b.uri; });
-  all_user_objects = new_all_user_objects;
+  all_userobjects = new_all_user_objects;
 
-  cout << "all_user_classes: ";
-  for (auto& s: all_user_classes) {
+  cout << "all_userclasses: ";
+  for (auto& s: all_userclasses) {
     cout << s << ", ";
   }
   cout << endl;
-  cout << "all_user_objects: ";
-  for (auto& s: all_user_objects) {
+  cout << "all_userobjects: ";
+  for (auto& s: all_userobjects) {
     cout << s << ", ";
   }
   cout << endl;
@@ -146,8 +128,8 @@ void RDFManager::process_raw_response(const std::string& raw_response)
 void RDFManager::start_load_graph(const string& kgm_path)
 {
   // reset
-  all_user_classes.clear();
-  all_user_objects.clear();
+  all_userclasses.clear();
+  all_userobjects.clear();
   triples.clear();
   
   string rq = prefixes::make_turtle_prefixes(true);

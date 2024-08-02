@@ -65,6 +65,7 @@ struct kgm {
   static inline URI placeholder{__prefix_uri.uri + "placeholder"};
   static inline URI member_name{__prefix_uri.uri + "member_name"};
   static inline URI member_type{__prefix_uri.uri + "member_type"};
+  static inline URI class_curie{__prefix_uri.uri + "class_curie"};
 };
 
 // example prefixes
@@ -84,7 +85,7 @@ struct nw {
 
 struct prefixes
 {
-  static bool is_prefix(const std::string& s);
+  static bool is_good_predicate_prefix(const std::string& s);
   static std::vector<std::tuple<std::string, URI>> known_prefixes;
   static std::string make_turtle_prefixes(bool is_sparql_style);
   std::string make_sparql_query(const char* rq);
