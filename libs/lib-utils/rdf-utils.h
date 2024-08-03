@@ -83,6 +83,7 @@ namespace std {
 
 inline std::ostream& operator<<(std::ostream& out, const URI& uri) { out << "<" << uri.uri << ">"; return out; }
 inline std::ostream& operator<<(std::ostream& out, const CURIE& curie) { out << curie.curie; return out; }
+inline std::ostream& operator<<(std::ostream& out, const Literal& l) {  out << "\"" << l.literal << "\"^^<" << l.datatype.uri << ">"; return out; }
 
 inline std::ostream& operator<<(std::ostream& out, const RDFSubject& uob) {
   if (uob.index() == 0) {

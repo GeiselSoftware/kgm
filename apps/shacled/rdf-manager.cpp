@@ -17,54 +17,38 @@ RDFManager::RDFManager(const std::string& fuseki_server_url)
   this->fuseki_server_url = fuseki_server_url;
 }
 
-#pragma message("asCURIE -- must always succeed???, check all subjs/objs during initial load")
-CURIE RDFManager::asCURIE(const URI& uri)
+CURIE RDFManager::collapse_prefix(const URI& uri)
 {
   CURIE ret;
   
-  bool found = false;
   for (auto& [prefix, prefix_uri]: prefixes::known_prefixes) {
     auto idx = uri.uri.find(prefix_uri.uri);
     if (idx == 0) {
       ret = CURIE{prefix + ":" + uri.uri.substr(idx + prefix_uri.uri.size())};
-      found = true;
       break;
     }
-  }
-  
-  if (!found) {
-    ret = CURIE{"<" + uri.uri + ">"};
   }
   
   return ret;
 }
 
-pair<URI, bool> RDFManager::expand_curie(const CURIE& curie)
+URI RDFManager::restore_prefix(const CURIE& curie)
 {
-  URI res;
   auto idx = curie.curie.find(":");
   if (idx == std::string::npos) {
-    //throw std::runtime_error(fmt::format("expand_curie failed: {}", curie));
-    return make_pair(URI(), false);
+    return URI();
   }  
   auto curie_prefix = curie.curie.substr(0, idx);
 
-  bool found = false;
-  std::string ret;
+  URI res;
   for (auto& [prefix, prefix_uri]: prefixes::known_prefixes) {
     if (curie_prefix == prefix) {
-      ret = prefix_uri.uri + curie.curie.substr(idx + 1);
-      found = true;
+      res = URI{prefix_uri.uri + curie.curie.substr(idx + 1)};
       break;
     }
   }
   
-  if (!found) {
-    //throw std::runtime_error(fmt::format("can't expand curie {}", curie));
-    return make_pair(URI(), false);
-  }
-  
-  return make_pair(URI{ret}, true);
+  return res;
 }
 
 
@@ -78,21 +62,21 @@ void RDFManager::process_raw_response(const std::string& raw_response)
     auto o = spo.o;
     
     if (asURI(p) == rdf::type) {
-      auto s_uri = asURI(s);
       auto o_uri = asURI(o);
       if (o_uri == sh::NodeShape) {
-	all_userclasses.insert(s_uri);
+	all_userclasses.insert(s);
       } else {
-	all_userobjects.insert(s_uri);
+	all_userobjects.insert(s);
       }
     }
   }
 
   // all_userobjects still have all_userclass, we need to calc all_userobjects MINUS all_userclasses
-  set<URI> new_all_user_objects;
-  std::set_difference(all_userobjects.begin(), all_userobjects.end(), all_userclasses.begin(), all_userclasses.end(),
+  set<RDFSubject> new_all_user_objects;
+  std::set_difference(all_userobjects.begin(), all_userobjects.end(),
+		      all_userclasses.begin(), all_userclasses.end(),
 		      std::inserter(new_all_user_objects, new_all_user_objects.begin()),
-		      [](auto& a, auto& b) { return a.uri < b.uri; });
+		      [](auto& a, auto& b) { return less<RDFSubject>()(a, b); });
   all_userobjects = new_all_user_objects;
 
   cout << "all_userclasses: ";

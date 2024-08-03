@@ -17,25 +17,25 @@ class VisManager
 {
 private:
   friend class VisNode;
+  friend class VisNode_UserClass;
   RDFManager* rdf_man = 0;
   std::vector<std::shared_ptr<VisNode>> nodes;
   std::vector<std::shared_ptr<VisLink>> links;
 
-  friend class VisNode_UserClass;
-  Dict<CURIE, std::shared_ptr<VisNode_UserClass>> userclasses_by_curie;
-  Dict<CURIE, std::shared_ptr<VisNode_DataClass>> dataclasses_by_curie;
+  Dict<CURIE, std::shared_ptr<VisNode_Class>> visnode_classes_by_curie;
 
 public:
   VisManager(RDFManager*);
+  void reset();
+  std::shared_ptr<VisNode_Class> find_visnode_class(const CURIE& curie);
   void dump_shacl();
   std::string shacl_dump;
 
-  void build();
+  void build_visnode_classes();
+  void build_userobjects();
+  
   void add_new_userclass();
   void userclasses_to_triples(std::vector<RDFSPO>* triples_ptr);
-
-  std::shared_ptr<VisNode_UserClass> find_userclass(const CURIE& curie) { return userclasses_by_curie.get(curie); }
-  std::shared_ptr<VisNode_DataClass> find_dataclass(const CURIE& curie) { return dataclasses_by_curie.get(curie); }
   
   void make_frame();
 };

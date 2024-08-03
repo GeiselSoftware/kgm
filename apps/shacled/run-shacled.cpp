@@ -80,7 +80,9 @@ struct SHACLEditor: public LoopStep
 
     if (rdf_manager.in_progress_load_graph()) {
       rdf_manager.finish_load_graph();
-      vis_manager.build();
+      vis_manager.reset();
+      vis_manager.build_visnode_classes();
+      vis_manager.build_userobjects();
     }
 
     if (button_disabled) {

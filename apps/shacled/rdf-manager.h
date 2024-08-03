@@ -13,16 +13,15 @@ private:
 
   std::string fuseki_server_url;  
   
-  //Dict<URI, std::vector<URI>> all_user_object_types; // s -> rdf:type -> [o]
   Dict<RDFSubject, Dict<RDFPredicate, std::vector<RDFObject>>> triples; // s -> (p -> [o]), p != rdf:type
-  std::set<URI> all_userclasses;
-  std::set<URI> all_userobjects;
+  std::set<RDFSubject> all_userclasses;
+  std::set<RDFSubject> all_userobjects;
   
 public:
   RDFManager(const std::string& fuseki_server_url);
 
-  CURIE asCURIE(const URI& uri);
-  std::pair<URI, bool> expand_curie(const CURIE& curie);
+  CURIE collapse_prefix(const URI& uri);
+  URI restore_prefix(const CURIE& curie);
   
   HTTPRawRequestHandler http_request_handler; 
   bool in_progress_load_graph_f = false;
