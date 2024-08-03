@@ -23,4 +23,4 @@ ab:amy ab:name "Amy"; ab:ownedBy ab:alice .
 ab:luna ab:name "Luna"; ab:ownedBy ab:bob .
 
 ab:worcester ab:city-name "Worcester"; ab:county "Worcester"; ab:country-code "US".
-ab:boston ab:city-name "Boston"; ab:county "Lincolnshire"; ab:country-code "UK".
+ab:boston ab:city-name "Boston"; ab:county: "Lincolnshire"; ab:country-code "UK".

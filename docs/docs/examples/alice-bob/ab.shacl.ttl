@@ -3,33 +3,21 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix dash: <http://datashapes.org/dash#> .
-@prefix kgm: <kgm:> .
 
 @prefix ab: <http://www.geisel-software.com/RDF/alice-bob#> .
 
-kgm:ForceAlwaysInvalid rdf:type sh:NodeShape; sh:targetNode kgm:THIS_IS_INVALID_SHACL_GRAPH ;
-        sh:property [ sh:path sh:nonexistentProperty ; sh:datatype xsd:string, xsd:integer ; sh:minCount 1]
-.
-kgm:THIS_IS_INVALID_SHACL_GRAPH rdf:type rdf:nil.
-
-#ab:Human rdf:type rdfs:Class; rdf:type sh:NodeShape; sh:closed true;
-ab:C1 rdf:type rdfs:Class; rdf:type sh:NodeShape; sh:closed true;
-      sh:description [ kgm:class_curie "a:Human" ];
-	 sh:property [sh:path rdf:type; sh:minCount 1];
+ab:Human rdf:type rdfs:Class; rdf:type sh:NodeShape;
          sh:property [sh:path ab:name;
 	 	      sh:minCount 1; sh:maxCount 1;
-		      sh:dataclass xsd:string;
-		      sh:description [ kgm:member_name: "ab:name"; kgm:dataclass "xsd:string"] ];
+		      sh:dataclass xsd:string];
        	 sh:property [sh:path ab:friendOf;
 	 	      sh:minCount 0;
 		      sh:class ab:Human];
        	 sh:property [sh:path ab:livesIn;
 	              sh:minCount 1;
-		      sh:class ab:Location]	
-.
+		      sh:class ab:Location].
 
-ab:Dog rdf:type rdfs:Class; rdf:type sh:NodeShape; sh:closed true;
-       sh:property [sh:path rdf:type; sh:minCount 1];
+ab:Dog rdf:type rdfs:Class; rdf:type sh:NodeShape;
        sh:property [sh:path ab:name;
        		    sh:minCount 1; sh:maxCount 1;
 		    sh:dataclass xsd:string];
@@ -37,8 +25,7 @@ ab:Dog rdf:type rdfs:Class; rdf:type sh:NodeShape; sh:closed true;
        		    sh:minCount 1; sh:maxCount 1;
 		    sh:class ab:Human] .
 
-ab:Cat rdf:type rdfs:Class; rdf:type sh:NodeShape; sh:closed true;
-       sh:property [sh:path rdf:type; sh:minCount 1];
+ab:Cat rdf:type rdfs:Class; rdf:type sh:NodeShape;
        sh:property [sh:path ab:name;
        		    sh:minCount 1; sh:maxCount 1;
 		    sh:dataclass xsd:string];
@@ -46,14 +33,10 @@ ab:Cat rdf:type rdfs:Class; rdf:type sh:NodeShape; sh:closed true;
        		    sh:minCount 1; sh:maxCount 1;
 		    sh:class ab:Human] .
 
-ab:Location rdf:type rdfs:Class; rdf:type sh:NodeShape; sh:closed true;
-	    sh:property [sh:path rdf:type; sh:minCount 1];
-       	    sh:property [sh:path ab:city-name;
-       	    	    	 sh:minCount 1; sh:maxCount 1;
-			 sh:dataclass xsd:string];
-	    sh:property [sh:path ab:county;
-	    		 sh:minCount 0; sh:maxCount 1;
-			 sh:dataclass xsd:string];
-            sh:property [sh:path ab:country-code;
-       	    	    	sh:minCount 1; sh:maxCount 1;
-		    	sh:dataclass xsd:string].
+ab:Location rdf:type rdfs:Class; rdf:type sh:NodeShape;
+       sh:property [sh:path ab:city-name;
+       		    sh:minCount 1; sh:maxCount 1;
+		    sh:dataclass xsd:string];
+       sh:property [sh:path ab:country-code;
+       		    sh:minCount 1; sh:maxCount 1;
+		    sh:dataclass xsd:string].

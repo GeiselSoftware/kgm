@@ -7,6 +7,8 @@
 #include <variant>
 #include <functional>
 
+#include <lib-utils/dict.h>
+
 struct URI {
   std::string uri;
   bool operator==(const URI& u) const { return this->uri == u.uri; }
@@ -124,3 +126,9 @@ struct RDFSPO {
 
 URI create_URI(const URI& class_uri);
 URI create_classURI(const URI& prefix);
+
+void dump_triples(std::ostream&, const std::vector<RDFSPO>& triples);
+typedef Dict<RDFSubject, Dict<RDFPredicate, std::vector<RDFObject>>> RDFGraph;
+void build_rdf_graph(RDFGraph*, const std::vector<RDFSPO>& triples);
+void dump_triples_as_turtle(std::ostream&, RDFGraph&);
+

@@ -84,11 +84,14 @@ void VisManager::build_visnode_classes()
     if (auto v_n = dynamic_pointer_cast<VisNode_UserClass>(n)) {
       auto uc_curie = v_n->get_class_curie();
       cout << "VisManager::build, second pass: " << uc_curie << " " << uc_subj << endl;
-      if (Dict<RDFPredicate, vector<RDFObject>>* user_class_doubles = rdf_man->triples.get(uc_subj)) {
+      if (Dict<RDFPredicate, vector<RDFObject>>* user_class_doubles = rdf_man->triples.get(uc_subj); user_class_doubles == 0) {
+	cout << "WARNING: no user_class_doubles found for " << uc_curie << " " << uc_subj << endl;
+      } else {
 	if (vector<RDFObject>* sh_props_oo = user_class_doubles->get(RDFPredicate(sh::property))) {
 	  for (RDFObject& sh_props_o: *sh_props_oo) {
-	    Dict<RDFPredicate, vector<RDFObject>>* sh_props_o_doubles = rdf_man->triples.get(RDFSubject(asBNode(sh_props_o)));
-	    if (sh_props_o_doubles) { 
+	    if (Dict<RDFPredicate, vector<RDFObject>>* sh_props_o_doubles = rdf_man->triples.get(RDFSubject(asBNode(sh_props_o))); sh_props_o_doubles == 0) {
+	      cout << "WARNING: no sh_props_o_doubles found for " << uc_curie << " " << uc_subj << endl;
+	    } else {
 	      VisNode_UserClass::Member m;
 	      for (auto& [prop_p, prop_v]: *sh_props_o_doubles) {
 		//cout << "prop_v: " << prop_p << " " <<  endl;
@@ -120,6 +123,7 @@ void VisManager::build_visnode_classes()
 		} else if (asURI(prop_p) == kgm::member_type) { // fallback to kgm_member_type
 		  assert(prop_v.size() >= 1 && isLiteral(prop_v[0]));
 		  auto to_uc_curie = CURIE{asLiteral(prop_v[0]).literal};
+		  m.member_type_input.visnode_class_ptr = this->find_visnode_class(to_uc_curie);
 		  m.member_type_input.curie = to_uc_curie;
 		}
 	      }
@@ -162,15 +166,73 @@ void VisManager::build_userobjects()
   }
 }
 
+void VisManager::userclasses_to_triples(vector<RDFSPO>* triples)
+{
+  for (auto n: this->nodes) {
+    if (auto uc = dynamic_pointer_cast<VisNode_UserClass>(n); uc) {
+      CURIE uc_curie = uc->get_class_curie();
+      RDFSubject uc_subj;
+      if (auto uc_uri = rdf_man->restore_prefix(uc_curie); uc_uri != URI()) {
+	uc_subj = RDFSubject(uc_uri);
+	triples->push_back(RDFSPO(uc_subj, rdf::type, rdfs::Class));
+	triples->push_back(RDFSPO(uc_subj, rdf::type, sh::NodeShape));
+      } else {
+	BNode uc_bn;
+	uc_subj = RDFSubject(uc_bn);
+	triples->push_back(RDFSPO(uc_subj, rdf::type, rdfs::Class));
+	triples->push_back(RDFSPO(uc_subj, rdf::type, sh::NodeShape));
+	triples->push_back(RDFSPO(uc_subj, kgm::class_curie, Literal(uc_curie.curie, xsd::string)));
+      }
+      
+      for (auto& m: uc->members) {
+	BNode bn;
+	triples->push_back(RDFSPO(uc_subj, sh::property, bn));
+	if (auto path_uri = rdf_man->restore_prefix(m.member_name_input); path_uri != URI()) {
+	  triples->push_back(RDFSPO(bn, sh::path, path_uri));
+	} else {
+#pragma message("do i need kgm::placeholder??")
+	  //triples->push_back(RDFSPO(bn, sh::path, kgm::placeholder));
+	  triples->push_back(RDFSPO(bn, kgm::member_name, Literal(m.member_name_input.curie, xsd::string)));
+	}
+	triples->push_back(RDFSPO(bn, sh::minCount, Literal(1)));
+	triples->push_back(RDFSPO(bn, sh::maxCount, Literal(1)));
+	if (auto visnode_class_ptr = this->find_visnode_class(m.member_type_input.curie)) {
+	  auto to_visnode_class_curie = visnode_class_ptr->get_class_curie();
+	  assert(to_visnode_class_curie == m.member_type_input.curie);
+	  auto to_visnode_class_uri = rdf_man->restore_prefix(to_visnode_class_curie);
+	  if (to_visnode_class_uri == URI()) {
+	    triples->push_back(RDFSPO(bn, kgm::member_type, Literal(to_visnode_class_curie.curie, xsd::string)));
+	  } else {
+	    auto pred = dynamic_pointer_cast<VisNode_UserClass>(visnode_class_ptr) ? sh::class_ : sh::dataclass;
+	    triples->push_back(RDFSPO(bn, pred, to_visnode_class_uri));
+	  }
+	} else {
+	  triples->push_back(RDFSPO(bn, kgm::member_type, Literal(m.member_type_input.curie.curie, xsd::string)));
+	}
+      }
+    }
+  }
+}
+
 void VisManager::dump_shacl()
 {
+#if 0
+  vector<RDFSPO> out_triples;
+  this->userclasses_to_triples(&out_triples);
+  ostringstream out;
+  //dump_triples(out, out_triples);
+  RDFGraph out_g;
+  build_rdf_graph(&out_g, out_triples);
+  dump_triples_as_turtle(out, out_g);
+  this->shacl_dump = out.str();
+#else
   ostringstream out;
   out << prefixes::make_turtle_prefixes(false);
-  
+
   for (auto n: this->nodes) {
     if (auto node = dynamic_pointer_cast<VisNode_UserClass>(n); node) {
       auto class_curie = node->get_class_curie();
-      
+
       out << class_curie << " "
 	  << rdf_man->collapse_prefix(rdf::type) << " " << rdf_man->collapse_prefix(rdfs::Class) << "; ";
       out << rdf_man->collapse_prefix(rdf::type) << " " << rdf_man->collapse_prefix(sh::NodeShape) << ";" << endl;
@@ -196,50 +258,7 @@ void VisManager::dump_shacl()
   }
 
   this->shacl_dump = out.str();
-}
-
-void VisManager::userclasses_to_triples(vector<RDFSPO>* triples)
-{
-  for (auto n: this->nodes) {
-    if (auto uc = dynamic_pointer_cast<VisNode_UserClass>(n); uc) {
-      CURIE uc_curie = uc->get_class_curie();
-      RDFSubject uc_subj;
-      if (auto uc_uri = rdf_man->restore_prefix(uc_curie); uc_uri != URI()) {
-	uc_subj = RDFSubject(uc_uri);
-	triples->push_back(RDFSPO(uc_subj, rdf::type, rdfs::Class));
-	triples->push_back(RDFSPO(uc_subj, rdf::type, sh::NodeShape));
-      } else {
-	BNode uc_bn;
-	uc_subj = RDFSubject(uc_bn);
-	triples->push_back(RDFSPO(uc_subj, rdf::type, rdfs::Class));
-	triples->push_back(RDFSPO(uc_subj, rdf::type, sh::NodeShape));
-	triples->push_back(RDFSPO(uc_subj, kgm::class_curie, Literal(uc_curie.curie, xsd::string)));
-      }
-      
-      for (auto& m: uc->members) {
-	BNode bn;
-	triples->push_back(RDFSPO(uc_subj, sh::property, bn));
-	if (auto path_uri = rdf_man->restore_prefix(m.member_name_input); path_uri != URI()) {
-	  triples->push_back(RDFSPO(bn, sh::path, path_uri));
-	} else {
-#pragma message("do i need kgm::placeholder")
-	  //triples->push_back(RDFSPO(bn, sh::path, kgm::placeholder));
-	  triples->push_back(RDFSPO(bn, kgm::member_name, Literal(m.member_name_input.curie, xsd::string)));
-	}
-	triples->push_back(RDFSPO(bn, sh::minCount, Literal(1)));
-	triples->push_back(RDFSPO(bn, sh::maxCount, Literal(1)));
-	if (auto visnode_class_ptr = this->find_visnode_class(m.member_type_input.curie)) {
-	  auto pred = dynamic_pointer_cast<VisNode_UserClass>(visnode_class_ptr) ? sh::class_ : sh::dataclass;
-	  auto to_visnode_class_curie = visnode_class_ptr->get_class_curie();
-	  assert(to_visnode_class_curie == m.member_type_input.curie);
-	  auto to_visnode_class_uri = rdf_man->restore_prefix(to_visnode_class_curie);
-	  triples->push_back(RDFSPO(bn, pred, to_visnode_class_uri));
-	} else {
-	  triples->push_back(RDFSPO(bn, kgm::member_type, Literal(m.member_type_input.curie.curie, xsd::string)));
-	}
-      }
-    }
-  }
+#endif
 }
 
 void VisManager::make_frame()
