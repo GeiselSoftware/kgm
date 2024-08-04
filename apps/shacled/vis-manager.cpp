@@ -49,7 +49,6 @@ void VisManager::add_new_userclass()
   static int noname_c = 1;
   auto new_class_curie = CURIE{"noname" + std::to_string(noname_c++)};
   auto v_n = make_shared<VisNode_UserClass>(new_class_curie, this);
-#pragma message("this is a problem: what if CURIE addresses more than one userclass?")
   this->nodes.set(new_class_curie, v_n);
 }
 

@@ -49,6 +49,17 @@ CURIE VisNode_UserClass::get_class_curie()
   return this->class_curie_input;
 }
 
+static int class_curie_edit_cb(ImGuiInputTextCallbackData* data)
+{
+  VisNode_UserClass* that = (VisNode_UserClass*)data->UserData;
+  //cout << "class_curie_edit_cb: " << data->Buf << endl;
+  if (that->vis_man->find_visnode_class(CURIE{std::string(data->Buf)}) != 0) {
+    cout << "preventing dup in class curie " << that->class_curie_input << endl;
+    data->InsertChars(0, "_");
+  }
+  return 0;
+}
+
 void VisNode_UserClass::make_frame()
 {
   ed::BeginNode(this->ID);
@@ -70,9 +81,9 @@ void VisNode_UserClass::make_frame()
     }
   
     if (this->is_editable) {
-      ImGui::SetNextItemWidth(100);      
+      ImGui::SetNextItemWidth(100);
       CURIE prev_curie = this->class_curie_input;
-      if (ImGui::InputText("##uri", &this->class_curie_input.curie)) {
+      if (ImGui::InputText("##uri", &this->class_curie_input.curie, ImGuiInputTextFlags_CallbackEdit, class_curie_edit_cb, this)) {
 	cout << "mod of class_curie_input: " << prev_curie << " --> " << this->class_curie_input << endl;
 	auto prev = vis_man->nodes.get(prev_curie); // will prevent delete of this instance by remove below
 	vis_man->nodes.remove(prev_curie);
