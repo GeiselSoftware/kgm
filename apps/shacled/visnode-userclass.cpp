@@ -99,7 +99,10 @@ void VisNode_UserClass::make_frame()
     }    
   }
 
-  ImGui::Text("This is the input");
+  if (ImGui::Button("X")) {
+    this->vis_man->userclasses_to_delete.push_back(this->class_curie_input);
+  }
+  
   ImGui::SameLine();
   if (ImGui::Button(" + ")) {
     this->members.push_back(Member());

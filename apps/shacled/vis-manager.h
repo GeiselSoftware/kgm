@@ -22,6 +22,8 @@ private:
 
   Dict<CURIE, std::shared_ptr<VisNode_Class>> nodes;
   Dict<std::tuple<CURIE, CURIE, CURIE>, std::shared_ptr<VisLink>> links;
+
+  std::vector<CURIE> userclasses_to_delete;
   
 public:
   VisManager(RDFManager*);

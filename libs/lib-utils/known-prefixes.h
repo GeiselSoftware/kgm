@@ -81,6 +81,11 @@ struct nw {
   static inline URI __prefix_uri{"http://www.geisel-software.com/RDF/NorthWind#"};
 };
 
+struct TU { // Test User
+  static inline std::string __prefix{"TU"};
+  static inline URI __prefix_uri{"http://www.geisel-software.com/RDF/KGM/TestUser#"};
+};
+
 // ..............................
 
 struct prefixes

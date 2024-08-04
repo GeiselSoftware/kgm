@@ -289,6 +289,11 @@ void VisManager::dump_shacl()
 
 void VisManager::make_frame()
 {
+  // delete userclasses marked for deletion
+  for (auto& uc_curie: this->userclasses_to_delete) {
+    this->nodes.remove(uc_curie);
+  }
+  
   // show all nodes
   for (auto& [_, node]: this->nodes) {
     node->make_frame();
