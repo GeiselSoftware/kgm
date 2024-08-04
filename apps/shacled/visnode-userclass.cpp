@@ -70,13 +70,14 @@ void VisNode_UserClass::make_frame()
     }
   
     if (this->is_editable) {
-      ImGui::SetNextItemWidth(100);
-      CURIE prev = this->class_curie_input;
+      ImGui::SetNextItemWidth(100);      
+      CURIE prev_curie = this->class_curie_input;
       mod = ImGui::InputText("##uri", &this->class_curie_input.curie);
       if (mod) {
-	cout << "mod of class_curie_input: " << prev << " --> " << this->class_curie_input << endl;
-	vis_man->visnode_classes_by_curie.remove(prev);
-	vis_man->visnode_classes_by_curie.set(this->class_curie_input, dynamic_pointer_cast<VisNode_Class>(this->get_ptr()));
+	cout << "mod of class_curie_input: " << prev_curie << " --> " << this->class_curie_input << endl;
+	auto prev = vis_man->nodes.get(prev_curie); // will prevent delete of this instance by remove below
+	vis_man->nodes.remove(prev_curie);
+	vis_man->nodes.set(this->class_curie_input, dynamic_pointer_cast<VisNode_Class>(this->get_ptr()));
       }
     } else {
       ImGui::SetNextItemWidth(100);

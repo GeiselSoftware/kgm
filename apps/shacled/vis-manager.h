@@ -19,11 +19,10 @@ private:
   friend class VisNode;
   friend class VisNode_UserClass;
   RDFManager* rdf_man = 0;
-  std::vector<std::shared_ptr<VisNode>> nodes;
-  std::vector<std::shared_ptr<VisLink>> links;
 
-  Dict<CURIE, std::shared_ptr<VisNode_Class>> visnode_classes_by_curie;
-
+  Dict<CURIE, std::shared_ptr<VisNode_Class>> nodes;
+  Dict<std::tuple<CURIE, CURIE, CURIE>, std::shared_ptr<VisLink>> links;
+  
 public:
   VisManager(RDFManager*);
   void reset();
@@ -31,6 +30,7 @@ public:
   void dump_shacl();
   std::string shacl_dump;
 
+  void build_visnode_dataclasses(); 
   void build_visnode_classes();
   void build_userobjects();
   
