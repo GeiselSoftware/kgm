@@ -11,15 +11,16 @@ class VisManager;
 class RDFManager;
 class VisNode : public std::enable_shared_from_this<VisNode>
 {
-public:
+private:
   static long unsigned int last_node_id;
+  
+public:
   static long unsigned int get_next_id();
 
-  ed::NodeId ID;
   VisManager* vis_man = 0;
   RDFManager* rdf_man = 0;
   
-  explicit VisNode(ed::NodeId new_node_id, VisManager*);
+  explicit VisNode(VisManager*);
   std::shared_ptr<VisNode> get_ptr() { return shared_from_this(); }
   
   virtual ~VisNode() = 0;

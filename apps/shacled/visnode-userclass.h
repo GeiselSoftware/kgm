@@ -14,7 +14,7 @@ class URI;
 class VisNode_Class : public VisNode
 {
 public:
-  explicit VisNode_Class(long unsigned int node_id, VisManager* vis_man) : VisNode(node_id, vis_man) {}
+  explicit VisNode_Class(VisManager* vis_man) : VisNode(vis_man) {}
   virtual CURIE get_class_curie() = 0;
 };
 
@@ -53,6 +53,8 @@ public:
   
   bool is_editable = true;
   ImGui::ToggleLock toggle_lock;  
+
+  ed::NodeId ID;
   ed::PinId node_InputPinId, node_OutputPinId;
   ed::PinId node_bottom_pin;
     

@@ -12,7 +12,7 @@
 using namespace std;
 
 VisNode_DataClass::VisNode_DataClass(const CURIE& curie, VisManager* vis_man) :
-  VisNode_Class(VisNode::get_next_id(), vis_man)
+  VisNode_Class(vis_man)
 {
   this->dataclass_curie = curie;
 }
@@ -29,17 +29,19 @@ void VisNode_DataClass::make_frame()
 
 VisNode_UserClass::Member::Member()
 {
-  this->out_pin_id = VisNode::last_node_id++;
+  this->out_pin_id = VisNode::get_next_id();
 }
 
 VisNode_UserClass::VisNode_UserClass(const CURIE& class_curie, VisManager* vis_man) :
-  VisNode_Class{get_next_id(), vis_man},
+  VisNode_Class(vis_man),
   toggle_lock("img/lock.png", "img/unlock.png")
 {
   this->class_curie_input = class_curie;
-  this->node_InputPinId = last_node_id++;
-  this->node_OutputPinId = last_node_id++;
-  this->node_bottom_pin = last_node_id++;
+
+  this->ID = VisNode::get_next_id();
+  this->node_InputPinId = VisNode::get_next_id();
+  this->node_OutputPinId = VisNode::get_next_id();
+  this->node_bottom_pin = VisNode::get_next_id();
 }
 
 CURIE VisNode_UserClass::get_class_curie()
@@ -49,8 +51,6 @@ CURIE VisNode_UserClass::get_class_curie()
 
 void VisNode_UserClass::make_frame()
 {
-  bool mod = false;
-  
   ed::BeginNode(this->ID);
   ImGui::PushID(this->ID.Get());
 
@@ -72,8 +72,7 @@ void VisNode_UserClass::make_frame()
     if (this->is_editable) {
       ImGui::SetNextItemWidth(100);      
       CURIE prev_curie = this->class_curie_input;
-      mod = ImGui::InputText("##uri", &this->class_curie_input.curie);
-      if (mod) {
+      if (ImGui::InputText("##uri", &this->class_curie_input.curie)) {
 	cout << "mod of class_curie_input: " << prev_curie << " --> " << this->class_curie_input << endl;
 	auto prev = vis_man->nodes.get(prev_curie); // will prevent delete of this instance by remove below
 	vis_man->nodes.remove(prev_curie);
@@ -135,36 +134,32 @@ void VisNode_UserClass::make_frame()
     ImGui::SameLine();
 
     {
-      auto member_type_check = rdf_man->restore_prefix(member.member_type_input.curie) != URI();
-      member_type_check = member_type_check && vis_man->find_visnode_class(member.member_type_input.curie) != 0;
+      // update member type class curie if applicable
+      if (member.member_type_input.visnode_class_ptr) {
+	member.member_type_input.curie = member.member_type_input.visnode_class_ptr->get_class_curie();
+      } else {
+	member.member_type_input.visnode_class_ptr = vis_man->find_visnode_class(member.member_type_input.curie);
+      }
+
+      auto missing_uri_check = rdf_man->restore_prefix(member.member_type_input.curie) == URI(); // true if no URI for this curie      
+      auto missing_curie_type_check = member.member_type_input.visnode_class_ptr == 0; // true if curie has no corresponding type node
       
       bool need_pop_style = false;
-      if (!member_type_check) {
+      if (missing_uri_check || missing_curie_type_check) {
 	ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0,0,255,255));
 	ImGui::PushStyleColor(ImGuiCol_FrameBg, IM_COL32(0,255,0,255));
 	need_pop_style = true;
       }
 
-      // update member type class curie if applicable
-      if (member.member_type_input.visnode_class_ptr) {
-	member.member_type_input.curie = member.member_type_input.visnode_class_ptr->get_class_curie();
+      ImGui::SetNextItemWidth(100.0f);
+      if (ImGui::InputText("##member_type_", &member.member_type_input.curie.curie)) {
+	cout << "mod " << member.member_type_input.curie << endl;
+	member.member_type_input.visnode_class_ptr = vis_man->find_visnode_class(member.member_type_input.curie);
       }
 
-      ImGui::SetNextItemWidth(100.0f);
-      mod = mod || ImGui::InputText("##member_type_", &member.member_type_input.curie.curie);
       if (need_pop_style) {
 	ImGui::PopStyleColor();
 	ImGui::PopStyleColor();
-      }
-
-      if (mod) {
-	cout << "mod " << member.member_type_input.curie << endl;
-	// check if we need to change member_type to point to another userclass, or to another dataclass or just hold curie
-	if (auto vnc = vis_man->find_visnode_class(member.member_type_input.curie)) {
-	  member.member_type_input.visnode_class_ptr = vnc;
-	} else {
-	  member.member_type_input.visnode_class_ptr = 0;
-	}
       }
     }
     

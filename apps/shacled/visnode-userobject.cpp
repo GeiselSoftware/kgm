@@ -2,13 +2,15 @@
 #include <misc/cpp/imgui_stdlib.h>
 
 VisNode_UserObject::VisNode_UserObject(const CURIE& curie, VisManager* vis_man) :
-  VisNode{get_next_id(), vis_man}
+  VisNode(vis_man)
 {
   this->user_object_curie = curie;
 }
 
 void VisNode_UserObject::make_frame()
 {
+#pragma message("VisNode_UserObject::make_frame disabled")
+#if 0
   ed::BeginNode(this->ID);
   ImGui::PushID(this->ID.Get());
 
@@ -35,4 +37,5 @@ void VisNode_UserObject::make_frame()
   
   ImGui::PopID();
   ed::EndNode();
+#endif
 }
