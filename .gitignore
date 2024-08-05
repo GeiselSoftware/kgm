@@ -17,3 +17,5 @@ docs/site
 
 imgui.ini
 Simple.json
+
+*.orig

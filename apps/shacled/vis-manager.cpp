@@ -293,6 +293,7 @@ void VisManager::make_frame()
   for (auto& uc_curie: this->userclasses_to_delete) {
     this->nodes.remove(uc_curie);
   }
+  this->userclasses_to_delete.clear();
   
   // show all nodes
   for (auto& [_, node]: this->nodes) {
