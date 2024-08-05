@@ -72,7 +72,9 @@ struct SHACLEditor: public LoopStep
       ImGui::BeginDisabled(true);
     }
 
-    if (ImGui::Button("test load")) {
+    static bool done_inital_load_action = false;
+    if (ImGui::Button("test load") || done_inital_load_action == false) {
+      done_inital_load_action = true;
       if (!rdf_manager.in_progress_load_graph()) {
         rdf_manager.start_load_graph(this->kgm_path);
       }

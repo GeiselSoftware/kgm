@@ -2,6 +2,7 @@
 #include "uuid.h"
 #include "known-prefixes.h"
 
+#include <vector>
 #include <sstream>
 #include <fmt/format.h>
 

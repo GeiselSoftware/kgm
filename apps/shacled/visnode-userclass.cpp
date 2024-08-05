@@ -81,7 +81,7 @@ void VisNode_UserClass::make_frame()
     }
   
     if (this->is_editable) {
-      ImGui::SetNextItemWidth(100);
+      ImGui::SetNextItemWidth(200);
       CURIE prev_curie = this->class_curie_input;
       if (ImGui::InputText("##uri", &this->class_curie_input.curie, ImGuiInputTextFlags_CallbackEdit, class_curie_edit_cb, this)) {
 	cout << "mod of class_curie_input: " << prev_curie << " --> " << this->class_curie_input << endl;
@@ -90,7 +90,7 @@ void VisNode_UserClass::make_frame()
 	vis_man->nodes.set(this->class_curie_input, dynamic_pointer_cast<VisNode_Class>(this->get_ptr()));
       }
     } else {
-      ImGui::SetNextItemWidth(100);
+      ImGui::SetNextItemWidth(200);
       ImGui::InputText("##uri", &this->class_curie_input.curie, ImGuiInputTextFlags_ReadOnly);
     }
     if (need_pop_style) {
@@ -138,7 +138,7 @@ void VisNode_UserClass::make_frame()
 	need_pop_style = true;
       }
       
-      ImGui::SetNextItemWidth(100.0f);
+      ImGui::SetNextItemWidth(150.0f);
       ImGui::InputText("##edit_k_", &member.member_name_input.curie);
       if (need_pop_style) {
 	ImGui::PopStyleColor();
@@ -165,7 +165,7 @@ void VisNode_UserClass::make_frame()
 	need_pop_style = true;
       }
 
-      ImGui::SetNextItemWidth(100.0f);
+      ImGui::SetNextItemWidth(150.0f);
       if (ImGui::InputText("##member_type_", &member.member_type_input.curie.curie)) {
 	cout << "mod " << member.member_type_input.curie << endl;
 	member.member_type_input.visnode_class_ptr = vis_man->find_visnode_class(member.member_type_input.curie);
