@@ -60,3 +60,54 @@ public:
     
   void make_frame() override;
 };
+
+class UserClassNode_delete_class : public Action
+{
+private:
+  CURIE class_curie;
+  
+public:
+  explicit UserClassNode_delete_class(VisManager* vis_man,
+				      CURIE class_curie) : Action(vis_man)
+  {
+    this->class_curie = class_curie;
+  }
+  
+  void do_it() override {
+    this->vis_man->nodes.remove(this->class_curie);
+  }
+};
+
+class UserClassNode_change_class_curie : public Action
+{
+private:
+  std::shared_ptr<VisNode> n;
+  CURIE prev_curie;
+  
+public:
+  explicit UserClassNode_change_class_curie(VisManager* vis_man,
+					    std::shared_ptr<VisNode> n, CURIE prev_curie) : Action(vis_man)
+  {
+    this->n = n;
+    this->prev_curie = prev_curie;
+  }
+  
+  void do_it() override
+  {
+    std::shared_ptr<VisNode_UserClass> that = dynamic_pointer_cast<VisNode_UserClass>(this->n);
+    
+    auto new_curie = that->class_curie_input;
+    while (that->vis_man->find_visnode_class(new_curie) != 0) {
+      new_curie.curie += "_";
+      std::cout << "preventing dup in class curie "
+		<< that->class_curie_input
+		<< " " << new_curie
+		<< std::endl;
+
+    }
+    
+    this->vis_man->nodes.remove(prev_curie);
+    that->class_curie_input = new_curie;
+    this->vis_man->nodes.set(new_curie, that);
+  }
+};

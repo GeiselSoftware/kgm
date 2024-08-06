@@ -85,9 +85,8 @@ void VisNode_UserClass::make_frame()
       CURIE prev_curie = this->class_curie_input;
       if (ImGui::InputText("##uri", &this->class_curie_input.curie, ImGuiInputTextFlags_CallbackEdit, class_curie_edit_cb, this)) {
 	cout << "mod of class_curie_input: " << prev_curie << " --> " << this->class_curie_input << endl;
-	auto prev = vis_man->nodes.get(prev_curie); // will prevent delete of this instance by remove below
-	vis_man->nodes.remove(prev_curie);
-	vis_man->nodes.set(this->class_curie_input, dynamic_pointer_cast<VisNode_Class>(this->get_ptr()));
+	auto action = make_shared<UserClassNode_change_class_curie>(this->vis_man, this->get_ptr(), prev_curie);
+	this->vis_man->pending_actions.push_back(action);	
       }
     } else {
       ImGui::SetNextItemWidth(200);
@@ -100,7 +99,8 @@ void VisNode_UserClass::make_frame()
   }
 
   if (ImGui::Button("X")) {
-    this->vis_man->userclasses_to_delete.push_back(this->class_curie_input);
+    auto action = make_shared<UserClassNode_delete_class>(this->vis_man, this->class_curie_input);
+    this->vis_man->pending_actions.push_back(action);
   }
   
   ImGui::SameLine();

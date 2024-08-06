@@ -289,12 +289,6 @@ void VisManager::dump_shacl()
 
 void VisManager::make_frame()
 {
-  // delete userclasses marked for deletion
-  for (auto& uc_curie: this->userclasses_to_delete) {
-    this->nodes.remove(uc_curie);
-  }
-  this->userclasses_to_delete.clear();
-  
   // show all nodes
   for (auto& [_, node]: this->nodes) {
     node->make_frame();
@@ -305,6 +299,13 @@ void VisManager::make_frame()
     ed::Link(link->ID, link->StartPinID, link->EndPinID);
   }
 
+  if (this->pending_actions.size() > 0) {
+    auto action = this->pending_actions.front();
+    this->pending_actions.pop_front();
+    action->do_it();
+    //cout << "pending actions size: " << pending_actions.size() << endl;
+  }
+  
 #if 0
   // Handle creation action, returns true if editor want to create new object (node or link)
   if (ed::BeginCreate()) {

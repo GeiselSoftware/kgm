@@ -2,6 +2,7 @@
 #pragma once
 
 #include <vector>
+#include <list>
 #include <memory>
 
 #include <lib-utils/dict.h>
@@ -13,6 +14,17 @@ class RDFManager;
 class VisNode_Class;
 class VisNode_UserClass;
 class VisNode_DataClass;
+class VisManager;
+
+class Action {
+protected:
+  VisManager* vis_man = 0;
+
+public:
+  Action(VisManager* vis_man) { this->vis_man = vis_man; }
+  virtual void do_it() = 0;
+};
+
 class VisManager
 {
 private:
@@ -20,10 +32,12 @@ private:
   friend class VisNode_UserClass;
   RDFManager* rdf_man = 0;
 
+  friend class UserClassNode_delete_class;
+  friend class UserClassNode_change_class_curie;
   Dict<CURIE, std::shared_ptr<VisNode_Class>> nodes;
   Dict<std::tuple<CURIE, CURIE, CURIE>, std::shared_ptr<VisLink>> links;
 
-  std::vector<CURIE> userclasses_to_delete;
+  std::list<std::shared_ptr<Action>> pending_actions;
   
 public:
   VisManager(RDFManager*);
