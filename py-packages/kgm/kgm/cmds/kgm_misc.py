@@ -5,6 +5,7 @@ from .. import graphviz_utils
 
 import http.server
 import socketserver
+import socket
 import os
 
 def do_misc_gv(ttl_file, construct_query):
@@ -52,20 +53,40 @@ def do_misc_select(ttl_file, select_query):
         for row in rq_res:
             print([str(x) for x in row], len(row))
 
+
+class ReuseAddrTCPServer(socketserver.TCPServer):
+    allow_reuse_address = True
+
+    def server_bind(self):
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        socketserver.TCPServer.server_bind(self)
+
+def launch_http_server(host, port, directory):
+    # Change the working directory to serve files from the specified directory
+    os.chdir(directory)
+    
+    # Define handler to serve the files
+    Handler = http.server.SimpleHTTPRequestHandler
+    
+    # Create the server with specified host and port using the custom TCPServer
+    httpd = ReuseAddrTCPServer((host, port), Handler)
+    
+    print(f"Serving HTTP on {host} port {port} (http://{host}:{port}/) ...")
+    
+    # Serve until process is interrupted
+    try:
+        httpd.serve_forever()
+    except KeyboardInterrupt:
+        pass
+    
+    httpd.server_close()
+    print("Server stopped.")                                                                                                
+            
 def do_misc_wasmtest():
     #ipdb.set_trace()
     HOST = "0.0.0.0"
     PORT = 8000
     DIRECTORY = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "kgm-wasm"))
     print("DIRECTORY:", DIRECTORY)
-    
-    # Change the current working directory to the serve directory
-    os.chdir(DIRECTORY)
 
-    # Create the handler to serve files
-    Handler = http.server.SimpleHTTPRequestHandler
-
-    # Create and start the HTTP server
-    with socketserver.TCPServer((HOST, PORT), Handler) as httpd:
-        print(f"Serving HTTP on {HOST} port {PORT} (http://{HOST}:{PORT}/) ...")
-        httpd.serve_forever()
+    launch_http_server(HOST, PORT, DIRECTORY)
