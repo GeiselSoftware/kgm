@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import click
-from .cmds import kgm_graph, kgm_validate, kgm_misc
+from .cmds import kgm_graph, kgm_graph_shacled, kgm_validate, kgm_misc
 from .config_utils import load_config
 
 class CustomGroup(click.Group):
@@ -27,14 +27,14 @@ def config(ctx):
     print("current config name:", w_config_name)
     print("current config:", w_config)
 
-@cli.command("ls")
+@cli.command("ls", help = "lists available graphs")
 @click.argument("path", required = False)
 @click.pass_context
 def graph_ls(ctx, path):
     _, w_config = ctx.obj["config"]
     kgm_graph.do_ls(w_config, path)
 
-@cli.command("new")
+@cli.command("new", help = "creates new empty graph at given path")
 @click.option("--kgm-graph-type", "-t", type = click.Choice(['data', 'shacl']), required = True, help = "KGM graph type, data or shacl")
 @click.argument("path", required = True)
 @click.pass_context
@@ -42,22 +42,22 @@ def graph_new(ctx, kgm_graph_type, path):
     _, w_config = ctx.obj["config"]
     kgm_graph.do_new(w_config, kgm_graph_type, path)
     
-@cli.command("append")
+@cli.command("download", help = "downloads ttl file into empty graph")
 @click.argument("path", required = True)
 @click.argument("ttl_file", required = True)
 @click.pass_context
-def graph_append(ctx, path, ttl_file):
+def graph_download(ctx, path, ttl_file):
     _, w_config = ctx.obj["config"]
-    kgm_graph.do_append(w_config, path, ttl_file)
+    kgm_graph.do_download(w_config, path, ttl_file)
 
-@cli.command("remove")
+@cli.command("remove", help = "removes graph")
 @click.argument("path", required = True)
 @click.pass_context
 def graph_remove(ctx, path):
     _, w_config = ctx.obj["config"]
     kgm_graph.do_remove(w_config, path)
 
-@cli.command("copy")
+@cli.command("copy", help = "copy graph to new path")
 @click.argument("source-path", required = True)
 @click.argument("dest-path", required = True)
 @click.pass_context
@@ -65,7 +65,7 @@ def do_copy(ctx, source_path, dest_path):
     _, w_config = ctx.obj["config"]
     kgm_graph.do_copy(w_config, source_path, dest_path)
 
-@cli.command("rename")
+@cli.command("rename", help = "changes the path of the graph leaving graph content intact")
 @click.argument("path", required = True)
 @click.argument("new-path", required = True)
 @click.pass_context
@@ -74,21 +74,29 @@ def do_rename(ctx, path, new_path):
     kgm_graph.do_rename(w_config, path, new_path)
 
 @cli.command("query")
-@click.option("--select-query-file", required = False, help = "select query file")
-@click.option("--select-query", required = False, help = "select query")
+@click.option("--select-query", "-Q", required = True, help = "select query")
 @click.pass_context
-def do_graph_select(select_query, select_query_file):
-    print(select_query, select_query_file)
-    kgm_graph.do_graph_select(select_query, select_query_file)
+def do_graph_select(ctx, select_query):
+    _, w_config = ctx.obj["config"]
+    kgm_graph.do_graph_select(w_config, select_query)
 
+@cli.command("shacled")
+@click.argument("path", required = True)
+@click.option("--public-access", "-P", is_flag = True, required = False)
+@click.pass_context
+def do_graph_shacled(ctx, path, public_access):
+    _, w_config = ctx.obj["config"]
+    kgm_graph_shacled.do_graph_shacled(w_config, path, public_access)
     
 @cli.command("validate")
 @click.argument("shacl-path")
 @click.argument("path")
 @click.pass_context
-def do_validate(shacl_path, path):
-    kgm_validate.do_validate(shacl_path, path)
-    
+def do_validate(ctx, shacl_path, path):
+    _, w_config = ctx.obj["config"]
+    kgm_validate.do_validate(w_config, shacl_path, path)
+
+
 @cli.group("misc")
 def do_misc():
     pass
