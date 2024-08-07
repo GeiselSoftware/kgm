@@ -151,7 +151,16 @@ def do_rename(w_config, path, new_path):
     for rq in rq_queries:
         print(rq)
         rq_update(rq, config = w_config)
-    
+
+def do_show(w_config, path, subj_or_obj):
+    graph_curie, _ = get_kgm_graph(w_config, path)
+    if graph_curie is None:
+        print(f"can't find path {path}, giving up")
+        return
+
+    rq = make_rq(f"select ?p ?o {{ graph {graph_curie} {{ {subj_or_obj} ?p ?o }} }}")
+    #print(rq)
+    print(rq_select(rq, config = w_config))
         
 def do_graph_select(w_config, select_query):
     query_text = make_rq(select_query)

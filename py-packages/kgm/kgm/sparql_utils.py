@@ -11,6 +11,7 @@ known_prefixes = {
     "xsd": "http://www.w3.org/2001/XMLSchema#",
     "sh": "http://www.w3.org/ns/shacl#",
     "kgm": "http://www.geisel-software.com/RDF/KGM#",
+    "dummy": "dummy:",
     "ab": "http://www.geisel-software.com/RDF/alice-bob#",
     "nw": "http://www.geisel-software.com/RDF/NorthWind#"
 }
