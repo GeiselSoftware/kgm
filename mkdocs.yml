@@ -26,6 +26,9 @@ plugins:
 extra_javascript:
   - javascripts/custom-abbr.js
 
+extra_css:
+  - css/extra.css
+
 # Page tree
 nav:
   - KG for practical software engeneering: kgm-introduction.md
