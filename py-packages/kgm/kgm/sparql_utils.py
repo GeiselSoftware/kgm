@@ -4,7 +4,6 @@ from SPARQLWrapper import SPARQLWrapper, JSON, TURTLE
 from SPARQLWrapper import POST, BASIC
 
 kgm_prefix = "https://www.geisel-software.com/RDFPrefix/kgm#"
-fuseki_url = "http://localhost:3030/kgm-default-dataset"
 
 def make_rq(rq):
     res = """
@@ -36,7 +35,7 @@ def to_rdfw(d):
         return literal(d['value'])
     raise Exception("unknown type")
 
-def rq_insert_graph(g, graph_uri):
+def rq_insert_graph(g, graph_uri, *, config):
     # Serialize the graph to a string in N-Triples format
     ntriples_data = g.serialize(format="nt")#.decode("utf-8")
     
@@ -56,7 +55,7 @@ def rq_insert_graph(g, graph_uri):
         """
             
     # Create a SPARQLWrapper instance
-    fuseki_update_url = f"{fuseki_url}/update"
+    fuseki_update_url = config["backend-url"] + "/update"
     sparql = SPARQLWrapper(fuseki_update_url)
     #sparql.setHTTPAuth(BASIC)
     #sparql.setCredentials("username", "password")  # Replace with your Fuseki credentials if necessary
@@ -72,8 +71,8 @@ def rq_insert_graph(g, graph_uri):
     if response.response.status != 200:
         raise Exception(f"Failed to insert data. Status code: {response.response.status}")
 
-def rq_select(rq):
-    fuseki_query_url = f"{fuseki_url}/query"
+def rq_select(rq, *, config):
+    fuseki_query_url = config["backend-url"] + "/query"
     sparql = SPARQLWrapper(fuseki_query_url)
 
     # Set the query and the return format
@@ -85,8 +84,8 @@ def rq_select(rq):
 
     return results
 
-def rq_construct(rq):
-    fuseki_query_url = f"{fuseki_url}/query"
+def rq_construct(rq, *, config):
+    fuseki_query_url = config["backend-url"] + "/query"
     sparql = SPARQLWrapper(fuseki_query_url)
 
     # Set the query and the return format
@@ -99,8 +98,8 @@ def rq_construct(rq):
             
     return g
 
-def rq_update(rq):
-    fuseki_query_url = f"{fuseki_url}/update"
+def rq_update(rq, *, config):
+    fuseki_query_url = config["backend-url"] + "/update"
     sparql = SPARQLWrapper(fuseki_query_url)
 
     # Set the query and the return format

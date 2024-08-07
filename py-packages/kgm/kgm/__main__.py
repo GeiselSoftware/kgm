@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
 import click
-from .cmds import kgm_config, kgm_graph, kgm_validate, kgm_misc
+from .cmds import kgm_graph, kgm_validate, kgm_misc
+from .config_utils import load_config
 
 class CustomGroup(click.Group):
     def parse_args(self, ctx, args):
@@ -11,44 +12,71 @@ class CustomGroup(click.Group):
         return super().parse_args(ctx, args)
     
 @click.group(cls = CustomGroup)
-def cli():
-    pass
+@click.option("--version", "-V", is_flag = True)
+@click.option("--config", "-c")
+@click.pass_context
+def cli(ctx, version, config):
+    #print("cli pre-subcommand:", version, config)
+    ctx.ensure_object(dict)
+    ctx.obj['config'] = load_config(config)
 
-@cli.command()
-def config():
-    kgm_config.do_config_show()
+@cli.command("show-config")
+@click.pass_context
+def config(ctx):
+    w_config_name, w_config = ctx.obj["config"]
+    print("current config name:", w_config_name)
+    print("current config:", w_config)
 
-@cli.group("graph")
-def do_graph():
-    pass
+@cli.command("ls")
+@click.argument("path", required = False)
+@click.pass_context
+def graph_ls(ctx, path):
+    _, w_config = ctx.obj["config"]
+    kgm_graph.do_ls(w_config, path)
 
-@do_graph.command()
-@click.argument("path")
-def ls(path):
-    kgm_graph.do_ls_kgm_graphs(path)
+@cli.command("new")
+@click.option("--kgm-graph-type", "-t", type = click.Choice(['data', 'shacl']), required = True, help = "KGM graph type, data or shacl")
+@click.argument("path", required = True)
+@click.pass_context
+def graph_new(ctx, kgm_graph_type, path):
+    _, w_config = ctx.obj["config"]
+    kgm_graph.do_new(w_config, kgm_graph_type, path)
     
-@do_graph.command("add")
-@click.option("--append", "-a", is_flag = True, help = "append destination graph if exists")
-@click.option("--kgm-graph-type", type = click.Choice(['data', 'shacl']), default = 'data', show_default = True, help = "KGM graph type, data or shacl")
-@click.argument("path")
-@click.argument("ttl_file")
-def do_add(ttl_file, path, kgm_graph_type, append):
-    kgm_graph.do_add_graph(ttl_file, path, kgm_graph_type, append)
+@cli.command("append")
+@click.argument("path", required = True)
+@click.argument("ttl_file", required = True)
+@click.pass_context
+def graph_append(ctx, path, ttl_file):
+    _, w_config = ctx.obj["config"]
+    kgm_graph.do_append(w_config, path, ttl_file)
 
-@do_graph.command("replace")
-@click.argument("path")
-@click.argument("ttl_file")
-def do_graph_replace(path, ttl_file):
-    kgm_graph.do_graph_replace(path, ttl_file)
+@cli.command("remove")
+@click.argument("path", required = True)
+@click.pass_context
+def graph_remove(ctx, path):
+    _, w_config = ctx.obj["config"]
+    kgm_graph.do_remove(w_config, path)
 
-@do_graph.command("remove")
-@click.argument("path")
-def rm(path):
-    kgm_graph.do_remove_graph(path)
+@cli.command("copy")
+@click.argument("source-path", required = True)
+@click.argument("dest-path", required = True)
+@click.pass_context
+def do_copy(ctx, source_path, dest_path):
+    _, w_config = ctx.obj["config"]
+    kgm_graph.do_copy(w_config, source_path, dest_path)
 
-@do_graph.command("query")
+@cli.command("rename")
+@click.argument("path", required = True)
+@click.argument("new-path", required = True)
+@click.pass_context
+def do_rename(ctx, path, new_path):
+    _, w_config = ctx.obj["config"]    
+    kgm_graph.do_rename(w_config, path, new_path)
+
+@cli.command("query")
 @click.option("--select-query-file", required = False, help = "select query file")
 @click.option("--select-query", required = False, help = "select query")
+@click.pass_context
 def do_graph_select(select_query, select_query_file):
     print(select_query, select_query_file)
     kgm_graph.do_graph_select(select_query, select_query_file)
@@ -57,6 +85,7 @@ def do_graph_select(select_query, select_query_file):
 @cli.command("validate")
 @click.argument("shacl-path")
 @click.argument("path")
+@click.pass_context
 def do_validate(shacl_path, path):
     kgm_validate.do_validate(shacl_path, path)
     
