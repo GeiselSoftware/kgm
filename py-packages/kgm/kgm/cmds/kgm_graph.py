@@ -1,4 +1,5 @@
 #import ipdb
+import sys
 import rdflib
 import urllib
 import pandas as pd
@@ -36,12 +37,33 @@ def do_cat(w_config, path):
         return
 
     graph_uri = restore_prefix(graph_curie)
-    rq = make_rq(f"construct {{ ?s ?p ?o }} where {{ graph <{graph_uri}> {{ ?s ?p ?o }} }}")
+    rq = make_rq(f"""
+    construct {{ 
+      ?s ?p ?o 
+    }} where {{ 
+       graph <{graph_uri}> {{ 
+         ?s ?p ?o
+       }} 
+    }} order by ?s ?p ?o
+    """)
     #print(rq)
     g = rq_construct(rq, config = w_config)
     #print(len(g))
     #print(type(g))
-    print(g.serialize(format="ttl"))
+
+    if 0:
+        print(g.serialize(format="ttl"))
+    else:
+        # this is other end of hack to insert bnodes as URIs with dummy: as prefix
+        res_g = rdflib.Graph()
+        for s, p, o in g:
+            #print(s, p, o)
+            if s.toPython().startswith("dummy:"):
+                s = rdflib.BNode(s)
+            if type(o) == rdflib.URIRef and o.toPython().startswith("dummy:"):
+                o = rdflib.BNode(o)
+            res_g.add((s, p, o))
+        print(res_g.serialize(format="ttl"))
     
 def do_download(w_config, path, ttl_file):
     print("do_download:", path, ttl_file)
