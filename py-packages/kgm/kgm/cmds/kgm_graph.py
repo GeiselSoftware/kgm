@@ -28,6 +28,20 @@ def do_new(w_config, kgm_graph_type, path):
     kgm_g_class_uri = get_kgm_graph_class_uri(kgm_graph_type)
     graph_uri = create_kgm_graph(w_config, kgm_g_class_uri, path)
     print(f"created graph at path {path}: {graph_uri}")
+
+def do_cat(w_config, path):
+    graph_curie, _ = get_kgm_graph(w_config, path)
+    if graph_curie is None:
+        print(f"can't find graph at path {path}", file = sys.stderr)
+        return
+
+    graph_uri = restore_prefix(graph_curie)
+    rq = make_rq(f"construct {{ ?s ?p ?o }} where {{ graph <{graph_uri}> {{ ?s ?p ?o }} }}")
+    #print(rq)
+    g = rq_construct(rq, config = w_config)
+    #print(len(g))
+    #print(type(g))
+    print(g.serialize(format="ttl"))
     
 def do_download(w_config, path, ttl_file):
     print("do_download:", path, ttl_file)

@@ -50,6 +50,14 @@ def graph_download(ctx, path, ttl_file):
     _, w_config = ctx.obj["config"]
     kgm_graph.do_download(w_config, path, ttl_file)
 
+@cli.command("cat", help = "prints graph to stdout")
+@click.argument("path", required = True)
+@click.pass_context
+def graph_cat(ctx, path):
+    _, w_config = ctx.obj["config"]
+    kgm_graph.do_cat(w_config, path)
+
+    
 @cli.command("remove", help = "removes graph")
 @click.argument("path", required = True)
 @click.pass_context
