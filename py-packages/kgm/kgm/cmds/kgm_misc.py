@@ -41,7 +41,7 @@ def do_misc_select(ttl_file, select_query):
         print(query_text)
         print("---")
         rq_res = g.query(query_text)
-        ipdb.set_trace()
+        #ipdb.set_trace()
         #df = pd.DataFrame(columns = [str(x) for x in rq_res.vars], 
         print([str(x) for x in rq_res.vars])
         print("-------")

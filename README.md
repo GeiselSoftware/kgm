@@ -18,23 +18,15 @@ wheel distribution build. before this steps build.wasm must be build as describe
 ```
 python3 -m venv ~/venv/kgm-distrib
 source ~/venv/kgm-distrib/bin/activate
-cd py-packages/kgm
 pip install build
+
+cd py-packages/kgm
 python -m build
 cd dist
 ```
 
 *.whl is binary distribution, *.tar.gz is source distribution.
 
-
-# mkdocs
-
-```
-python3 -m venv ~/venv/kgm-docs
-source ~/venv/kgm-docs
-pip install -r docs/requirements.txt
-mkdocs serve -a 0.0.0.0:8001
-```
 
 # build - ubuntu 22.04
 
