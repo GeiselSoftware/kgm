@@ -43,12 +43,15 @@ def do_graph_shacled(w_config, path, public_access):
     if public_access:
         bind_host = "0.0.0.0"
         HOST = socket.gethostname()
+        FUSEKI_HOST = HOST
+        FUSEKI_PORT = 3030
     else:
-        bind_host = HOST = "localhost"
+        FUSEKI_HOST = bind_host = HOST = "localhost"
+        FUSEKI_PORT = 3030
         
     PORT = 8000
     DIRECTORY = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "kgm-wasm"))
     print("DIRECTORY:", DIRECTORY)
 
-    print(f"use this URL to access shacled: http://{HOST}:{PORT}/run-shacled.html?fuseki-host=h1&fuseki-port=3030&kgm-path={path}")
+    print(f"use this URL to access shacled: http://{HOST}:{PORT}/run-shacled.html?fuseki-host={FUSEKI_HOST}&fuseki-port={FUSEKI_PORT}&kgm-path={path}")
     launch_http_server(bind_host, PORT, DIRECTORY)
