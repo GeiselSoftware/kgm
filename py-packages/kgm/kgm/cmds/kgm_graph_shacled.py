@@ -1,7 +1,7 @@
 import http.server
 import socketserver
 import socket
-import os
+import os, base64
 from ..kgm_utils import get_kgm_graph
 
 class ReuseAddrTCPServer(socketserver.TCPServer):
@@ -53,5 +53,10 @@ def do_graph_shacled(w_config, path, public_access):
     DIRECTORY = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "kgm-wasm"))
     print("DIRECTORY:", DIRECTORY)
 
-    print(f"use this URL to access shacled: http://{HOST}:{PORT}/run-shacled.html?fuseki-host={FUSEKI_HOST}&fuseki-port={FUSEKI_PORT}&kgm-path={path}")
+    args_d = {"FUSEKI_HOST": FUSEKI_HOST, "FUSEKI_PORT": FUSEKI_PORT, "KGM_PATH": path}
+    args = base64.b64encode(",".join([f"{k}={v}" for k, v in args_d.items()]).encode('ascii')).decode('ascii')
+    print(args)
+    
+    #print(f"use this URL to access shacled: http://{HOST}:{PORT}/run-shacled.html?fuseki-host={FUSEKI_HOST}&fuseki-port={FUSEKI_PORT}&kgm-path={path}")
+    print(f"use this URL to access shacled: http://{HOST}:{PORT}/run-shacled.html?{args}")
     launch_http_server(bind_host, PORT, DIRECTORY)

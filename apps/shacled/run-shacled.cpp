@@ -2,6 +2,7 @@
 #include <misc/cpp/imgui_stdlib.h>
 #include <imgui.h>
 
+#include <lib-utils/string-utils.h>
 #include <lib-apploops/loop-runner.h>
 #include "vis-manager.h"
 #include "rdf-manager.h"
@@ -184,26 +185,27 @@ struct SHACLEditor: public LoopStep
 
 };
 
-std::vector<std::string> string_split(std::string str, char splitter = '=')
+bool process_wasm_run_args(const char* b64_args, string* fuseki_host, string* fuseki_port, string* kgm_path)
 {
-  std::vector<std::string> result;
-  std::string current = ""; 
-  for (int i = 0; i < str.size(); i++) {
-    if (str[i] == splitter) {
-      if (current != "") {
-        result.push_back(current);
-        current = "";
-      } 
-      continue;
+  auto args_s = base64_decode(string(b64_args));
+  bool fuseki_host_ok = false, fuseki_port_ok = false, kgm_path_ok = false;
+  for (auto& arg_pair_s: string_split(args_s, ',')) {
+    auto [k, v] = string_split_to_pair(arg_pair_s, '=');
+    if (k == "FUSEKI_HOST") {
+      *fuseki_host = v;
+      fuseki_host_ok = true;
     }
-    current += str[i];
+    if (k == "FUSEKI_PORT") {
+      *fuseki_port = v;
+      fuseki_port_ok = true;
+    }
+    if (k == "KGM_PATH") {
+      *kgm_path = v;
+      kgm_path_ok = true;
+    }
   }
 
-  if (current.size() != 0) {
-    result.push_back(current);
-  }
-
-  return result;
+  return fuseki_host_ok && fuseki_port_ok && kgm_path_ok;
 }
 
 int main(int argc, char** argv)
@@ -217,14 +219,18 @@ int main(int argc, char** argv)
   string fuseki_url, kgm_path;
   
 #ifdef __EMSCRIPTEN__
-  if (argc != 4) {
-    cout << "error" << endl;
-    cout << "example: http://h1:8000/apps/shacled/run-shacled.html?fuseki-host=metis&fuseki-port=3030?kgm-path=/NorthWind.shacl" << endl;
+  if (argc != 2) {
+    cout << "error - wrong args" << endl;
     exit(2);
   } else {
-    string fuseki_host = string_split(argv[1], '=')[1];
-    string fuseki_port = string_split(argv[2], '=')[1];
-    kgm_path = string_split(argv[3], '=')[1];
+    string fuseki_host, fuseki_port;
+    if (!process_wasm_run_args(argv[1], &fuseki_host, &fuseki_port, &kgm_path)) {
+      cout << "error processing args" << endl;
+      exit(3);
+    }
+    cout << "fuseki_host: " << fuseki_host << endl;
+    cout << "fuseki_port: " << fuseki_port << endl;
+    cout << "kgm_path: " << kgm_path << endl;
     fuseki_url = string("http://") + fuseki_host + ":" + fuseki_port + "/kgm-default-dataset/query";
   }
 #else  
