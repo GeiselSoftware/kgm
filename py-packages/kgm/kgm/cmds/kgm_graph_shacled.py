@@ -53,10 +53,11 @@ def do_graph_shacled(w_config, path, public_access):
     DIRECTORY = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "kgm-wasm"))
     print("DIRECTORY:", DIRECTORY)
 
-    args_d = {"FUSEKI_HOST": FUSEKI_HOST, "FUSEKI_PORT": FUSEKI_PORT, "KGM_PATH": path}
+    backend_url = w_config["backend-url"]
+    args_d = {"BACKEND_URL": backend_url, "KGM_PATH": path}
     args = base64.b64encode(",".join([f"{k}={v}" for k, v in args_d.items()]).encode('ascii')).decode('ascii')
-    print(args)
-    
-    #print(f"use this URL to access shacled: http://{HOST}:{PORT}/run-shacled.html?fuseki-host={FUSEKI_HOST}&fuseki-port={FUSEKI_PORT}&kgm-path={path}")
+    #print(args)
+
+    print(f"backend_url: {backend_url}")
     print(f"use this URL to access shacled: http://{HOST}:{PORT}/run-shacled.html?{args}")
     launch_http_server(bind_host, PORT, DIRECTORY)
