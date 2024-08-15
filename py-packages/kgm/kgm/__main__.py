@@ -42,13 +42,13 @@ def graph_new(ctx, kgm_graph_type, path):
     _, w_config = ctx.obj["config"]
     kgm_graph.do_new(w_config, kgm_graph_type, path)
     
-@cli.command("download", help = "downloads ttl file into empty graph")
+@cli.command("import", help = "import ttl file into empty graph")
 @click.argument("path", required = True)
 @click.argument("ttl_file", required = True)
 @click.pass_context
-def graph_download(ctx, path, ttl_file):
+def graph_import(ctx, path, ttl_file):
     _, w_config = ctx.obj["config"]
-    kgm_graph.do_download(w_config, path, ttl_file)
+    kgm_graph.do_import(w_config, path, ttl_file)
 
 @cli.command("cat", help = "prints graph to stdout")
 @click.argument("path", required = True)

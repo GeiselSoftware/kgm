@@ -65,8 +65,8 @@ def do_cat(w_config, path):
             res_g.add((s, p, o))
         print(res_g.serialize(format="ttl"))
     
-def do_download(w_config, path, ttl_file):
-    print("do_download:", path, ttl_file)
+def do_import(w_config, path, ttl_file):
+    print("do_import:", path, ttl_file)
 
     graph_curie, _ = get_kgm_graph(w_config, path)
     if graph_curie == None:
