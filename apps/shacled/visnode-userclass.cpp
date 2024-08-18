@@ -83,6 +83,7 @@ void VisNode_UserClass::make_frame()
     if (this->is_editable) {
       ImGui::SetNextItemWidth(200);
       CURIE prev_curie = this->class_curie_input;
+      //if (ImGui::InputText("##uri", &this->class_curie_input.curie)) {
       if (ImGui::InputText("##uri", &this->class_curie_input.curie, ImGuiInputTextFlags_CallbackEdit, class_curie_edit_cb, this)) {
 	cout << "mod of class_curie_input: " << prev_curie << " --> " << this->class_curie_input << endl;
 	auto action = make_shared<UserClassNode_change_class_curie>(this->vis_man, this->get_ptr(), prev_curie);
@@ -140,6 +141,7 @@ void VisNode_UserClass::make_frame()
       
       ImGui::SetNextItemWidth(150.0f);
       ImGui::InputText("##edit_k_", &member.member_name_input.curie);
+      
       if (need_pop_style) {
 	ImGui::PopStyleColor();
 	ImGui::PopStyleColor();
@@ -148,15 +150,18 @@ void VisNode_UserClass::make_frame()
     ImGui::SameLine();
 
     {
+#pragma message("this is misplaced action, need to be moved")
+#if 0
       // update member type class curie if applicable
       if (member.member_type_input.visnode_class_ptr) {
 	member.member_type_input.curie = member.member_type_input.visnode_class_ptr->get_class_curie();
       } else {
 	member.member_type_input.visnode_class_ptr = vis_man->find_visnode_class(member.member_type_input.curie);
       }
-
-      auto missing_uri_check = rdf_man->restore_prefix(member.member_type_input.curie) == URI(); // true if no URI for this curie      
-      auto missing_curie_type_check = member.member_type_input.visnode_class_ptr == 0; // true if curie has no corresponding type node
+#endif
+      
+      auto missing_uri_check = rdf_man->restore_prefix(member.member_type_input) == URI(); // true if no URI for this curie      
+      auto missing_curie_type_check = vis_man->find_visnode_class(member.member_type_input) == 0; // true if curie has no corresponding type node
       
       bool need_pop_style = false;
       if (missing_uri_check || missing_curie_type_check) {
@@ -166,10 +171,7 @@ void VisNode_UserClass::make_frame()
       }
 
       ImGui::SetNextItemWidth(150.0f);
-      if (ImGui::InputText("##member_type_", &member.member_type_input.curie.curie)) {
-	cout << "mod " << member.member_type_input.curie << endl;
-	member.member_type_input.visnode_class_ptr = vis_man->find_visnode_class(member.member_type_input.curie);
-      }
+      ImGui::InputText("##member_type_", &member.member_type_input.curie);
 
       if (need_pop_style) {
 	ImGui::PopStyleColor();
@@ -177,7 +179,7 @@ void VisNode_UserClass::make_frame()
       }
     }
     
-    if (dynamic_pointer_cast<VisNode_UserClass>(member.member_type_input.visnode_class_ptr)) {
+    if (dynamic_pointer_cast<VisNode_UserClass>(vis_man->find_visnode_class(member.member_type_input))) {
       ImGui::SameLine();
       ed::BeginPin(member.out_pin_id, ed::PinKind::Output);
       ImGui::Text("->>>");

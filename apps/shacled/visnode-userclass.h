@@ -34,13 +34,7 @@ public:
     bool checkbox_value = false;
     ax::NodeEditor::PinId out_pin_id;
 
-    CURIE member_name_input;
-    
-    struct member_type_t {
-      std::shared_ptr<VisNode_Class> visnode_class_ptr;
-      CURIE curie;
-    };
-    member_type_t member_type_input;
+    CURIE member_name_input, member_type_input;
 
     Member();
   };
@@ -95,8 +89,11 @@ public:
   void do_it() override
   {
     std::shared_ptr<VisNode_UserClass> that = dynamic_pointer_cast<VisNode_UserClass>(this->n);
-    
     auto new_curie = that->class_curie_input;
+
+#pragma message("something funny happens with the code below on native build when class_curie_edit_cb is disabled")
+#if 0
+    // see also class_curie_edit_cb - it prevents creation of dup userclasses
     while (that->vis_man->find_visnode_class(new_curie) != 0) {
       new_curie.curie += "_";
       std::cout << "preventing dup in class curie "
@@ -105,9 +102,25 @@ public:
 		<< std::endl;
 
     }
-    
+#endif
+
+    for (auto [_, n]: vis_man->nodes) {
+      if (auto uc_n = dynamic_pointer_cast<VisNode_UserClass>(n)) {
+	for (auto& m: uc_n->members) {
+	  if (m.member_type_input == this->prev_curie) {
+	    m.member_type_input = new_curie;
+	  }
+	}
+      }
+    }
+
     this->vis_man->nodes.remove(prev_curie);
     that->class_curie_input = new_curie;
     this->vis_man->nodes.set(new_curie, that);
+    
+    // changing links
+    for (auto& l: this->vis_man->links) {
+      
+    }
   }
 };

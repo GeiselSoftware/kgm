@@ -37,6 +37,8 @@ struct VisNodeIdLess
 
 struct VisLink
 {
+  CURIE from_curie, link_curie, to_curie;
+  
   ed::LinkId ID;
   
   ed::PinId StartPinID;
@@ -44,8 +46,12 @@ struct VisLink
 
   ImColor Color;
   
-  explicit VisLink(ed::LinkId id, ed::PinId startPinId, ed::PinId endPinId):
+  explicit VisLink(const CURIE& from_curie, const CURIE& link_curie, const CURIE& to_curie,
+		   ed::LinkId id, ed::PinId startPinId, ed::PinId endPinId):
     ID(id), StartPinID(startPinId), EndPinID(endPinId), Color(255, 255, 255)
   {
+    this->from_curie = from_curie;
+    this->link_curie = link_curie;
+    this->to_curie = to_curie;
   }
 };

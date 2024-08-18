@@ -117,13 +117,7 @@ void VisManager::build_visnode_classes()
 		  if (to_uc_curie == CURIE()) {
 		    throw runtime_error(fmt::format("can't collapse prefix for URI {}", to_uc_uri.uri));
 		  }
-		  m.member_type_input.visnode_class_ptr = this->find_visnode_class(to_uc_curie);
-		  if (m.member_type_input.visnode_class_ptr) {
-		    assert(m.member_type_input.visnode_class_ptr->get_class_curie() == to_uc_curie);
-		    m.member_type_input.curie = to_uc_curie;
-		  } else {
-		    throw runtime_error(fmt::format("can't find user class with CURIE {}", to_uc_curie.curie));
-		  }
+		  m.member_type_input = to_uc_curie;
 		} else if (asURI(prop_p) == sh::dataclass) {
 		  assert(prop_v.size() >= 1 && isURI(prop_v[0]));
 		  auto to_dc_uri = asURI(prop_v[0]);
@@ -131,18 +125,11 @@ void VisManager::build_visnode_classes()
 		  if (to_dc_curie == CURIE()) {
 		    throw runtime_error(fmt::format("can't collapse prefix for URI {}", to_dc_uri.uri));
 		  }
-		  m.member_type_input.visnode_class_ptr = this->find_visnode_class(to_dc_curie);
-		  if (m.member_type_input.visnode_class_ptr) {
-		    assert(m.member_type_input.visnode_class_ptr->get_class_curie() == to_dc_curie);
-		    m.member_type_input.curie = to_dc_curie;
-		  } else {
-		    throw runtime_error(fmt::format("can't find dataclass with CURIE {}", to_dc_curie.curie));
-		  }		  
+		  m.member_type_input = to_dc_curie;
 		} else if (asURI(prop_p) == kgm::member_type) { // fallback to kgm_member_type
 		  assert(prop_v.size() >= 1 && isLiteral(prop_v[0]));
 		  auto to_uc_curie = CURIE{asLiteral(prop_v[0]).literal};
-		  m.member_type_input.visnode_class_ptr = this->find_visnode_class(to_uc_curie);
-		  m.member_type_input.curie = to_uc_curie;
+		  m.member_type_input = to_uc_curie;
 		}
 	      }
 	      v_n->members.push_back(m);
@@ -160,14 +147,13 @@ void VisManager::build_visnode_classes()
     if (auto uc = std::dynamic_pointer_cast<VisNode_UserClass>(n)) {
       cout << "UC: " << uc->get_class_curie() << endl;
       for (auto& m: uc->members) {
-	if (auto to_uc = m.member_type_input.visnode_class_ptr ? dynamic_pointer_cast<VisNode_UserClass>(m.member_type_input.visnode_class_ptr) : 0) {
-	  cout << "from: " << m.member_name_input << " " << m.member_type_input.curie
-	       << " " << m.member_type_input.visnode_class_ptr->get_class_curie()
+	if (auto to_uc = dynamic_pointer_cast<VisNode_UserClass>(this->find_visnode_class(m.member_type_input))) {
+	  cout << "from: " << m.member_name_input << " " << m.member_type_input
 	       << " to: " << to_uc->get_class_curie()
 	       << endl;
-	  auto from_uc_node_port_pin_id = m.out_pin_id;
-	  shared_ptr<VisLink> v_l = make_shared<VisLink>(VisNode::get_next_id(), from_uc_node_port_pin_id, to_uc->node_InputPinId);
-	  this->links.set(make_tuple(uc->get_class_curie(), m.member_type_input.curie, to_uc->get_class_curie()), v_l);
+	  shared_ptr<VisLink> v_l = make_shared<VisLink>(uc->get_class_curie(), m.member_type_input, to_uc->get_class_curie(),
+							 ed::LinkId(VisNode::get_next_id()), m.out_pin_id, to_uc->node_InputPinId);
+	  this->links.push_back(v_l);
 	}
       }
     }
@@ -222,9 +208,8 @@ void VisManager::userclasses_to_triples(vector<RDFSPO>* triples)
 	}
 	triples->push_back(RDFSPO(bn, sh::minCount, Literal(1)));
 	triples->push_back(RDFSPO(bn, sh::maxCount, Literal(1)));
-	if (auto visnode_class_ptr = this->find_visnode_class(m.member_type_input.curie)) {
-	  auto to_visnode_class_curie = visnode_class_ptr->get_class_curie();
-	  assert(to_visnode_class_curie == m.member_type_input.curie);
+	if (auto visnode_class_ptr = this->find_visnode_class(m.member_type_input)) {
+	  auto to_visnode_class_curie = m.member_type_input;
 	  auto to_visnode_class_uri = rdf_man->restore_prefix(to_visnode_class_curie);
 	  if (to_visnode_class_uri == URI()) {
 	    triples->push_back(RDFSPO(bn, kgm::member_type, Literal(to_visnode_class_curie.curie, xsd::string)));
@@ -233,7 +218,7 @@ void VisManager::userclasses_to_triples(vector<RDFSPO>* triples)
 	    triples->push_back(RDFSPO(bn, pred, to_visnode_class_uri));
 	  }
 	} else {
-	  triples->push_back(RDFSPO(bn, kgm::member_type, Literal(m.member_type_input.curie.curie, xsd::string)));
+	  triples->push_back(RDFSPO(bn, kgm::member_type, Literal(m.member_type_input.curie, xsd::string)));
 	}
       }
     }
@@ -269,13 +254,12 @@ void VisManager::dump_shacl()
 	out << rdf_man->collapse_prefix(sh::minCount) << " " << "1" << "; "
 	    << rdf_man->collapse_prefix(sh::maxCount) << " " << "1" << "; ";
 
-	if (auto visnode_class_ptr = this->find_visnode_class(m.member_type_input.curie)) {
+	if (auto visnode_class_ptr = this->find_visnode_class(m.member_type_input)) {
 	  auto pred = dynamic_pointer_cast<VisNode_UserClass>(visnode_class_ptr) ? sh::class_ : sh::dataclass;
-	  auto to_visnode_class_curie = visnode_class_ptr->get_class_curie();
-	  assert(to_visnode_class_curie == m.member_type_input.curie);
+	  auto to_visnode_class_curie = m.member_type_input;
 	  out << rdf_man->collapse_prefix(pred) << " " << to_visnode_class_curie << "; ";
 	} else {
-	  out << rdf_man->collapse_prefix(kgm::member_type) << " " << Literal(m.member_type_input.curie.curie, xsd::string) << "; ";
+	  out << rdf_man->collapse_prefix(kgm::member_type) << " " << Literal(m.member_type_input.curie, xsd::string) << "; ";
 	}
 	out << "];" << endl;
       }
@@ -295,7 +279,7 @@ void VisManager::make_frame()
   }
 
   // show all links
-  for (auto& [_, link]: this->links) {
+  for (auto& link: this->links) {
     ed::Link(link->ID, link->StartPinID, link->EndPinID);
   }
 
