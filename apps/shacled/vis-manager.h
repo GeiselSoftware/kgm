@@ -34,8 +34,10 @@ private:
 
   friend class UserClassNode_delete_class;
   friend class UserClassNode_change_class_curie;
+  friend class UserClassNode_change_member_type_curie;
+  friend class UserClassNode_delete_members;
   Dict<CURIE, std::shared_ptr<VisNode_Class>> nodes;
-  std::vector<std::shared_ptr<VisLink>> links;
+  Dict<std::string, std::shared_ptr<VisLink>> links;
 
   std::list<std::shared_ptr<Action>> pending_actions;
   

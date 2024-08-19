@@ -4,6 +4,7 @@
 #include <memory>
 #include <imgui_node_editor.h>
 #include <lib-utils/rdf-utils.h>
+#include <lib-utils/uuid.h>
 
 namespace ed = ax::NodeEditor;
 
@@ -37,21 +38,17 @@ struct VisNodeIdLess
 
 struct VisLink
 {
-  CURIE from_curie, link_curie, to_curie;
-  
-  ed::LinkId ID;
-  
+  std::string uuid;
+  ed::LinkId imgui_link_id;  
   ed::PinId StartPinID;
   ed::PinId EndPinID;
 
   ImColor Color;
   
-  explicit VisLink(const CURIE& from_curie, const CURIE& link_curie, const CURIE& to_curie,
-		   ed::LinkId id, ed::PinId startPinId, ed::PinId endPinId):
-    ID(id), StartPinID(startPinId), EndPinID(endPinId), Color(255, 255, 255)
+  explicit VisLink(ed::PinId startPinId, ed::PinId endPinId):
+    StartPinID(startPinId), EndPinID(endPinId), Color(255, 255, 255)
   {
-    this->from_curie = from_curie;
-    this->link_curie = link_curie;
-    this->to_curie = to_curie;
+    this->uuid = generate_uuid_v4();
+    this->imgui_link_id = VisNode::get_next_id();
   }
 };

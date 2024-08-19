@@ -6,6 +6,7 @@
 
 #include "vis-manager.h"
 #include "visnode-userclass.h"
+#include "visnode-userclass-actions.h"
 #include "rdf-manager.h"
 
 #include <iostream>
@@ -85,7 +86,6 @@ void VisNode_UserClass::make_frame()
       CURIE prev_curie = this->class_curie_input;
       //if (ImGui::InputText("##uri", &this->class_curie_input.curie)) {
       if (ImGui::InputText("##uri", &this->class_curie_input.curie, ImGuiInputTextFlags_CallbackEdit, class_curie_edit_cb, this)) {
-	cout << "mod of class_curie_input: " << prev_curie << " --> " << this->class_curie_input << endl;
 	auto action = make_shared<UserClassNode_change_class_curie>(this->vis_man, this->get_ptr(), prev_curie);
 	this->vis_man->pending_actions.push_back(action);	
       }
@@ -115,8 +115,9 @@ void VisNode_UserClass::make_frame()
       ImGui::BeginDisabled();
     }
     ImGui::SameLine();
-    if (ImGui::Button(" - ")) {      
-      this->members.erase(remove_if(this->members.begin(), this->members.end(), [](const Member& m) -> bool { return m.checkbox_value; }), this->members.end());
+    if (ImGui::Button(" - ")) {
+      auto action = make_shared<UserClassNode_delete_members>(this->vis_man, this->get_ptr());
+      this->vis_man->pending_actions.push_back(action);
     }
     if (disabled) {
       ImGui::EndDisabled();
@@ -150,16 +151,6 @@ void VisNode_UserClass::make_frame()
     ImGui::SameLine();
 
     {
-#pragma message("this is misplaced action, need to be moved")
-#if 0
-      // update member type class curie if applicable
-      if (member.member_type_input.visnode_class_ptr) {
-	member.member_type_input.curie = member.member_type_input.visnode_class_ptr->get_class_curie();
-      } else {
-	member.member_type_input.visnode_class_ptr = vis_man->find_visnode_class(member.member_type_input.curie);
-      }
-#endif
-      
       auto missing_uri_check = rdf_man->restore_prefix(member.member_type_input) == URI(); // true if no URI for this curie      
       auto missing_curie_type_check = vis_man->find_visnode_class(member.member_type_input) == 0; // true if curie has no corresponding type node
       
@@ -171,7 +162,11 @@ void VisNode_UserClass::make_frame()
       }
 
       ImGui::SetNextItemWidth(150.0f);
-      ImGui::InputText("##member_type_", &member.member_type_input.curie);
+      CURIE prev_member_type_curie = member.member_type_input;
+      if (ImGui::InputText("##member_type_", &member.member_type_input.curie)) {
+	auto action = make_shared<UserClassNode_change_member_type_curie>(this->vis_man, &member, prev_member_type_curie);
+	this->vis_man->pending_actions.push_back(action);
+      }
 
       if (need_pop_style) {
 	ImGui::PopStyleColor();
@@ -187,8 +182,6 @@ void VisNode_UserClass::make_frame()
     }
     ImGui::PopID();
   }
-
-  //ed::BeginPin(this->node_bottom_pin, ed::PinKind::Input); ImGui::Text("BOTTOM"); ed::EndPin();
 
   ImGui::EndGroup();
 

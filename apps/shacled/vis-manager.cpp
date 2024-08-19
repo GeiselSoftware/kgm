@@ -151,9 +151,9 @@ void VisManager::build_visnode_classes()
 	  cout << "from: " << m.member_name_input << " " << m.member_type_input
 	       << " to: " << to_uc->get_class_curie()
 	       << endl;
-	  shared_ptr<VisLink> v_l = make_shared<VisLink>(uc->get_class_curie(), m.member_type_input, to_uc->get_class_curie(),
-							 ed::LinkId(VisNode::get_next_id()), m.out_pin_id, to_uc->node_InputPinId);
-	  this->links.push_back(v_l);
+	  shared_ptr<VisLink> v_l = make_shared<VisLink>(m.out_pin_id, to_uc->node_InputPinId);
+	  m.member_type_link = v_l;
+	  this->links.set(v_l->uuid, v_l);
 	}
       }
     }
@@ -279,8 +279,8 @@ void VisManager::make_frame()
   }
 
   // show all links
-  for (auto& link: this->links) {
-    ed::Link(link->ID, link->StartPinID, link->EndPinID);
+  for (auto& [_, link]: this->links) {
+    ed::Link(link->imgui_link_id, link->StartPinID, link->EndPinID);
   }
 
   if (this->pending_actions.size() > 0) {
