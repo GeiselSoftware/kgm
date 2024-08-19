@@ -105,8 +105,11 @@ void VisNode_UserClass::make_frame()
   }
   
   ImGui::SameLine();
+#pragma message("we need action at this point, not good for make_frame")
   if (ImGui::Button(" + ")) {
-    this->members.push_back(Member());
+    auto m = Member();
+    m.min_count = m.max_count = 1;    
+    this->members.push_back(m);
   }
 
   {

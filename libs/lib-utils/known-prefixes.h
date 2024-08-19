@@ -53,6 +53,7 @@ struct sh {
   static inline URI property{__prefix_uri.uri + "property"};
   static inline URI path{__prefix_uri.uri + "path"};
   static inline URI class_{__prefix_uri.uri + "class"};
+  static inline URI closed{__prefix_uri.uri + "closed"};
   static inline URI dataclass{__prefix_uri.uri + "dataclass"};
   static inline URI minCount{__prefix_uri.uri + "minCount"};
   static inline URI maxCount{__prefix_uri.uri + "maxCount"};

@@ -29,6 +29,9 @@ struct Literal {
 
   explicit Literal(const std::string& literal, const URI& datatype);
   explicit Literal(int);
+  explicit Literal(bool);
+
+  int as_int();
 };
 
 struct BNode {

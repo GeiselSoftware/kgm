@@ -44,6 +44,17 @@ RDFSPO::RDFSPO(const BNode& s, const URI& p, const Literal& o) : s(s), p(p), o(o
 
 Literal::Literal(const std::string& literal, const URI& datatype) : literal(literal), datatype(datatype) {}
 Literal::Literal(int i) : literal(to_string(i)), datatype(xsd::integer) {}
+Literal::Literal(bool b) : datatype(xsd::boolean) { this->literal = b ? "true" : "false"; }
+
+#pragma message("needed better handling of literals")
+int Literal::as_int()
+{
+  assert(datatype == xsd::integer);
+  if (this->literal.find("\"") != string::npos) {
+    throw runtime_error(fmt::format("can't process literal {}", this->literal));
+  }
+  return stoi(this->literal);
+}
 
 BNode::BNode() {
   this->bnode = "dummy:" + generate_uuid_v4();

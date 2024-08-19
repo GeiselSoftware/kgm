@@ -118,6 +118,12 @@ void VisManager::build_visnode_classes()
 		    throw runtime_error(fmt::format("can't collapse prefix for URI {}", to_uc_uri.uri));
 		  }
 		  m.member_type_input = to_uc_curie;
+		} else if (asURI(prop_p) == sh::minCount) {
+		  assert(prop_v.size() >= 1 && isLiteral(prop_v[0]));
+		  m.min_count = asLiteral(prop_v[0]).as_int();
+		} else if (asURI(prop_p) == sh::maxCount) {
+		  assert(prop_v.size() >= 1 && isLiteral(prop_v[0]));
+		  m.max_count = asLiteral(prop_v[0]).as_int();
 		} else if (asURI(prop_p) == sh::dataclass) {
 		  assert(prop_v.size() >= 1 && isURI(prop_v[0]));
 		  auto to_dc_uri = asURI(prop_v[0]);
@@ -131,6 +137,10 @@ void VisManager::build_visnode_classes()
 		  auto to_uc_curie = CURIE{asLiteral(prop_v[0]).literal};
 		  m.member_type_input = to_uc_curie;
 		}
+	      }
+	      
+	      if (m.member_name_input.curie == "rdf:type") {
+		continue;
 	      }
 	      v_n->members.push_back(m);
 	    }
@@ -188,14 +198,24 @@ void VisManager::userclasses_to_triples(vector<RDFSPO>* triples)
 	uc_subj = RDFSubject(uc_uri);
 	triples->push_back(RDFSPO(uc_subj, rdf::type, rdfs::Class));
 	triples->push_back(RDFSPO(uc_subj, rdf::type, sh::NodeShape));
+	triples->push_back(RDFSPO(uc_subj, sh::closed, Literal(true)));
       } else {
 	BNode uc_bn;
 	uc_subj = RDFSubject(uc_bn);
 	triples->push_back(RDFSPO(uc_subj, rdf::type, rdfs::Class));
 	triples->push_back(RDFSPO(uc_subj, rdf::type, sh::NodeShape));
+	triples->push_back(RDFSPO(uc_subj, sh::closed, Literal(true)));
 	triples->push_back(RDFSPO(uc_subj, kgm::class_curie, Literal(uc_curie.curie, xsd::string)));
       }
-      
+
+      {
+	BNode bn;
+	triples->push_back(RDFSPO(uc_subj, sh::property, bn));
+	triples->push_back(RDFSPO(bn, sh::path, rdf::type));
+	triples->push_back(RDFSPO(bn, sh::class_, rdfs::Class));
+	triples->push_back(RDFSPO(bn, sh::minCount, Literal(1)));
+      }
+	  
       for (auto& m: uc->members) {
 	BNode bn;
 	triples->push_back(RDFSPO(uc_subj, sh::property, bn));
@@ -206,8 +226,14 @@ void VisManager::userclasses_to_triples(vector<RDFSPO>* triples)
 	  //triples->push_back(RDFSPO(bn, sh::path, kgm::placeholder));
 	  triples->push_back(RDFSPO(bn, kgm::member_name, Literal(m.member_name_input.curie, xsd::string)));
 	}
-	triples->push_back(RDFSPO(bn, sh::minCount, Literal(1)));
-	triples->push_back(RDFSPO(bn, sh::maxCount, Literal(1)));
+	
+	if (m.min_count >= 0) {
+	  triples->push_back(RDFSPO(bn, sh::minCount, Literal(m.min_count)));
+	}
+	if (m.max_count >= 0) {
+	  triples->push_back(RDFSPO(bn, sh::maxCount, Literal(m.max_count)));
+	}
+	
 	if (auto visnode_class_ptr = this->find_visnode_class(m.member_type_input)) {
 	  auto to_visnode_class_curie = m.member_type_input;
 	  auto to_visnode_class_uri = rdf_man->restore_prefix(to_visnode_class_curie);
@@ -227,16 +253,6 @@ void VisManager::userclasses_to_triples(vector<RDFSPO>* triples)
 
 void VisManager::dump_shacl()
 {
-#if 0
-  vector<RDFSPO> out_triples;
-  this->userclasses_to_triples(&out_triples);
-  ostringstream out;
-  //dump_triples(out, out_triples);
-  RDFGraph out_g;
-  build_rdf_graph(&out_g, out_triples);
-  dump_triples_as_turtle(out, out_g);
-  this->shacl_dump = out.str();
-#else
   ostringstream out;
   out << prefixes::make_turtle_prefixes(false);
 
@@ -246,13 +262,20 @@ void VisManager::dump_shacl()
 
       out << class_curie << " "
 	  << rdf_man->collapse_prefix(rdf::type) << " " << rdf_man->collapse_prefix(rdfs::Class) << "; ";
-      out << rdf_man->collapse_prefix(rdf::type) << " " << rdf_man->collapse_prefix(sh::NodeShape) << ";" << endl;
+      out << rdf_man->collapse_prefix(rdf::type) << " " << rdf_man->collapse_prefix(sh::NodeShape) << "; ";
+      out << rdf_man->collapse_prefix(sh::closed) << " " << Literal(true) << "; ";
+      out << endl;
       for (auto& m: node->members) {
 	out << "  " << rdf_man->collapse_prefix(sh::property) << " ["
 	    << rdf_man->collapse_prefix(sh::path) << " "
 	    << m.member_name_input.curie << "; ";
-	out << rdf_man->collapse_prefix(sh::minCount) << " " << "1" << "; "
-	    << rdf_man->collapse_prefix(sh::maxCount) << " " << "1" << "; ";
+
+	if (m.min_count >= 0) {
+	  out << rdf_man->collapse_prefix(sh::minCount) << " " << m.min_count << "; ";
+	}
+	if (m.max_count >= 0) {
+	  out << rdf_man->collapse_prefix(sh::maxCount) << " " << m.max_count << "; ";
+	}
 
 	if (auto visnode_class_ptr = this->find_visnode_class(m.member_type_input)) {
 	  auto pred = dynamic_pointer_cast<VisNode_UserClass>(visnode_class_ptr) ? sh::class_ : sh::dataclass;
@@ -268,7 +291,6 @@ void VisManager::dump_shacl()
   }
 
   this->shacl_dump = out.str();
-#endif
 }
 
 void VisManager::make_frame()

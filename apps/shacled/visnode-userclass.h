@@ -35,7 +35,8 @@ public:
     ax::NodeEditor::PinId out_pin_id;
     std::shared_ptr<VisLink> member_type_link;    
     CURIE member_name_input, member_type_input;
-
+    int min_count = -1, max_count = -1;
+    
     Member();
   };
 
