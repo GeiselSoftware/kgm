@@ -11,23 +11,16 @@
 
 class URI;
 
-class VisNode_Class : public VisNode
+class VisNode_DataType : public VisNode
 {
 public:
-  explicit VisNode_Class(VisManager* vis_man) : VisNode(vis_man) {}
-  virtual CURIE get_class_curie() = 0;
-};
-
-class VisNode_DataClass : public VisNode_Class
-{
-public:
-  explicit VisNode_DataClass(const CURIE& curie, VisManager* vis_man);
-  CURIE dataclass_curie;
-  CURIE get_class_curie() override;
+  explicit VisNode_DataType(const CURIE& curie, VisManager* vis_man);
+  CURIE datatype_curie;
+  CURIE get_curie() override;
   void make_frame() override;
 };
 
-class VisNode_UserClass : public VisNode_Class
+class VisNode_UserClass : public VisNode
 {
 public:
   struct Member {
@@ -41,7 +34,7 @@ public:
   };
 
   explicit VisNode_UserClass(const CURIE& class_curie, VisManager* vis_man);
-  CURIE get_class_curie() override;
+  CURIE get_curie() override;
 
   CURIE class_curie_input;
   std::vector<Member> members;

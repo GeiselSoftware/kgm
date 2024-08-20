@@ -12,18 +12,18 @@
 #include <iostream>
 using namespace std;
 
-VisNode_DataClass::VisNode_DataClass(const CURIE& curie, VisManager* vis_man) :
-  VisNode_Class(vis_man)
+VisNode_DataType::VisNode_DataType(const CURIE& curie, VisManager* vis_man) :
+  VisNode(vis_man)
 {
-  this->dataclass_curie = curie;
+  this->datatype_curie = curie;
 }
 
-CURIE VisNode_DataClass::get_class_curie()
+CURIE VisNode_DataType::get_curie()
 {
-  return this->dataclass_curie;
+  return this->datatype_curie;
 }
 
-void VisNode_DataClass::make_frame()
+void VisNode_DataType::make_frame()
 {
 }
 
@@ -34,7 +34,7 @@ VisNode_UserClass::Member::Member()
 }
 
 VisNode_UserClass::VisNode_UserClass(const CURIE& class_curie, VisManager* vis_man) :
-  VisNode_Class(vis_man),
+  VisNode(vis_man),
   toggle_lock("img/lock.png", "img/unlock.png")
 {
   this->class_curie_input = class_curie;
@@ -45,7 +45,7 @@ VisNode_UserClass::VisNode_UserClass(const CURIE& class_curie, VisManager* vis_m
   this->node_bottom_pin = VisNode::get_next_id();
 }
 
-CURIE VisNode_UserClass::get_class_curie()
+CURIE VisNode_UserClass::get_curie()
 {
   return this->class_curie_input;
 }
@@ -54,7 +54,7 @@ static int class_curie_edit_cb(ImGuiInputTextCallbackData* data)
 {
   VisNode_UserClass* that = (VisNode_UserClass*)data->UserData;
   //cout << "class_curie_edit_cb: " << data->Buf << endl;
-  if (that->vis_man->find_visnode_class(CURIE{std::string(data->Buf)}) != 0) {
+  if (that->vis_man->find_visnode(CURIE{std::string(data->Buf)}) != 0) {
     cout << "preventing dup in class curie " << that->class_curie_input << endl;
     data->InsertChars(0, "_");
   }
@@ -155,7 +155,7 @@ void VisNode_UserClass::make_frame()
 
     {
       auto missing_uri_check = rdf_man->restore_prefix(member.member_type_input) == URI(); // true if no URI for this curie      
-      auto missing_curie_type_check = vis_man->find_visnode_class(member.member_type_input) == 0; // true if curie has no corresponding type node
+      auto missing_curie_type_check = vis_man->find_visnode(member.member_type_input) == 0; // true if curie has no corresponding type node
       
       bool need_pop_style = false;
       if (missing_uri_check || missing_curie_type_check) {
@@ -177,7 +177,7 @@ void VisNode_UserClass::make_frame()
       }
     }
     
-    if (dynamic_pointer_cast<VisNode_UserClass>(vis_man->find_visnode_class(member.member_type_input))) {
+    if (dynamic_pointer_cast<VisNode_UserClass>(vis_man->find_visnode(member.member_type_input))) {
       ImGui::SameLine();
       ed::BeginPin(member.out_pin_id, ed::PinKind::Output);
       ImGui::Text("->>>");

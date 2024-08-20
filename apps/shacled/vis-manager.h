@@ -36,7 +36,7 @@ private:
   friend class UserClassNode_change_class_curie;
   friend class UserClassNode_change_member_type_curie;
   friend class UserClassNode_delete_members;
-  Dict<CURIE, std::shared_ptr<VisNode_Class>> nodes;
+  Dict<CURIE, std::shared_ptr<VisNode>> nodes;
   Dict<std::string, std::shared_ptr<VisLink>> links;
 
   std::list<std::shared_ptr<Action>> pending_actions;
@@ -44,7 +44,7 @@ private:
 public:
   VisManager(RDFManager*);
   void reset();
-  std::shared_ptr<VisNode_Class> find_visnode_class(const CURIE& curie);
+  std::shared_ptr<VisNode> find_visnode(const CURIE& curie);
   void dump_shacl();
   std::string shacl_dump;
 

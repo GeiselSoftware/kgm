@@ -97,7 +97,7 @@ void UserClassNode_change_member_type_curie::do_it()
     this->member_ptr->member_type_link = 0;
   }
   
-  if (auto to_uc = dynamic_pointer_cast<VisNode_UserClass>(vis_man->find_visnode_class(this->member_ptr->member_type_input))) {
+  if (auto to_uc = dynamic_pointer_cast<VisNode_UserClass>(vis_man->find_visnode(this->member_ptr->member_type_input))) {
     auto new_link = make_shared<VisLink>(member_ptr->out_pin_id, to_uc->node_InputPinId);
     this->member_ptr->member_type_link = new_link;
     vis_man->links.set(new_link->uuid, new_link);

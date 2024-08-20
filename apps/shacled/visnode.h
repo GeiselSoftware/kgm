@@ -26,6 +26,7 @@ public:
   
   virtual ~VisNode() = 0;
   virtual void make_frame() = 0;
+  virtual CURIE get_curie() = 0;
 };
 
 struct VisNodeIdLess

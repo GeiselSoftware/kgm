@@ -50,11 +50,11 @@ struct sh {
   static inline std::string __prefix{"sh"};
   static inline URI __prefix_uri{"http://www.w3.org/ns/shacl#"};
   static inline URI NodeShape{__prefix_uri.uri + "NodeShape"};
+  static inline URI closed{__prefix_uri.uri + "closed"};
   static inline URI property{__prefix_uri.uri + "property"};
   static inline URI path{__prefix_uri.uri + "path"};
   static inline URI class_{__prefix_uri.uri + "class"};
-  static inline URI closed{__prefix_uri.uri + "closed"};
-  static inline URI dataclass{__prefix_uri.uri + "dataclass"};
+  static inline URI datatype{__prefix_uri.uri + "datatype"};
   static inline URI minCount{__prefix_uri.uri + "minCount"};
   static inline URI maxCount{__prefix_uri.uri + "maxCount"};
 };
