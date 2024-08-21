@@ -28,8 +28,13 @@ public:
     ax::NodeEditor::PinId out_pin_id;
     std::shared_ptr<VisLink> member_type_link;    
     CURIE member_name_input, member_type_input;
+
+    bool is_minmax_c_input_valid = false;
+    std::string minmaxc_input;
+    void init_minmaxc_input();
+    void parse_minmaxc_input();
     int min_count = -1, max_count = -1;
-    
+        
     Member();
   };
 

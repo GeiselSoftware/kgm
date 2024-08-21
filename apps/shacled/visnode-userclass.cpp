@@ -33,6 +33,55 @@ VisNode_UserClass::Member::Member()
   this->out_pin_id = VisNode::get_next_id();
 }
 
+void VisNode_UserClass::Member::init_minmaxc_input()
+{
+  ostringstream out_s;
+  if (this->min_count == -1) {
+    out_s << "n";
+  } else {
+    out_s << this->min_count;
+  }
+  
+  out_s << "..";
+
+  if (this->max_count == -1) {
+    out_s << "n";
+  } else {
+    out_s << this->max_count;
+  }
+
+  this->minmaxc_input = out_s.str();
+  this->is_minmax_c_input_valid = true;
+}
+
+void VisNode_UserClass::Member::parse_minmaxc_input()
+{
+  auto idx = minmaxc_input.find("..");
+  if (idx == string::npos) {
+    is_minmax_c_input_valid = false;
+    return;
+  }
+  
+  try {
+    auto min_s = minmaxc_input.substr(0, idx);
+    auto max_s = minmaxc_input.substr(idx + 2);
+    
+    if (min_s == "n") {
+      this->min_count = -1;
+    } else {    
+      this->min_count = stoi(min_s);
+    }
+    if (max_s == "n") {
+      this->max_count = -1;
+    } else {
+      this->max_count = stoi(max_s);
+    }
+    is_minmax_c_input_valid = true;
+  } catch (logic_error&) {
+    is_minmax_c_input_valid = false;
+  }
+}
+
 VisNode_UserClass::VisNode_UserClass(const CURIE& class_curie, VisManager* vis_man) :
   VisNode(vis_man),
   toggle_lock("img/lock.png", "img/unlock.png")
@@ -176,11 +225,29 @@ void VisNode_UserClass::make_frame()
 	ImGui::PopStyleColor();
       }
     }
+    ImGui::SameLine();
+    
+    {
+      bool need_pop_style = false;
+      if (!member.is_minmax_c_input_valid) {
+	ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0,0,255,255));
+	ImGui::PushStyleColor(ImGuiCol_FrameBg, IM_COL32(0,255,0,255));
+	need_pop_style = true;
+      }
+      ImGui::SetNextItemWidth(45.0f);
+      if (ImGui::InputText("##member_minmaxc_input_", &member.minmaxc_input)) {
+	member.parse_minmaxc_input();
+      }
+      if (need_pop_style) {
+	ImGui::PopStyleColor();
+	ImGui::PopStyleColor();
+      }
+    }
     
     if (dynamic_pointer_cast<VisNode_UserClass>(vis_man->find_visnode(member.member_type_input))) {
       ImGui::SameLine();
       ed::BeginPin(member.out_pin_id, ed::PinKind::Output);
-      ImGui::Text("->>>");
+      ImGui::Text("->>");
       ed::EndPin();
     }
     ImGui::PopID();

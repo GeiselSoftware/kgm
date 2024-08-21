@@ -142,6 +142,7 @@ void VisManager::build_visnode_classes()
 	      if (m.member_name_input.curie == "rdf:type") {
 		continue;
 	      }
+	      m.init_minmaxc_input();
 	      v_n->members.push_back(m);
 	    }
 	  }
