@@ -172,7 +172,7 @@ void RDFManager::start_save_graph(const string& kgm_path, const vector<RDFSPO>& 
   }}
   where {{
     ?g kgm:path "{}"
-    graph ?g {{ ?s ?p ?o }}
+    graph ?g {{ optional {{ ?s ?p ?o }} }}
     values (?ns ?np ?no)
     {{
       {}

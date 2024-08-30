@@ -48,7 +48,7 @@ struct SHACLEditor: public LoopStep
       ImGui::BeginDisabled(true);
     }
 
-    if (ImGui::Button("test save")) {
+    if (ImGui::Button("save")) {
       if (!rdf_manager.in_progress_save_graph_f) {
 	vector<RDFSPO> triples;
 	vis_manager.userclasses_to_triples(&triples);
@@ -74,7 +74,7 @@ struct SHACLEditor: public LoopStep
     }
 
     static bool done_inital_load_action = false;
-    if (ImGui::Button("test load") || done_inital_load_action == false) {
+    if (ImGui::Button("load") || done_inital_load_action == false) {
       done_inital_load_action = true;
       if (!rdf_manager.in_progress_load_graph()) {
         rdf_manager.start_load_graph(this->kgm_path);
@@ -105,7 +105,7 @@ struct SHACLEditor: public LoopStep
     }
 
     if (1) { // add new userclass
-      if (ImGui::Button("Add new class")) {
+      if (ImGui::Button("add new class")) {
 	vis_manager.add_new_userclass();
       }
     }

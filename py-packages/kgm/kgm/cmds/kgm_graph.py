@@ -10,15 +10,15 @@ from ..kgm_utils import *
 def do_ls(w_config, path):
     print("do_ls:", path)
     query = make_rq("""
-    select ?kgm_path ?g { ?g rdf:type ?gt filter(?gt = kgm:DataGraph || ?gt = kgm:SHACLGraph). ?g kgm:path ?kgm_path } 
+    select ?kgm_path ?g { ?g rdf:type kgm:Graph; kgm:path ?kgm_path } 
     """)
     #print(query)
     
     res = rq_select(query, config = w_config)
     print(res)
 
-def do_new(w_config, kgm_graph_type, path):
-    print("do_graph_new:", kgm_graph_type, path)
+def do_new(w_config, path):
+    print("do_graph_new:", path)
 
     graph_curie, _ = get_kgm_graph(w_config, path)
     if graph_curie != None:
@@ -26,7 +26,7 @@ def do_new(w_config, kgm_graph_type, path):
         return
     del graph_curie
     
-    kgm_g_class_uri = get_kgm_graph_class_uri(kgm_graph_type)
+    kgm_g_class_uri = get_kgm_graph_class_uri()
     graph_uri = create_kgm_graph(w_config, kgm_g_class_uri, path)
     print(f"created graph at path {path}: {graph_uri}")
 
@@ -69,12 +69,15 @@ def do_import(w_config, path, ttl_file):
     print("do_import:", path, ttl_file)
 
     graph_curie, _ = get_kgm_graph(w_config, path)
-    if graph_curie == None:
-        print(f"no graph at path {path}")
+    if graph_curie != None:
+        print(f"graph at path {path} already exists:", graph_curie)
         return
-
+    del graph_curie
+    
+    kgm_g_class_uri = get_kgm_graph_class_uri()
+    graph_uri = create_kgm_graph(w_config, kgm_g_class_uri, path)
+    
     # check do we really have empty dest graph
-    graph_uri = restore_prefix(graph_curie)
     rq = make_rq(f"select (count(?s) as ?c) {{ graph <{graph_uri}> {{ ?s ?p ?o }} }}")
     rq_res = rq_select(rq, config = w_config)
     if rq_res.iloc[0, 0].literal != "0":
@@ -90,7 +93,6 @@ def do_import(w_config, path, ttl_file):
         g.parse(ttl_file, format="turtle")
 
     #ipdb.set_trace()
-    graph_uri = rdflib.URIRef(restore_prefix(graph_curie))
     rq_insert_graph(g, graph_uri, config = w_config)
 
     print(path, graph_uri)

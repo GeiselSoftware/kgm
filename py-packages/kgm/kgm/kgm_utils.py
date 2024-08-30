@@ -7,13 +7,8 @@ def create_uri(rdfs_class: rdflib.URIRef) -> rdflib.URIRef:
     uri_s = rdfs_class.toPython() + "--" + str(uuid.uuid4())
     return rdflib.URIRef(uri_s)
 
-def get_kgm_graph_class_uri(kgm_graph_type):
-    if kgm_graph_type == "data":
-        kgm_g_class_uri = rdflib.URIRef(known_prefixes["kgm"] + "DataGraph")
-    elif kgm_graph_type == "shacl":
-        kgm_g_class_uri = rdflib.URIRef(known_prefixes["kgm"] + "SHACLGraph")
-    else:
-        raise Exception(f"unexpected value of graph-type: {kgm_graph_type}")
+def get_kgm_graph_class_uri():
+    kgm_g_class_uri = rdflib.URIRef(known_prefixes["kgm"] + "Graph")
     return kgm_g_class_uri
         
 def create_kgm_graph(w_config, kgm_g_class_uri, path):

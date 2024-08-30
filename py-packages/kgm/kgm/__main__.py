@@ -35,14 +35,13 @@ def graph_ls(ctx, path):
     kgm_graph.do_ls(w_config, path)
 
 @cli.command("new", help = "creates new empty graph at given path")
-@click.option("--kgm-graph-type", "-t", type = click.Choice(['data', 'shacl']), required = True, help = "KGM graph type, data or shacl")
 @click.argument("path", required = True)
 @click.pass_context
-def graph_new(ctx, kgm_graph_type, path):
+def graph_new(ctx, path):
     _, w_config = ctx.obj["config"]
-    kgm_graph.do_new(w_config, kgm_graph_type, path)
+    kgm_graph.do_new(w_config, path)
     
-@cli.command("import", help = "import ttl file into empty graph")
+@cli.command("import", help = "import ttl file into the graph")
 @click.argument("path", required = True)
 @click.argument("ttl_file", required = True)
 @click.pass_context
