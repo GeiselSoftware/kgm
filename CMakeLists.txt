@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.12)
 
 project(KGM)
 
+#set(CMAKE_VERBOSE_MAKEFILE TRUE)
+
 set(FMT_ROOT_DIR "${CMAKE_SOURCE_DIR}/external/fmt")
 set(NLOHMANN_ROOT_DIR "${CMAKE_SOURCE_DIR}/external/json")
 set(IMGUI_ROOT_DIR "${CMAKE_SOURCE_DIR}/external/imgui")
@@ -18,7 +20,7 @@ if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
   set(CMAKE_EXECUTABLE_SUFFIX ".html")
   #set(CMAKE_CXX_FLAGS "-fsanitize=undefined -sNO_DISABLE_EXCEPTION_CATCHING -gsource-map") # -g") # -O2")
   set(CMAKE_CXX_FLAGS "-fsanitize=undefined -sNO_DISABLE_EXCEPTION_CATCHING") # -g") # -O2")
-  set(CMAKE_EXE_LINKER_FLAGS "--emrun -s FETCH=1 -s USE_WEBGL2 -s USE_GLFW=3 -s FULL_ES3=1 -s WASM=1")
+  set(CMAKE_EXE_LINKER_FLAGS "--emrun -s FETCH=1 -s USE_WEBGL2 -s USE_GLFW=3 -s FULL_ES3=1 -s WASM=1 --bind")
 else ()
   set(CMAKE_EXECUTABLE_SUFFIX ".tsk")
 endif()

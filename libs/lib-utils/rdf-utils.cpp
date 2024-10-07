@@ -4,7 +4,14 @@
 
 #include <vector>
 #include <sstream>
+
+#ifdef __EMSCRIPTEN__
+#include <format>
+#define std_format std::format
+#else
 #include <fmt/format.h>
+#define std_format fmt::format
+#endif
 
 using namespace std;
 
@@ -51,7 +58,7 @@ int Literal::as_int()
 {
   assert(datatype == xsd::integer);
   if (this->literal.find("\"") != string::npos) {
-    throw runtime_error(fmt::format("can't process literal {}", this->literal));
+    throw runtime_error(std_format("can't process literal {}", this->literal));
   }
   return stoi(this->literal);
 }

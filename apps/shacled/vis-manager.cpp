@@ -3,7 +3,15 @@
 //#include <iostream>
 #include <sstream>
 #include <utility>
+
+#ifdef __EMSCRIPTEN__
+#include <format>
+#define std_format std::format
+#else
 #include <fmt/format.h>
+#define std_format fmt::format
+#endif
+
 #include <imgui_node_editor.h>
 #include <lib-utils/uuid.h>
 #include <lib-utils/known-prefixes.h>
@@ -105,7 +113,7 @@ void VisManager::build_visnode_classes()
 		  auto o_uri = asURI(prop_v[0]);
 		  auto o_curie = rdf_man->collapse_prefix(o_uri);
 		  if (o_curie == CURIE()) {
-		    throw runtime_error(fmt::format("can't convert URI to CURIE: {}", o_uri.uri));
+		    throw runtime_error(std_format("can't convert URI to CURIE: {}", o_uri.uri));
 		  }
 		  m.member_name_input = o_curie;
 		} else if (asURI(prop_p) == kgm::member_name) {
@@ -115,7 +123,7 @@ void VisManager::build_visnode_classes()
 		  auto to_uc_uri = asURI(prop_v[0]);
 		  auto to_uc_curie = rdf_man->collapse_prefix(to_uc_uri);
 		  if (to_uc_curie == CURIE()) {
-		    throw runtime_error(fmt::format("can't collapse prefix for URI {}", to_uc_uri.uri));
+		    throw runtime_error(std_format("can't collapse prefix for URI {}", to_uc_uri.uri));
 		  }
 		  m.member_type_input = to_uc_curie;
 		} else if (asURI(prop_p) == sh::minCount) {
@@ -129,7 +137,7 @@ void VisManager::build_visnode_classes()
 		  auto to_dt_uri = asURI(prop_v[0]);
 		  auto to_dt_curie = rdf_man->collapse_prefix(to_dt_uri);
 		  if (to_dt_curie == CURIE()) {
-		    throw runtime_error(fmt::format("can't collapse prefix for URI {}", to_dt_uri.uri));
+		    throw runtime_error(std_format("can't collapse prefix for URI {}", to_dt_uri.uri));
 		  }
 		  m.member_type_input = to_dt_curie;
 		} else if (asURI(prop_p) == kgm::member_type) { // fallback to kgm_member_type

@@ -3,7 +3,14 @@
 #include <iostream>
 #include <sstream>
 
+#ifdef __EMSCRIPTEN__
+#include <format>
+#define std_format std::format
+#else
 #include <fmt/format.h>
+#define std_format fmt::format
+#endif
+
 #include <nlohmann/json.hpp>
 
 #include <lib-utils/known-prefixes.h>
@@ -123,7 +130,7 @@ void RDFManager::start_load_graph(const string& kgm_path)
    graph ?g {{ ?s ?p ?o }}
   }}
   )";  
-  rq += fmt::format(rq_fmt, kgm_path);  
+  rq += std_format(rq_fmt, kgm_path);  
   
   cout << "sending rq: " << rq << endl;
   decltype(HTTPPostRequest::request_headers) req_headers;
@@ -179,7 +186,7 @@ void RDFManager::start_save_graph(const string& kgm_path, const vector<RDFSPO>& 
     }}
   }}
   )";
-  rq += fmt::format(rq_fmt, kgm_path, values.str());
+  rq += std_format(rq_fmt, kgm_path, values.str());
   
   cout << rq << endl;
 
