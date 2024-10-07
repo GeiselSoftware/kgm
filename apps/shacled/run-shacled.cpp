@@ -2,10 +2,12 @@
 #include <misc/cpp/imgui_stdlib.h>
 #include <imgui.h>
 
-#include <lib-utils/string-utils.h>
+//#include <lib-utils/string-utils.h>
 #include <lib-apploops/loop-runner.h>
 #include "vis-manager.h"
 #include "rdf-manager.h"
+
+#include <emscripten/val.h>
 
 namespace ed = ax::NodeEditor;
 
@@ -185,25 +187,6 @@ struct SHACLEditor: public LoopStep
 
 };
 
-bool process_wasm_run_args(const char* b64_args, string* fuseki_backend_url, string* kgm_path)
-{
-  auto args_s = base64_decode(string(b64_args));
-  bool fuseki_backend_url_ok = false, kgm_path_ok = false;
-  for (auto& arg_pair_s: string_split(args_s, ',')) {
-    auto [k, v] = string_split_to_pair(arg_pair_s, '=');
-    if (k == "BACKEND_URL") {
-      *fuseki_backend_url = v;
-      fuseki_backend_url_ok = true;
-    }
-    if (k == "KGM_PATH") {
-      *kgm_path = v;
-      kgm_path_ok = true;
-    }
-  }
-
-  return fuseki_backend_url_ok && kgm_path_ok;
-}
-
 int main(int argc, char** argv)
 {
   cout << "main args:" << endl;
@@ -213,20 +196,29 @@ int main(int argc, char** argv)
   cout << "--------------------" << endl;
 
   string fuseki_url, kgm_path;
-  
+
 #ifdef __EMSCRIPTEN__
-  if (argc != 2) {
-    cout << "error - wrong args" << endl;
-    exit(2);
-  } else {
-    if (!process_wasm_run_args(argv[1], &fuseki_url, &kgm_path)) {
-      cout << "error processing args" << endl;
-      exit(3);
-    }
-    cout << "fuseki_url: " << fuseki_url << endl;
-    cout << "kgm_path: " << kgm_path << endl;
-    fuseki_url += "/query";
+#if 0
+  EM_ASM({
+      console.log("Module:", Module);
+    });
+  
+  emscripten::val jsGlobal = emscripten::val::global();
+  emscripten::val js_argv1 = jsGlobal["Argv1"];
+  emscripten::val js_argv2 = jsGlobal["Argv2"];
+  if (js_argv1.isString()) {
+    fuseki_url = js_argv1.as<std::string>();
   }
+  if (js_argv2.isString()) {
+    kgm_path = js_argv2.as<std::string>();
+  }
+#else
+  fuseki_url = "http://localhost:3030/kgm-dataset-default";
+  kgm_path = "/NorthWind.shacl";
+#endif
+  cout << "fuseki_url: " << fuseki_url << endl;
+  cout << "kgm_path: " << kgm_path << endl;
+  fuseki_url += "/query";  
 #else  
   if (argc != 3) {
     cout << "error, need suply url to fuseki server and kgm path to existing graph" << endl;
