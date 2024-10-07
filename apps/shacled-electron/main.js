@@ -17,11 +17,11 @@ function createWindow () {
 
   // and load the index.html of the app.
     //mainWindow.loadFile('index.html')
-    mainWindow.loadFile('run-shacled.html');
-    //mainWindow.on('show', () => {
-//	console.log("SHOWHOSHOWWWWWWWWW");
-//	mainWindow.webContents.executeJavascript('console.log("HAHAHA");');
- //   });
+    mainWindow.loadFile('run-shacled.html', {
+	query: {
+	    queryKey: process.argv
+	}
+    });
 
   // Open the DevTools.
   // mainWindow.webContents.openDevTools()
@@ -31,9 +31,6 @@ function createWindow () {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
-    //Argv1 = process.argv[2];
-    //Argv2 = process.argv[3];
-    console.log("main.js argv1, argv2:", Argv1, Argv2);
   createWindow()
 
   app.on('activate', function () {

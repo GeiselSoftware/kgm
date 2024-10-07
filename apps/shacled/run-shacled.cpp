@@ -7,8 +7,6 @@
 #include "vis-manager.h"
 #include "rdf-manager.h"
 
-#include <emscripten/val.h>
-
 namespace ed = ax::NodeEditor;
 
 #include <iostream>
@@ -198,24 +196,13 @@ int main(int argc, char** argv)
   string fuseki_url, kgm_path;
 
 #ifdef __EMSCRIPTEN__
-#if 0
-  EM_ASM({
-      console.log("Module:", Module);
-    });
-  
-  emscripten::val jsGlobal = emscripten::val::global();
-  emscripten::val js_argv1 = jsGlobal["Argv1"];
-  emscripten::val js_argv2 = jsGlobal["Argv2"];
-  if (js_argv1.isString()) {
-    fuseki_url = js_argv1.as<std::string>();
-  }
-  if (js_argv2.isString()) {
-    kgm_path = js_argv2.as<std::string>();
-  }
-#else
-  fuseki_url = "http://localhost:3030/kgm-dataset-default";
-  kgm_path = "/NorthWind.shacl";
-#endif
+  if (argc != 4) {
+    cout << "error, need suply url to fuseki server and kgm path to existing graph" << endl;
+    cout << "Example: " << argv[0] << " http://metis:3030/kgm-default-dataset/query /NorthWind.shacl" << endl;
+    exit(2);
+  }    
+  fuseki_url = argv[2];
+  kgm_path = argv[3];
   cout << "fuseki_url: " << fuseki_url << endl;
   cout << "kgm_path: " << kgm_path << endl;
   fuseki_url += "/query";  
