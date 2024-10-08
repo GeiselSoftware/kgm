@@ -2,7 +2,7 @@
 #include <misc/cpp/imgui_stdlib.h>
 #include <imgui.h>
 
-//#include <lib-utils/string-utils.h>
+#include <lib-utils/string-utils.h>
 #include <lib-apploops/loop-runner.h>
 #include "vis-manager.h"
 #include "rdf-manager.h"
@@ -201,8 +201,8 @@ int main(int argc, char** argv)
     cout << "Example: " << argv[0] << " http://metis:3030/kgm-default-dataset/query /NorthWind.shacl" << endl;
     exit(2);
   }    
-  fuseki_url = argv[3];
-  kgm_path = argv[4];
+  fuseki_url = string_split_to_pair(urlDecode(argv[3]), '=').second;
+  kgm_path = string_split_to_pair(urlDecode(argv[4]), '=').second;
 #else  
   if (argc != 3) {
     cout << "error, need suply url to fuseki server and kgm path to existing graph" << endl;

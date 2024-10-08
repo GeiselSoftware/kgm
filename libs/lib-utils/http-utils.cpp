@@ -76,7 +76,7 @@ void HTTPRawRequestHandler::on_error(emscripten_fetch_t *fetch)
 {
   //delete [] fetch->__attributes.requestData; // that was in place in old version of fuseki http handler on wasm
   auto that = reinterpret_cast<HTTPRawRequestHandler*>(fetch->userData);
-  that->raw_response = "";
+  that->raw_response = "error";
   that->request_in_progress = false;
   emscripten_fetch_close(fetch);
 }

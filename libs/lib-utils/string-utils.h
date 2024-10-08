@@ -6,3 +6,7 @@
 std::vector<std::string> string_split(std::string str, char splitter = '=');
 std::pair<std::string, std::string> string_split_to_pair(std::string str, char splitter = '=');					       
 std::string base64_decode(std::string const& encoded_string);
+
+std::string urlEncode(std::string str);
+std::string urlDecode(std::string str);
+
