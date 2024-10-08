@@ -196,27 +196,26 @@ int main(int argc, char** argv)
   string fuseki_url, kgm_path;
 
 #ifdef __EMSCRIPTEN__
-  if (argc != 4) {
+  if (argc != 5) {
     cout << "error, need suply url to fuseki server and kgm path to existing graph" << endl;
     cout << "Example: " << argv[0] << " http://metis:3030/kgm-default-dataset/query /NorthWind.shacl" << endl;
     exit(2);
   }    
-  fuseki_url = argv[2];
-  kgm_path = argv[3];
-  cout << "fuseki_url: " << fuseki_url << endl;
-  cout << "kgm_path: " << kgm_path << endl;
-  fuseki_url += "/query";  
+  fuseki_url = argv[3];
+  kgm_path = argv[4];
 #else  
   if (argc != 3) {
     cout << "error, need suply url to fuseki server and kgm path to existing graph" << endl;
     cout << "Example: " << argv[0] << " http://metis:3030/kgm-default-dataset/query /NorthWind.shacl" << endl;
     exit(2);
-  } else {
-    fuseki_url = argv[1];
-    kgm_path = argv[2];
   }
+  fuseki_url = argv[1];
+  kgm_path = argv[2];  
 #endif
 
+  cout << "fuseki_url: " << fuseki_url << endl;
+  cout << "kgm_path: " << kgm_path << endl;
+  
   if (fuseki_url.size() == 0) {
     cout << "no fuseki url specified" << endl;
     exit(2);
@@ -227,7 +226,6 @@ int main(int argc, char** argv)
     exit(2);
   }
   
-  cout << "fuseki url: " << fuseki_url << endl;
   SHACLEditor e(fuseki_url, kgm_path);
   LoopRunner lr(&e);
 

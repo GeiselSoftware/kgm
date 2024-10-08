@@ -27,8 +27,8 @@
       var Module = {
         preRun: [],
         postRun: [],
-        print: (function() {})(),
-        printErr: function(text) {},
+          print: function(text) { console.log("stdout: ", text); },
+          printErr: function(text) { console.log("ERROR:", text); },
         canvas: (function() {
           var canvas = document.getElementById('canvas');
           // As a default initial behavior, pop up an alert when webgl context is lost. To make your
