@@ -120,6 +120,7 @@ def rq_select(rq, *, config):
     results = sparql.query().convert()
 
     #ipdb.set_trace()
+    print(results)
     return pd.DataFrame.from_records(results['results']['bindings'], columns = results['head']['vars']).map(to_rdfw)
 
 def rq_construct(rq, *, config):

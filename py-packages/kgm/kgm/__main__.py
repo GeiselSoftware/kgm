@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
 import click
-from .cmds import kgm_graph, kgm_graph_shacled, kgm_validate, kgm_misc
+from .cmds import kgm_graph, kgm_validate, kgm_misc
+from .codegen import kgm_csharp
 from .config_utils import load_config
 
 class CustomGroup(click.Group):
@@ -93,14 +94,6 @@ def do_rename(ctx, path, new_path):
 def do_graph_select(ctx, select_query):
     _, w_config = ctx.obj["config"]
     kgm_graph.do_graph_select(w_config, select_query)
-
-@cli.command("shacled")
-@click.argument("path", required = True)
-@click.option("--public-access", "-P", is_flag = True, required = False)
-@click.pass_context
-def do_graph_shacled(ctx, path, public_access):
-    _, w_config = ctx.obj["config"]
-    kgm_graph_shacled.do_graph_shacled(w_config, path, public_access)
     
 @cli.command("validate")
 @click.argument("shacl-path")
@@ -110,6 +103,16 @@ def do_validate(ctx, shacl_path, path):
     _, w_config = ctx.obj["config"]
     kgm_validate.do_validate(w_config, shacl_path, path)
 
+@cli.group("codegen")
+def do_codegen():
+    pass
+
+@do_codegen.command("cs")
+@click.argument("path")
+@click.pass_context
+def do_codegen_cs(ctx, path):
+    _, w_config = ctx.obj["config"]
+    kgm_csharp.generate_csharp_defs(w_config, path)
 
 @cli.group("misc")
 def do_misc():
@@ -126,10 +129,6 @@ def do_misc_graphvis(ttl_file, construct_rq):
 @click.option("--select-query", required = False, help = "select query file")
 def do_misc_select(ttl_file, select_query):
     kgm_misc.do_misc_select(ttl_file, select_query)
-
-@do_misc.command("wasm_test")
-def do_misc_wasmtest():
-    kgm_misc.do_misc_wasmtest()
     
     
 def main():
