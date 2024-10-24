@@ -13,7 +13,8 @@ known_prefixes = {
     "kgm": "http://www.geisel-software.com/RDF/KGM#",
     "dummy": "dummy:",
     "ab": "http://www.geisel-software.com/RDF/alice-bob#",
-    "nw": "http://www.geisel-software.com/RDF/NorthWind#"
+    "nw": "http://www.geisel-software.com/RDF/NorthWind#",
+    "TU": "http://www.geisel-software.com/RDF/KGM/TestUser#"
 }
 
 def restore_prefix(curie:str):
