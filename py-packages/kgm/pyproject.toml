@@ -6,8 +6,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "kgm"
-version = "0.0.4"
-description = "Knowledge Graph Management"
+version = "0.0.5"
+description = "Knowledge Graph Management - command line utilities"
 readme = "README.md"
 requires-python = ">=3.10"
 #license = {file = "LICENSE.txt"}
@@ -19,12 +19,13 @@ authors = [
 dependencies = ["click", "rdflib", "sparqlwrapper", "pandas", "graphviz"]
 
 [project.urls]
-"Source" = "https://github.com/GeiselSoftware/KGM/py-packages/kgm"
+"Source" = "https://github.com/GeiselSoftware/kgm/py-packages/kgm"
 
 # The following would provide a command line executable called `sample`
 # which executes the function `main` from this package when invoked.
 [project.scripts]
-kgm = "kgm.__main__:main"
+kgm = "kgm.kgm_main:main"
+kgm-gencode="kgm.kgm_gencode_main:main"
 
 #[tool.setuptools.packages.find]
 #where = ["src"]
