@@ -58,5 +58,3 @@ def gencode_cs():
     """.replace("{{user_class.uriref_class}}", user_class.uriref_class)
           .replace("{{user_class.name}}", user_class.name)
           .replace("{{user_class.user_class_uri}}", user_class.user_class_uri))
-    
-    
