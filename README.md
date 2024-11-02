@@ -27,6 +27,14 @@ cd dist
 
 *.whl is binary distribution, *.tar.gz is source distribution.
 
+It is possible to use gh to place distribution file into GitHub repo releases.
+
+```
+cd <repo>
+gu auth login
+cd py-packages/kgm/dist
+gh release create <tag> --generate-notes <file-to-release>
+```
 
 # build - ubuntu 22.04
 
