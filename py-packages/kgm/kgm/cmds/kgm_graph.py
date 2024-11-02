@@ -25,8 +25,9 @@ def do_new(w_config, path):
         print(f"graph exists on path {path}, giving up, graph was {graph_curie}")
         return
     del graph_curie
-    
-    kgm_g_class_uri = get_kgm_graph_class_uri()
+
+    #ipdb.set_trace()
+    kgm_g_class_uri = kgm.Graph
     graph_uri = create_kgm_graph(w_config, kgm_g_class_uri, path)
     print(f"created graph at path {path}: {graph_uri}")
 
@@ -40,7 +41,7 @@ def do_cat(w_config, path):
     rq = make_rq(f"""
     construct {{ 
       ?s ?p ?o 
-    }} where {{ 
+    }} where {{
        graph <{graph_uri}> {{ 
          ?s ?p ?o
        }} 

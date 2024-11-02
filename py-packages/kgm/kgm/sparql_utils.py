@@ -1,97 +1,55 @@
-#import ipdb
+import ipdb
 import io
 import pandas as pd
 import rdflib
 from SPARQLWrapper import SPARQLWrapper, JSON, TURTLE
 from SPARQLWrapper import POST, BASIC
 
-known_prefixes = {
-    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-    "xsd": "http://www.w3.org/2001/XMLSchema#",
-    "sh": "http://www.w3.org/ns/shacl#",
-    "kgm": "http://www.geisel-software.com/RDF/KGM#",
-    "dummy": "dummy:",
-    "ab": "http://www.geisel-software.com/RDF/alice-bob#",
-    "nw": "http://www.geisel-software.com/RDF/NorthWind#",
-    "TU": "http://www.geisel-software.com/RDF/KGM/TestUser#"
-}
-
-def restore_prefix(curie:str):
-    for prefix, prefix_uri_s in known_prefixes.items():
-        if curie.find(prefix) == 0:
-            return rdflib.URIRef(curie.replace(prefix + ":", prefix_uri_s))
-    raise Exception("can't restore prefix in curie", curie)
+#from .known_prefixes import *
+from .rdf_utils import *
 
 def make_rq(rq):
-    return "\n".join([f"prefix {prefix}: <{prefix_uri_s}>" for prefix, prefix_uri_s in known_prefixes.items()]) + "\n" + rq
-
-class uri:
-    def __init__(self, s):
-        self.uri = s
-        
-    def __repr__(self):
-        return f"<{self.uri}>"
-
-    def __eq__(self, o):
-        return self.uri == o.uri
-    def __hash__(self):
-        return self.uri.__hash__()
-
-    def collapse_prefix(self):
-        for p, p_uri_s in known_prefixes.items():
-            if self.uri.find(p_uri_s) == 0:
-                return self.uri.replace(p_uri_s, p + ":")
-        raise Exception("can't collapse prefix for URI:", self.uri)
-    
-class literal:
-    def __init__(self, s):
-        self.literal = s
-
-    def __repr__(self):
-        return f'"{self.literal}"'
-
-    def __eq__(self, o):
-        return self.literal == o.literal
-    def __hash__(self):
-        return o.__hash__()
-
-class bnode:
-    def __init__(self, s):
-        self.bnode = s
-
-    def __repr__(self):
-        return f"{self.bnode}"
+    return "\n".join([f"prefix {prefix}: <{prefix_uri.uri}>" for prefix, prefix_uri in known_prefixes.items()]) + "\n" + rq
     
 def to_rdfw(d):
+    if pd.isnull(d):
+        return None
     if d['type'] == 'uri':
-        return uri(d['value']).collapse_prefix()
+        return collapse_prefix(URI(d['value']))
     if d['type'] == 'literal':
-        return literal(d['value'])
+        if not 'datatype' in d:
+            datatype = xsd.string
+        else:
+            datatype = URI(d['datatype'])
+        return Literal(d['value'], datatype)
     if d['type'] == 'bnode':
-        return bnode(d['value'])
+        return BNode(d['value'])
     raise Exception("unknown type")
 
-def rq_insert_graph(g, graph_uri, *, config):
+def rq_insert_graph(triples, graph_uri, *, config):
     # Serialize the graph to a string in N-Triples format
-    ntriples_data = g.serialize(format="nt")#.decode("utf-8")
-    
+    ntriples_data = []
+    for t in triples:
+        ntriples_data.append(f"{t[0].as_turtle()} {t[1].as_turtle()} {t[2].as_turtle()} .")
+        
+    ntriples_data_s = "\n".join(ntriples_data)
     if graph_uri:
-        assert(type(graph_uri) == rdflib.URIRef)
+        assert(type(graph_uri) == URI)
         update_query = f"""
         INSERT DATA {{
-        GRAPH <{graph_uri}> {{
-        {ntriples_data}
+        GRAPH <{graph_uri.uri}> {{
+        {ntriples_data_s}
         }}
         }}
         """
     else:
         update_query = f"""
         INSERT DATA {{
-        {ntriples_data}
+        {ntriples_data_s}
         }}
         """
-            
+
+    ipdb.set_trace()
     # Create a SPARQLWrapper instance
     fuseki_update_url = config["backend-url"] + "/update"
     sparql = SPARQLWrapper(fuseki_update_url)

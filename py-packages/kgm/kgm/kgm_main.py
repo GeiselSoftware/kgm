@@ -14,8 +14,9 @@ class CustomGroup(click.Group):
 @click.group(cls = CustomGroup)
 @click.option("--version", "-V", is_flag = True)
 @click.option("--config", "-c")
+@click.option("--verbose", "-v", is_flag = True)
 @click.pass_context
-def cli(ctx, version, config):
+def cli(ctx, version, config, verbose):
     #print("cli pre-subcommand:", version, config)
     ctx.ensure_object(dict)
     ctx.obj['config'] = load_config(config)

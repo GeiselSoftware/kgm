@@ -1,22 +1,16 @@
 #import ipdb
 import uuid
-import rdflib
 from .sparql_utils import *
 
-def create_uri(rdfs_class: rdflib.URIRef) -> rdflib.URIRef:
-    uri_s = rdfs_class.toPython() + "--" + str(uuid.uuid4())
-    return rdflib.URIRef(uri_s)
-
-def get_kgm_graph_class_uri():
-    kgm_g_class_uri = rdflib.URIRef(known_prefixes["kgm"] + "Graph")
-    return kgm_g_class_uri
+def create_uri(rdfs_class: URI) -> URI:
+    return URI(rdfs_class.uri + "--" + str(uuid.uuid4()))
         
 def create_kgm_graph(w_config, kgm_g_class_uri, path):
-    assert(type(kgm_g_class_uri) == rdflib.URIRef)
+    assert(type(kgm_g_class_uri) == URI)
     graph_uri = create_uri(kgm_g_class_uri)
-    descr_g = rdflib.Graph()
-    descr_g.add((graph_uri, rdflib.RDF.type, kgm_g_class_uri))
-    descr_g.add((graph_uri, rdflib.URIRef(known_prefixes["kgm"] + "path"), rdflib.Literal(path)))
+    descr_g = []
+    descr_g.append((graph_uri, rdf.type, RDFObject(kgm_g_class_uri)))
+    descr_g.append((graph_uri, kgm.path, RDFObject(Literal(path, xsd.string))))
 
     rq_insert_graph(descr_g, None, config = w_config)
     return graph_uri
@@ -25,8 +19,8 @@ def create_kgm_graph(w_config, kgm_g_class_uri, path):
 # graph_uri - is kgm graph's curie,
 # {pred: obj} - dict of graph's pred:obj pairs as found in kgm backend
 def get_kgm_graph(w_config, path):
-    rq = make_rq(f'select ?s ?p ?o where {{ ?s kgm:path "{path}"; ?p ?o }}')
-    #print(rq)
+    rq = make_rq(f'select ?s ?p ?o where {{ ?s kgm:path "{path}"; rdf:type kgm:Graph }}')
+    print(rq)
 
     rq_res = rq_select(rq, config = w_config)
     graph_uris = rq_res.s.unique()
