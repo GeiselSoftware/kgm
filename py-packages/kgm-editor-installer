@@ -1,0 +1,49 @@
+#!/usr/bin/env python3
+
+import os
+import sys
+import subprocess
+import venv
+import argparse
+import urllib.request
+
+def create_and_install_venv(wheel_url, venv_dir):
+    venv.create(venv_dir, with_pip=True)
+    
+    # Activate virtual environment
+    if os.name == "nt":  # Windows
+        activate_script = os.path.join(venv_dir, "Scripts", "activate")
+    else:  # Unix-based
+        activate_script = os.path.join(venv_dir, "bin", "activate")
+    
+    # Download the wheel file
+    wheel_file = os.path.join(venv_dir, wheel_url.split('/')[-1])
+    urllib.request.urlretrieve(wheel_url, wheel_file)
+    
+    # Run pip install in virtual environment
+    pip_install_cmd = f"{os.path.join(venv_dir, 'bin', 'pip')} install {wheel_file}" if os.name != "nt" else f"{os.path.join(venv_dir, 'Scripts', 'pip')} install {wheel_file}"
+    subprocess.run(pip_install_cmd, shell=True)
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Create a virtual environment and install a package from a wheel URL.")
+    parser.add_argument("wheel_url", help="The URL of the .whl package file")
+    args = parser.parse_args()
+
+    # Create virtual environment
+    if os.name == "nt": # Windows
+        raise Exception("not supported")
+    else: # linux and mac
+        venv_dir = "/usr/local/kgm"
+    
+    print("kgm will be installed to dir", venv_dir)
+    print("proceed? [Y/n]:")
+    res = input()
+    if len(res) == 0:
+        res = 'y'
+
+    if res == 'y':
+        print("start kgm-editor install")
+        create_and_install_venv(args.wheel_url, venv_dir)
+        print(f"kgm-editor installed into {venv_dir}, to run use {venv_dir}/bin/kgm-editor")
+    else:
+        print("aborted")
