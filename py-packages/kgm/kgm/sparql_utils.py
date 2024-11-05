@@ -1,4 +1,4 @@
-import ipdb
+#import ipdb
 import io
 import pandas as pd
 import rdflib
@@ -49,7 +49,7 @@ def rq_insert_graph(triples, graph_uri, *, config):
         }}
         """
 
-    ipdb.set_trace()
+    #ipdb.set_trace()
     # Create a SPARQLWrapper instance
     fuseki_update_url = config["backend-url"] + "/update"
     sparql = SPARQLWrapper(fuseki_update_url)

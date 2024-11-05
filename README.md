@@ -24,10 +24,6 @@ cd py-packages/kgm
 python -m build --wheel
 cd dist
 
-cd py-packages/kgm-editor
-python -n build --wheel
-cd dist
-
 ```
 
 *.whl is binary distribution, *.tar.gz is source distribution.

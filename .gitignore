@@ -20,4 +20,4 @@ Simple.json
 
 *.orig
 
-py-packages/kgm-editor/kgm_editor/electron-dist/
+py-packages/kgm/kgm/electron-dist/

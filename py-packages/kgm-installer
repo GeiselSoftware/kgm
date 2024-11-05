@@ -21,7 +21,7 @@ def create_and_install_venv(wheel_url, venv_dir):
     urllib.request.urlretrieve(wheel_url, wheel_file)
     
     # Run pip install in virtual environment
-    pip_install_cmd = f"{os.path.join(venv_dir, 'bin', 'pip')} install {wheel_file}" if os.name != "nt" else f"{os.path.join(venv_dir, 'Scripts', 'pip')} install {wheel_file}"
+    pip_install_cmd = f"{os.path.join(venv_dir, 'bin', 'pip')} install --no-cache-dir {wheel_file}" if os.name != "nt" else f"{os.path.join(venv_dir, 'Scripts', 'pip')} install {wheel_file}"
     subprocess.run(pip_install_cmd, shell=True)
 
 if __name__ == "__main__":

@@ -26,6 +26,20 @@ dependencies = ["click", "rdflib", "sparqlwrapper", "pandas", "graphviz"]
 [project.scripts]
 kgm = "kgm.kgm_main:main"
 kgm-gencode="kgm.kgm_gencode_main:main"
+kgm-editor = "kgm.kgm_editor:main"
 
-#[tool.setuptools.packages.find]
-#where = ["src"]
+[tool.setuptools.package-data]
+"kgm" = [
+      	     "electron-dist/*",
+	     "electron-dist/*/*",
+	     "electron-dist/*/*/*",
+	     "electron-dist/*/*/*/*",
+	     "electron-dist/*/*/*/*/*",
+	     "electron-dist/*/*/*/*/*/*",
+	     "electron-dist/*/*/*/*/*/*/*",
+	     "electron-dist/*/*/*/*/*/*/*/*",
+	     "electron-dist/*/*/*/*/*/*/*/*/*",
+	     "electron-dist/*/*/*/*/*/*/*/*/*/*",
+	     "electron-dist/*/*/*/*/*/*/*/*/*/*/*",
+	     "electron-dist/*/*/*/*/*/*/*/*/*/*/*/*"
+	     ]

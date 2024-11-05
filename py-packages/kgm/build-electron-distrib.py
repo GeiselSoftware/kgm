@@ -58,7 +58,7 @@ if __name__ == "__main__":
     top_dir = subprocess.check_output(shlex.split(cmd)).decode('ascii').strip()
     print(f"top_dir: {top_dir}")
 
-    top_dist_dir = os.path.realpath(f"{top_dir}/py-packages/kgm-editor/kgm_editor/electron-dist/")
+    top_dist_dir = os.path.realpath(f"{top_dir}/py-packages/kgm/kgm/electron-dist/")
     print(f"top_dist_dir: {top_dist_dir}")
     
     supported_dists = ["linux-x64", "win32-x64", "darwin-arm64"]
