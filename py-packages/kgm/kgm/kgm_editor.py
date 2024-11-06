@@ -2,6 +2,9 @@ import platform, site, os
 import sys
 
 def main():
+    fuseki_url = "http://localhost:3030/kgm-default-dataset/query"
+    kgm_path = sys.argv[1]
+
     # linux:
     
     # mac: /usr/local/kgm/lib/python3.13/site-packages/kgm/electron-dist/darwin-arm64
@@ -11,12 +14,16 @@ def main():
     # /usr/local/kgm/lib/python3.13/site-packages/kgm/electron-dist/darwin-arm64/kgm-editor.app/Contents/MacOS/Electron -- http://localhost:3030/kgm-default-dataset/query /gimp-test.shacl
     p = platform.system()
     if p == "Darwin":
-        fuseki_query_url = "http://localhost:3030/kgm-default-dataset/query"
-        kgm_path = sys.argv[1]
-        electron_app_dir = os.path.join(site.getsitepackages()[0], "kgm/electron-dist/darwin-arm64")
-        kgm_editor_cmd = f"{electron_app_dir}/kgm-editor.app/Contents/MacOS/Electron -- {fuseki_query_url} {kgm_path}"
-        print(kgm_editor_cmd)
-        os.system(kgm_editor_cmd)
+        electron_app = os.path.join(site.getsitepackages()[0], "kgm/electron-dist/darwin-arm64/kgm-editor.app/Contents/MacOS/Electron")
+        kgm_editor_cmd = f"{electron_app} -- {fuseki_url} {kgm_path}"
+    elif p == "Windows":
+        electron_app = os.path.join(site.getsitepackages()[0], "kgm/electron-dist/win32-x64/kgm-editor.exe")
+        kgm_editor_cmd = f"{electron_app} -- {fuseki_url} {kgm_path}"
+    elif p == "Linux":
+        electron_app = os.path.join(site.getsitepackages()[0], "kgm/electron-dist/linux-x64/kgm-editor")
+        kgm_editor_cmd = f"{electron_app} -- {fuseki_url} {kgm_path}"
     else:
         raise Exception(f"not supported platform {p}")
 
+    print(kgm_editor_cmd)
+    os.system(kgm_editor_cmd)
