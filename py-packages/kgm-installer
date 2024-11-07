@@ -22,7 +22,7 @@ def create_and_install_venv(wheel_url, venv_dir):
     #wheel_file = wheel_url
     
     # Run pip install in virtual environment
-    pip = os.path.join(venv_dir, 'bin', 'pip') if os.name != "nt" else '"' + {os.path.join(venv_dir, 'Scripts', 'pip') + '"'
+    pip = os.path.join(venv_dir, 'bin', 'pip') if os.name != "nt" else '"' + os.path.join(venv_dir, 'Scripts', 'pip') + '"'
     wheel_file = wheel_file if os.name != "nt" else f'"{wheel_file}"'
     pip_install_cmd = f"{pip} install --no-cache-dir {wheel_file}"
     subprocess.run(pip_install_cmd, shell=True)
