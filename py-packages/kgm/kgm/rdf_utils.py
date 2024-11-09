@@ -59,6 +59,9 @@ class BNode:
     def __repr__(self):
         return f"{self.bnode}"
 
+    def as_turtle(self):
+        return "_:" + self.bnode
+    
 class RDFObject:
     def __init__(self, object_):
         self.object_ = object_

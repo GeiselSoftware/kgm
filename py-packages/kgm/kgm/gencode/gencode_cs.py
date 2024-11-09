@@ -1,23 +1,41 @@
 #import ipdb
-from ..rdf_utils import xsd_dflt_cs_values, restore_prefix
+from ..rdf_utils import xsd_dflt_cs_values, restore_prefix, xsd
 from ..sparql_utils import make_rq, rq_select, rq_insert_graph, rq_update
 
 class UserClass:
     def __init__(self):
         self.name = None
 
-def get_cs_dflt_value(is_class, m_type_curie, cs_type, min_card):
+def get_cs_type(uc_m_type_curie):
+    if uc_m_type_curie.curie.startswith("xsd"):
+        xsd_type_uri = restore_prefix(uc_m_type_curie)
+        if xsd_type_uri == xsd.string:
+            ret = "string"
+        elif xsd_type_uri == xsd.integer:
+            ret = "int"
+        elif xsd_type_uri == xsd.boolean:
+            ret = "bool"
+        else:
+            raise Exception(f"not supported xsd type {xsd_type_uri}")
+    else:
+        ret = "URIRef_CD_" + uc_m_type_curie.get_suffix()
+        
+    return ret    
+        
+def get_cs_dflt_value(is_class_arg, m_type_curie, min_card):
+    is_class = is_class_arg.literal
+    cs_type = get_cs_type(m_type_curie)
     ret = None
     #ipdb.set_trace()
     if min_card == 0:
-        if is_class.literal:
+        if is_class:
             ret = "null"
         else:
             ret = "null"
     elif min_card == 1:
         #print("WOW:", is_class, is_class.literal)
-        if is_class.literal:
-            ret = f"new {cs_type}()"
+        if is_class:
+            ret = f"{cs_type}.create(null)"
         else:
             ret = xsd_dflt_cs_values[restore_prefix(m_type_curie)]
     else:
@@ -53,39 +71,40 @@ def gencode_cs(w_config, uc_curie):
     uc.user_class_uri = uc_curie
     
     member_decls = []
-    default_assignments = []
+    default_ctor_assignments = []
     uriref_member_getseters = []
     user_class_info_member_entries = []
     for ii, r in rq_res.iterrows():
         cs_m_name = r['uc_m'].get_suffix()
+        cs_m_type = get_cs_type(r['uc_m_type'])
         cs_m_min_card = r['uc_m_minc']
         if cs_m_min_card == 0:
-            cs_m_type = r['uc_m_type'].get_suffix() + "?"
-            cs_m_getsetter = f"    public {cs_m_type} {cs_m_name} {{ get {{ return ref_.{cs_m_name}__; }} set {{ ref_.{cs_m_name}__ = value; }} }}"
-        elif cs_m_min_card == 1:
-            cs_m_type = r['uc_m_type'].get_suffix()
-            cs_m_getsetter = f"    public {cs_m_type} {cs_m_name} {{ get {{ return ref_.{cs_m_name}__; }} set {{ Debug.Assert(ref_.{cs_m_name}__); ref_.{cs_m_name}__ = value; }} }}"
+            member_decls.append(f"  public {cs_m_type}? {cs_m_name}__;")
+            cs_m_getsetter = f"    public {cs_m_type}? {cs_m_name} {{ get {{ return ref_.{cs_m_name}__; }} set {{ ref_.{cs_m_name}__ = value; }} }}"
+        elif cs_m_min_card == 1:            
+            member_decls.append(f"  public {cs_m_type} {cs_m_name}__;")
+            cs_m_getsetter = f"    public {cs_m_type} {cs_m_name} {{ get {{ return ref_.{cs_m_name}__; }} set {{ Debug.Assert(ref_.{cs_m_name}__ != null); ref_.{cs_m_name}__ = value; }} }}"
         else:
             raise Exception("not supported minc > 1")
 
         uc_member_info_initializer = []
         uc_m = r['uc_m'].curie
-        uc_member_info_initializer.append(f"RDFUtils.restore_prefix(new CURIE(\"{uc_m}\"))")
+        uc_m_type = r['uc_m_type']
+        uc_member_info_initializer.append(f"Turtle.make_uri(\"{uc_m}\")")
         uc_member_info_initializer.append(f"{r['uc_m_minc']}")
         uc_member_info_initializer.append(f"{r['uc_m_maxc']}")
-        uc_member_info_initializer.append("xsd.class_" if r['uc_m_is_class'].literal == True else "xsd.datatype")
-        uc_member_info_initializer.append('new URI("' + restore_prefix(r['uc_m_type']).uri + '")')
+        uc_member_info_initializer.append("sh.class_" if r['uc_m_is_class'].literal == True else "sh.datatype")
+        uc_member_info_initializer.append(f"Turtle.make_uri(\"{uc_m_type}\")")
         uc_member_info_initializer.append(f"typeof({uc.name}).GetField(\"{cs_m_name}__\")")
         if r['uc_m_is_class'].literal == True:
-            uc_member_info_initializer.append(f"() => new {uc.uriref_class}(null, new {uc_m}()))")
+            uc_member_info_initializer.append(f"() => {cs_m_type}.create(null)")
         else:
             uc_member_info_initializer.append("null")
         
         #ipdb.set_trace()
-        cs_m_dflt_value = get_cs_dflt_value(r['uc_m_is_class'], r['uc_m_type'], r['uc_m'].get_suffix(), cs_m_min_card)
+        cs_m_dflt_value = get_cs_dflt_value(r['uc_m_is_class'], r['uc_m_type'], cs_m_min_card)
         
-        member_decls.append(f"  public {cs_m_type} {cs_m_name}__;")
-        default_assignments.append(f"  {cs_m_name}__ = {cs_m_dflt_value};")
+        default_ctor_assignments.append(f"  {cs_m_name}__ = {cs_m_dflt_value};")
         uriref_member_getseters.append(cs_m_getsetter)
         user_class_info_member_entries.append(f"{{ \"{cs_m_name}\", new uc_member_info({','.join(uc_member_info_initializer)}) }}")
         
@@ -98,7 +117,7 @@ def gencode_cs(w_config, uc_curie):
     using kgm;
     
     public class {{uc.name}} {
-      public static URI uo_class_uri = RDFUtils.restore_prefix("{{uc.user_class_uri}}");
+      public static URI uo_class_uri = Turtle.make_uri("{{uc.user_class_uri}}");
 
       {{member_decls}}
 
@@ -108,7 +127,7 @@ def gencode_cs(w_config, uc_curie):
 
       public static Dictionary<string, uc_member_info> user_class_info = new Dictionary<string, uc_member_info>{
        {{user_class_info_member_entries}}
-      }
+      };
 
     }
 
@@ -128,7 +147,7 @@ def gencode_cs(w_config, uc_curie):
       public static {{uc.uriref_class}} create(URI? uri)
       {
         if (uri == null) {
-            uri = RDFUtils.create_uo_uri({{uc.name}}.uo_class_uri);
+            uri = URI.new_uo_uri({{uc.name}}.uo_class_uri);
         }
         {{uc.name}} new_uo_ref = new {{uc.name}}();
         return new {{uc.uriref_class}}(uri, new_uo_ref);
@@ -149,7 +168,7 @@ def gencode_cs(w_config, uc_curie):
           .replace("{{uc.name}}", uc.name)
           .replace("{{uc.user_class_uri}}", uc.user_class_uri)
           .replace("{{member_decls}}", "\n".join(member_decls))
-          .replace("{{default_ctor_assignments}}", "\n".join(default_assignments))
+          .replace("{{default_ctor_assignments}}", "\n".join(default_ctor_assignments))
           .replace("{{uriref_member_getseters}}", "\n".join(uriref_member_getseters))
           .replace("{{user_class_info_member_entries}}", ",\n".join(user_class_info_member_entries))
           )

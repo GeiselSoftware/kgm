@@ -75,16 +75,6 @@ def do_import(w_config, path, ttl_file):
         return
     del graph_curie
     
-    kgm_g_class_uri = get_kgm_graph_class_uri()
-    graph_uri = create_kgm_graph(w_config, kgm_g_class_uri, path)
-    
-    # check do we really have empty dest graph
-    rq = make_rq(f"select (count(?s) as ?c) {{ graph <{graph_uri}> {{ ?s ?p ?o }} }}")
-    rq_res = rq_select(rq, config = w_config)
-    if rq_res.iloc[0, 0].literal != "0":
-        print(f"dest graph at path {path} is not empty, giving up, graph was {graph_curie}")
-        return
-    
     g = rdflib.Graph()    
     if ttl_file.startswith("http"):
         ttl_file_url = ttl_file
@@ -94,6 +84,8 @@ def do_import(w_config, path, ttl_file):
         g.parse(ttl_file, format="turtle")
 
     #ipdb.set_trace()
+    kgm_g_class_uri = kgm.Graph
+    graph_uri = create_kgm_graph(w_config, kgm_g_class_uri, path)    
     rq_insert_graph(g, graph_uri, config = w_config)
 
     print(path, graph_uri)
