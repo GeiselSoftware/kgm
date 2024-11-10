@@ -57,12 +57,12 @@ def graph_cat(ctx, path):
     _, w_config = ctx.obj["config"]
     kgm_graph.do_cat(w_config, path)
 
-@cli.command("show", help = "shows details about given RDF CURIE")
-@click.argument("curie", required = True)
+@cli.command("show", help = "shows details about given URI")
+@click.argument("uri", required = True)
 @click.pass_context
-def graph_show(ctx, curie):
+def graph_show(ctx, uri):
     _, w_config = ctx.obj["config"]
-    kgm_graph.do_show(w_config, curie)
+    kgm_graph.do_show(w_config, uri)
     
 @cli.command("remove", help = "removes graph")
 @click.argument("path", required = True)

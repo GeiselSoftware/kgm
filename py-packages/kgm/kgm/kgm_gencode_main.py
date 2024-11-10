@@ -15,16 +15,16 @@ class CustomGroup(click.Group):
 @click.option("--config", "-c")
 @click.pass_context
 def cli(ctx, version, config):
-    print("cli pre-subcommand:", version, config)
+    #print("cli pre-subcommand:", version, config)
     ctx.ensure_object(dict)
     ctx.obj['config'] = load_config(config)
-    print(ctx.obj['config'])
+    #print(ctx.obj['config'])
 
 @cli.command("cs", help = "C# generation")
 @click.argument("user-class-uri", required = True)
 @click.pass_context
 def gencode_cs(ctx, user_class_uri):
-    print("gencode_cs:", ctx.obj)
+    #print("gencode_cs:", ctx.obj)
     _, w_config = ctx.obj["config"]
     mod_gencode_cs.gencode_cs(w_config, user_class_uri)
 

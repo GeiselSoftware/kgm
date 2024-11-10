@@ -1,14 +1,16 @@
 #import ipdb
-from ..rdf_utils import xsd_dflt_cs_values, restore_prefix, xsd
+import pandas as pd
+from ..rdf_utils import xsd_dflt_cs_values, restore_prefix__, collapse_prefix__, xsd, URI
 from ..sparql_utils import make_rq, rq_select, rq_insert_graph, rq_update
 
 class UserClass:
     def __init__(self):
         self.name = None
 
-def get_cs_type(uc_m_type_curie):
-    if uc_m_type_curie.curie.startswith("xsd"):
-        xsd_type_uri = restore_prefix(uc_m_type_curie)
+def get_cs_type(uc_m_type_uri):
+    #ipdb.set_trace()
+    if uc_m_type_uri.uri.startswith(xsd.prefix_uri__.uri):
+        xsd_type_uri = uc_m_type_uri
         if xsd_type_uri == xsd.string:
             ret = "string"
         elif xsd_type_uri == xsd.integer:
@@ -18,13 +20,13 @@ def get_cs_type(uc_m_type_curie):
         else:
             raise Exception(f"not supported xsd type {xsd_type_uri}")
     else:
-        ret = "URIRef_CD_" + uc_m_type_curie.get_suffix()
+        ret = "URIRef_CD_" + uc_m_type_uri.get_suffix()
         
     return ret    
-        
-def get_cs_dflt_value(is_class_arg, m_type_curie, min_card):
+
+def get_cs_dflt_value(is_class_arg, m_type_uri, min_card):
     is_class = is_class_arg.literal
-    cs_type = get_cs_type(m_type_curie)
+    cs_type = get_cs_type(m_type_uri)
     ret = None
     #ipdb.set_trace()
     if min_card == 0:
@@ -37,43 +39,47 @@ def get_cs_dflt_value(is_class_arg, m_type_curie, min_card):
         if is_class:
             ret = f"{cs_type}.create(null)"
         else:
-            ret = xsd_dflt_cs_values[restore_prefix(m_type_curie)]
+            ret = xsd_dflt_cs_values[m_type_uri]
     else:
         raise Execute("can't get dflt value for card >1")
 
     return ret
     
-def gencode_cs(w_config, uc_curie):
-    print("gencode_cs")
+def gencode_cs(w_config, uc_uri_s):
+    #ipdb.set_trace()
+    uc_uri = URI(restore_prefix__(uc_uri_s))
+    #print("gencode_cs")
     kgm_path = "/CloudDoors.shacl"
     
     rq = make_rq("""
     select ?uc ?uc_m ?uc_m_minc ?uc_m_maxc ?uc_m_is_class ?uc_m_type {
      ?g kgm:path "{{kgm_path}}".
      graph ?g {
-      bind({{uc_curie}} as ?uc)
+      bind({{uc_uri.as_turtle()}} as ?uc)
       ?uc sh:property ?uc_p .
       ?uc_p sh:minCount ?uc_m_minc; sh:maxCount ?uc_m_maxc .
       { optional { ?uc_p sh:path ?uc_m; sh:datatype ?uc_m_type bind(false as ?uc_m_is_class) } }
         union { optional { ?uc_p sh:path ?uc_m; sh:class ?uc_m_type bind(true as ?uc_m_is_class)} }
       }
     }
-    """.replace("{{kgm_path}}", kgm_path).replace("{{uc_curie}}", uc_curie))
-    
-    print(rq)
-    rq_res = rq_select(rq, config = w_config)
+    """.replace("{{kgm_path}}", kgm_path)
+                 .replace("{{uc_uri.as_turtle()}}", uc_uri.as_turtle())
+    )
+    #print(rq)
+    rq_res = pd.DataFrame(rq_select(rq, config = w_config))
     #ipdb.set_trace()
-    print(rq_res)
+    #print(rq_res)
 
     uc = UserClass()
-    uc.name = f"CD_{uc_curie.split(':')[1]}"
+    uc.name = f"CD_{uc_uri.get_suffix()}"
     uc.uriref_class = "URIRef_" + uc.name
-    uc.user_class_uri = uc_curie
+    uc.user_class_uri = uc_uri
     
     member_decls = []
     default_ctor_assignments = []
     uriref_member_getseters = []
     user_class_info_member_entries = []
+    #ipdb.set_trace()
     for ii, r in rq_res.iterrows():
         cs_m_name = r['uc_m'].get_suffix()
         cs_m_type = get_cs_type(r['uc_m_type'])
@@ -88,8 +94,8 @@ def gencode_cs(w_config, uc_curie):
             raise Exception("not supported minc > 1")
 
         uc_member_info_initializer = []
-        uc_m = r['uc_m'].curie
-        uc_m_type = r['uc_m_type']
+        uc_m = collapse_prefix__(r['uc_m'].uri)
+        uc_m_type = collapse_prefix__(r['uc_m_type'].uri)
         uc_member_info_initializer.append(f"Turtle.make_uri(\"{uc_m}\")")
         uc_member_info_initializer.append(f"{r['uc_m_minc']}")
         uc_member_info_initializer.append(f"{r['uc_m_maxc']}")
@@ -110,7 +116,7 @@ def gencode_cs(w_config, uc_curie):
         
     
     print("""
-    // generated code
+    // generated code - DO NOT EDIT
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Threading.Tasks;
@@ -166,7 +172,7 @@ def gencode_cs(w_config, uc_curie):
 
     """.replace("{{uc.uriref_class}}", uc.uriref_class)
           .replace("{{uc.name}}", uc.name)
-          .replace("{{uc.user_class_uri}}", uc.user_class_uri)
+          .replace("{{uc.user_class_uri}}", uc.user_class_uri.as_turtle())
           .replace("{{member_decls}}", "\n".join(member_decls))
           .replace("{{default_ctor_assignments}}", "\n".join(default_ctor_assignments))
           .replace("{{uriref_member_getseters}}", "\n".join(uriref_member_getseters))

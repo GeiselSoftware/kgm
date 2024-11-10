@@ -1,7 +1,8 @@
 #import ipdb
 import os
 import tempfile
-from ..rdf_utils import restore_prefix
+import pandas as pd
+from ..rdf_utils import restore_prefix__
 from ..sparql_utils import rq_construct, rq_select, make_rq
 
 def do_validate(w_config, shacl_kgm_path, kgm_path):
@@ -13,9 +14,8 @@ def do_validate(w_config, shacl_kgm_path, kgm_path):
     temp_fn = tempfile.mkstemp("shacl.ttl")[1]
     shacl_g.serialize(temp_fn)
 
-    res = rq_select(make_rq(f'select ?g where {{ ?g kgm:path "{kgm_path}" }}'), config = w_config)
-    kgm_graph_curie = res.iloc[0, 0]
-    kgm_graph_uri = restore_prefix(kgm_graph_curie)
+    res = pd.DataFrame(rq_select(make_rq(f'select ?g where {{ ?g kgm:path "{kgm_path}" }}'), config = w_config))
+    kgm_graph_uri = res.iloc[0, 0]
     #print("data graph:", kgm_graph_uri)
 
     kgm_graph_uri = kgm_graph_uri.uri.replace("#", "%23")
