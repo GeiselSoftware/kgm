@@ -15,29 +15,27 @@ def do_ls(w_config, path):
     #print(query)
     
     res = rq_select(query, config = w_config)
-    print(res)
+    print(pd.DataFrame(res).map(lambda x: x.as_turtle()))
 
 def do_new(w_config, path):
     print("do_graph_new:", path)
 
-    graph_curie, _ = get_kgm_graph(w_config, path)
-    if graph_curie != None:
-        print(f"graph exists on path {path}, giving up, graph was {graph_curie}")
+    graph_uri = get_kgm_graph(w_config, path)
+    if graph_uri is not None:
+        print(f"graph exists on path {path}, giving up, graph was {graph_uri.uri}")
         return
-    del graph_curie
+    del graph_uri
 
     #ipdb.set_trace()
-    kgm_g_class_uri = kgm.Graph
-    graph_uri = create_kgm_graph(w_config, kgm_g_class_uri, path)
+    graph_uri = create_kgm_graph(w_config, path)
     print(f"created graph at path {path}: {graph_uri}")
 
 def do_cat(w_config, path):
-    graph_curie, _ = get_kgm_graph(w_config, path)
-    if graph_curie is None:
+    graph_uri = get_kgm_graph(w_config, path)
+    if graph_uri is None:
         print(f"can't find graph at path {path}", file = sys.stderr)
         return
 
-    graph_uri = restore_prefix(graph_curie)
     rq = make_rq(f"""
     construct {{ 
       ?s ?p ?o 
@@ -65,40 +63,60 @@ def do_cat(w_config, path):
                 o = rdflib.BNode(o)
             res_g.add((s, p, o))
         print(res_g.serialize(format="ttl"))
+
+def parse_ttl(source):
+    g = rdflib.Graph()
+    g.parse(source, format = "turtle")
+    triples = []
+    for s, p, o in g:
+        new_spo = []
+        for r in [s, p, o]:
+            #print(r)
+            if type(r) == rdflib.URIRef:
+                new_spo.append(URI(r.toPython()))
+            elif type(r) == rdflib.BNode:
+                new_spo.append(BNode(r.toPython()))
+            elif type(r) == rdflib.Literal:
+                new_spo.append(Literal(r.toPython(), URI(r.datatype.toPython())))
+            else:
+                raise Exception("parse_ttl conversion failed")
+        triples.append(new_spo)
     
+    return triples
+        
 def do_import(w_config, path, ttl_file):
     print("do_import:", path, ttl_file)
-
-    graph_curie, _ = get_kgm_graph(w_config, path)
-    if graph_curie != None:
-        print(f"graph at path {path} already exists:", graph_curie)
-        return
-    del graph_curie
+    #ipdb.set_trace()
     
-    g = rdflib.Graph()    
+    graph_uri = get_kgm_graph(w_config, path)
+    if graph_uri is not None:
+        print(f"graph at path {path} already exists:", graph_uri)
+        return
+    del graph_uri
+
     if ttl_file.startswith("http"):
         ttl_file_url = ttl_file
         with urllib.request.urlopen(ttl_file_url) as fd:
-            g.parse(fd, format = "turtle")
+            source_triples = parse_ttl(fd)
     else:
-        g.parse(ttl_file, format="turtle")
-
+        source_triples = parse_ttl(ttl_file)
+    
     #ipdb.set_trace()
-    kgm_g_class_uri = kgm.Graph
-    graph_uri = create_kgm_graph(w_config, kgm_g_class_uri, path)    
-    rq_insert_graph(g, graph_uri, config = w_config)
+    graph_uri = create_kgm_graph(w_config, path)
+    rq_insert_graph(source_triples, graph_uri, config = w_config)
 
     print(path, graph_uri)
     
 def do_remove(w_config, path):
-    graph_uri, _ = get_kgm_graph(w_config, path)
-    if graph_uri == None:
+    graph_uri = get_kgm_graph(w_config, path)
+    if graph_uri is None:
         print("can't find graph at path {path}")
         return
     
-    rq_queries = [make_rq(f"drop graph {graph_uri}"),
-                  make_rq(f'delete {{ ?s ?p ?o }} where {{ bind({graph_uri} as ?s) {{ ?s ?p ?o }} }}')]
-        
+    rq_queries = [make_rq(f"drop graph {graph_uri.as_turtle()}"),
+                  make_rq(f'delete {{ ?s ?p ?o }} where {{ bind({graph_uri.as_turtle()} as ?s) {{ ?s ?p ?o }} }}')]
+
+    #ipdb.set_trace()
     for rq in rq_queries:
         print(rq)
         rq_update(rq, config = w_config)
@@ -106,22 +124,20 @@ def do_remove(w_config, path):
 def do_copy(w_config, source_path, dest_path):
     print("do_copy:", source_path, dest_path)
 
-    source_graph_curie, source_graph_props = get_kgm_graph(w_config, source_path)
-    if source_graph_props == None:
+    source_graph_uri = get_kgm_graph(w_config, source_path)
+    if source_graph_uri is None:
         print(f"no graph at source path {source_path}")
         return
 
-    dest_graph, _ = get_kgm_graph(w_config, dest_path)
-    if dest_graph != None:
+    dest_graph_uri = get_kgm_graph(w_config, dest_path)
+    if dest_graph_uri is not None:
         print(f"there is a graph at dest path {dest_path}: {dest_graph_uri}, giving up")
         return    
-    del dest_graph
+    del dest_graph_uri
     
-    kgm_g_class_curie = source_graph_props["rdf:type"]
-    kgm_g_class_uri = restore_prefix(kgm_g_class_curie)
-    dest_graph_uri = create_kgm_graph(w_config, kgm_g_class_uri, dest_path)    
-    rq_queries = [make_rq(f'insert {{ <{dest_graph_uri}> kgm:path "{dest_path}"; ?p ?o }} where {{ {source_graph_curie} ?p ?o filter(?p != kgm:path) }}'),
-                  make_rq(f'copy {source_graph_curie} to <{dest_graph_uri}>')]
+    dest_graph_uri = create_kgm_graph(w_config, dest_path)    
+    rq_queries = [make_rq(f'insert {{ <{dest_graph_uri.uri}> kgm:path "{dest_path}"; ?p ?o }} where {{ <{source_graph_uri.uri}> ?p ?o filter(?p != kgm:path) }}'),
+                  make_rq(f'copy <{source_graph_uri.uri}> to <{dest_graph_uri.uri}>')]
     for rq in rq_queries:
         print(rq)
         rq_update(rq, config = w_config)
@@ -130,19 +146,19 @@ def do_copy(w_config, source_path, dest_path):
 def do_rename(w_config, path, new_path):
     print("do_rename:", path, new_path)
 
-    graph_uri, _ = get_kgm_graph(w_config, path)
-    if graph_uri == None:
+    graph_uri = get_kgm_graph(w_config, path)
+    if graph_uri is None:
         print("no graph at path {path}")
         return
 
-    new_graph_uri, _ = get_kgm_graph(w_config, new_path)
-    if new_graph_uri != None:
+    new_graph_uri = get_kgm_graph(w_config, new_path)
+    if new_graph_uri is not None:
         print(f"there is a graph at new path {new_path}: {new_graph_uri}, giving up")
         return
     del new_graph_uri
     
-    rq_queries = [make_rq(f'delete data {{ {graph_uri} kgm:path "{path}" }}'),
-                  make_rq(f'insert data {{ {graph_uri} kgm:path "{new_path}" }}')]
+    rq_queries = [make_rq(f'delete data {{ <{graph_uri.uri}> kgm:path "{path}" }}'),
+                  make_rq(f'insert data {{ <{graph_uri.uri}> kgm:path "{new_path}" }}')]
     for rq in rq_queries:
         print(rq)
         rq_update(rq, config = w_config)
@@ -159,7 +175,10 @@ def do_show(w_config, curie):
     }}
     """)
     #print(rq)
-    print(rq_select(rq, config = w_config))
+
+    #ipdb.set_trace()
+    rq_res = rq_select(rq, config = w_config)
+    print(pd.DataFrame(rq_res).map(lambda x: x.as_turtle()))
 
 def do_graph_select(w_config, select_query):
     query_text = make_rq(select_query)

@@ -13,17 +13,11 @@ class URI:
         return self.uri.__hash__()
 
     def as_turtle(self):
-        return "<" + self.uri + ">"
-    
-class CURIE:
-    def __init__(self, s):
-        self.curie = s
-
-    def __repr__(self):
-        return self.curie
+        return collapse_prefix__(self.uri)
 
     def get_suffix(self):
-        return self.curie.split(':')[-1]
+        curie = collapse_prefix__(self.uri)
+        return curie.split(':')[-1]
     
 class Literal:
     def __init__(self, value, datatype_uri):
@@ -50,7 +44,12 @@ class Literal:
         return o.__hash__()    
 
     def as_turtle(self):
-        return '"' + f"{self.literal}" + '"' + "^^" + self.datatype_uri.as_turtle()
+        if self.datatype_uri == xsd.string:
+            return f'"{self.literal}"'
+        elif self.datatype_uri == xsd.integer:
+            return f"{self.literal}"
+        else:
+            return '"' + f"{self.literal}" + '"' + "^^" + self.datatype_uri.as_turtle()
     
 class BNode:
     def __init__(self, s):
@@ -127,14 +126,14 @@ known_prefixes = {
     TU.prefix__: TU.prefix_uri__
 }
 
-def collapse_prefix(uri:URI):
+def collapse_prefix__(uri:str):
     for p, p_uri in known_prefixes.items():
-        if uri.uri.find(p_uri.uri) == 0:
-            return CURIE(uri.uri.replace(p_uri.uri, p + ":"))
-    raise Exception("can't collapse prefix for URI:", uri.uri)
+        if uri.find(p_uri.uri) == 0:
+            return uri.replace(p_uri.uri, p + ":")
+    raise Exception("can't collapse prefix for URI:", uri)
 
-def restore_prefix(curie):
+def restore_prefix__(curie:str):
     for prefix, prefix_uri in known_prefixes.items():
-        if curie.curie.find(prefix) == 0:
-            return URI(curie.curie.replace(prefix + ":", prefix_uri.uri))
-    raise Exception("can't restore prefix in curie", curie.curie)
+        if curie.find(prefix) == 0:
+            return curie.replace(prefix + ":", prefix_uri.uri)
+    raise Exception("can't restore prefix in curie", curie)

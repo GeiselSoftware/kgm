@@ -34,7 +34,7 @@ def launch_http_server(host, port, directory):
             
 def do_graph_shacled(w_config, path, public_access):
     print(f"checking path {path}")
-    graph_curie, _ = get_kgm_graph(w_config, path)
+    graph_curie = get_kgm_graph(w_config, path)
     if graph_curie is None:
         print(f"can't find graph on path {path}, giving up")
         return

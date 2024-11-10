@@ -10,12 +10,12 @@ from .rdf_utils import *
 
 def make_rq(rq):
     return "\n".join([f"prefix {prefix}: <{prefix_uri.uri}>" for prefix, prefix_uri in known_prefixes.items()]) + "\n" + rq
-    
+
 def to_rdfw(d):
     if pd.isnull(d):
         return None
     if d['type'] == 'uri':
-        return collapse_prefix(URI(d['value']))
+        return URI(d['value'])
     if d['type'] == 'literal':
         if not 'datatype' in d:
             datatype = xsd.string
@@ -35,19 +35,19 @@ def rq_insert_graph(triples, graph_uri, *, config):
     ntriples_data_s = "\n".join(ntriples_data)
     if graph_uri:
         assert(type(graph_uri) == URI)
-        update_query = f"""
+        update_query = make_rq(f"""
         INSERT DATA {{
         GRAPH <{graph_uri.uri}> {{
         {ntriples_data_s}
         }}
         }}
-        """
+        """)
     else:
-        update_query = f"""
+        update_query = make_rq(f"""
         INSERT DATA {{
         {ntriples_data_s}
         }}
-        """
+        """)
 
     #ipdb.set_trace()
     # Create a SPARQLWrapper instance
@@ -67,6 +67,7 @@ def rq_insert_graph(triples, graph_uri, *, config):
     if response.response.status != 200:
         raise Exception(f"Failed to insert data. Status code: {response.response.status}")
 
+# returns dict var => list of URI/BNode/Literal
 def rq_select(rq, *, config):
     fuseki_query_url = config["backend-url"] + "/query"
     sparql = SPARQLWrapper(fuseki_query_url)
@@ -79,7 +80,13 @@ def rq_select(rq, *, config):
     results = sparql.query().convert()
 
     #ipdb.set_trace()
-    return pd.DataFrame.from_records(results['results']['bindings'], columns = results['head']['vars']).map(to_rdfw)
+    res_d = {col:[] for col in results['head']['vars']}
+    for row in results['results']['bindings']:
+        for col in res_d.keys():
+            res_d[col].append(None)
+        for b_k, b_v in row.items():
+            res_d[b_k][-1] = to_rdfw(b_v)
+    return res_d
 
 def rq_construct(rq, *, config):
     fuseki_query_url = config["backend-url"] + "/query"
