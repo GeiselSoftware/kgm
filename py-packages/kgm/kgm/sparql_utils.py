@@ -5,17 +5,18 @@ import rdflib
 from SPARQLWrapper import SPARQLWrapper, JSON, TURTLE
 from SPARQLWrapper import POST, BASIC
 
-#from .known_prefixes import *
 from .rdf_utils import *
 
 def make_rq(rq):
-    return "\n".join([f"prefix {prefix}: <{prefix_uri.uri}>" for prefix, prefix_uri in known_prefixes.items()]) + "\n" + rq
+    #ipdb.set_trace()
+    ret = "\n".join([f"prefix {prefix}: <{prefix_uri}>" for prefix, prefix_uri in known_prefixes.items()]) + "\n" + rq
+    return ret
 
 def to_rdfw(d):
     if pd.isnull(d):
         return None
     if d['type'] == 'uri':
-        return URI(d['value'])
+        return URI(collapse_prefix__(d['value']))
     if d['type'] == 'literal':
         if not 'datatype' in d:
             datatype = xsd.string

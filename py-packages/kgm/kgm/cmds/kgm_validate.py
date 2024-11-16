@@ -2,7 +2,6 @@
 import os
 import tempfile
 import pandas as pd
-from ..rdf_utils import restore_prefix__
 from ..sparql_utils import rq_construct, rq_select, make_rq
 
 def do_validate(w_config, shacl_kgm_path, kgm_path):

@@ -1,6 +1,6 @@
 #import ipdb
 import pandas as pd
-from ..rdf_utils import xsd_dflt_cs_values, restore_prefix__, collapse_prefix__, xsd, URI
+from ..rdf_utils import xsd_dflt_cs_values, restore_prefix__, collapse_prefix__, xsd, URI, Literal
 from ..sparql_utils import make_rq, rq_select, rq_insert_graph, rq_update
 
 class UserClass:
@@ -9,7 +9,7 @@ class UserClass:
 
 def get_cs_type(uc_m_type_uri):
     #ipdb.set_trace()
-    if uc_m_type_uri.uri.startswith(xsd.prefix_uri__.uri):
+    if uc_m_type_uri.get_prefix() == xsd.prefix__:
         xsd_type_uri = uc_m_type_uri
         if xsd_type_uri == xsd.string:
             ret = "string"
@@ -24,20 +24,21 @@ def get_cs_type(uc_m_type_uri):
         
     return ret    
 
-def get_cs_dflt_value(is_class_arg, m_type_uri, min_card):
-    is_class = is_class_arg.literal
+def get_cs_dflt_value(is_class_arg_l, m_type_uri, min_card_l):
+    #ipdb.set_trace()
+    is_class = is_class_arg_l == Literal.from_python(True)
     cs_type = get_cs_type(m_type_uri)
     ret = None
     #ipdb.set_trace()
-    if min_card == 0:
+    if min_card_l == Literal.from_python(0):
         if is_class:
             ret = "null"
         else:
             ret = "null"
-    elif min_card == 1:
+    elif min_card_l == Literal.from_python(1):
         #print("WOW:", is_class, is_class.literal)
         if is_class:
-            ret = f"{cs_type}.create(null)"
+            ret = "null"
         else:
             ret = xsd_dflt_cs_values[m_type_uri]
     else:
@@ -47,7 +48,7 @@ def get_cs_dflt_value(is_class_arg, m_type_uri, min_card):
     
 def gencode_cs(w_config, uc_uri_s):
     #ipdb.set_trace()
-    uc_uri = URI(restore_prefix__(uc_uri_s))
+    uc_uri = URI(uc_uri_s)
     #print("gencode_cs")
     kgm_path = "/CloudDoors.shacl"
     
@@ -84,25 +85,25 @@ def gencode_cs(w_config, uc_uri_s):
         cs_m_name = r['uc_m'].get_suffix()
         cs_m_type = get_cs_type(r['uc_m_type'])
         cs_m_min_card = r['uc_m_minc']
-        if cs_m_min_card == 0:
+        if cs_m_min_card == Literal.from_python(0):
             member_decls.append(f"  public {cs_m_type}? {cs_m_name}__;")
             cs_m_getsetter = f"    public {cs_m_type}? {cs_m_name} {{ get {{ return ref_.{cs_m_name}__; }} set {{ ref_.{cs_m_name}__ = value; }} }}"
-        elif cs_m_min_card == 1:            
+        elif cs_m_min_card == Literal.from_python(1):
             member_decls.append(f"  public {cs_m_type} {cs_m_name}__;")
             cs_m_getsetter = f"    public {cs_m_type} {cs_m_name} {{ get {{ return ref_.{cs_m_name}__; }} set {{ Debug.Assert(ref_.{cs_m_name}__ != null); ref_.{cs_m_name}__ = value; }} }}"
         else:
             raise Exception("not supported minc > 1")
 
         uc_member_info_initializer = []
-        uc_m = collapse_prefix__(r['uc_m'].uri)
-        uc_m_type = collapse_prefix__(r['uc_m_type'].uri)
+        uc_m = r['uc_m'].as_turtle()
+        uc_m_type = r['uc_m_type'].as_turtle()
         uc_member_info_initializer.append(f"Turtle.make_uri(\"{uc_m}\")")
         uc_member_info_initializer.append(f"{r['uc_m_minc']}")
         uc_member_info_initializer.append(f"{r['uc_m_maxc']}")
-        uc_member_info_initializer.append("sh.class_" if r['uc_m_is_class'].literal == True else "sh.datatype")
+        uc_member_info_initializer.append("sh.class_" if r['uc_m_is_class'] == Literal.from_python(True) else "sh.datatype")
         uc_member_info_initializer.append(f"Turtle.make_uri(\"{uc_m_type}\")")
         uc_member_info_initializer.append(f"typeof({uc.name}).GetField(\"{cs_m_name}__\")")
-        if r['uc_m_is_class'].literal == True:
+        if r['uc_m_is_class'] == Literal.from_python(True):
             uc_member_info_initializer.append(f"() => {cs_m_type}.create(null)")
         else:
             uc_member_info_initializer.append("null")

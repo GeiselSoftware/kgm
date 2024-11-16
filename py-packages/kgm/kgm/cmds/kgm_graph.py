@@ -40,7 +40,7 @@ def do_cat(w_config, path):
     construct {{ 
       ?s ?p ?o 
     }} where {{
-       graph <{graph_uri}> {{ 
+       graph {graph_uri} {{ 
          ?s ?p ?o
        }} 
     }} order by ?s ?p ?o

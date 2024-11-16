@@ -14,14 +14,14 @@ std::vector<std::tuple<std::string, URI>> prefixes::known_prefixes =
     {kgm::__prefix, kgm::__prefix_uri},
     {ab::__prefix, ab::__prefix_uri},
     {nw::__prefix, nw::__prefix_uri},
-    {TU::__prefix, TU::__prefix_uri}
+    {__::__prefix, __::__prefix_uri}
   };
 
 bool prefixes::is_good_predicate_prefix(const std::string& s)
 {
   return s == rdf::__prefix || s == rdfs::__prefix || s == sh::__prefix
     || s == kgm::__prefix
-    || s == ab::__prefix || s == nw::__prefix || s == TU::__prefix;
+    || s == ab::__prefix || s == nw::__prefix || s == __::__prefix;
 }
 
 std::string prefixes::make_turtle_prefixes(bool is_sparql_style)

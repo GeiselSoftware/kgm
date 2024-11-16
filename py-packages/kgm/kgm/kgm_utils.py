@@ -17,7 +17,7 @@ def create_kgm_graph(w_config, path):
 # returns uri on kgm path
 def get_kgm_graph(w_config, path):
     rq = make_rq(f'select ?s ?p ?o where {{ ?s kgm:path "{path}"; rdf:type kgm:Graph }}')
-    print(rq)
+    #print(rq)
 
     rq_res = rq_select(rq, config = w_config)
     graph_uris = rq_res['s']
