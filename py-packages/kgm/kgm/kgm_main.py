@@ -1,6 +1,5 @@
-#!/usr/bin/env python3
-
 import click
+import importlib.metadata
 from .cmds import kgm_graph, kgm_graph_shacled, kgm_validate, kgm_misc
 from .config_utils import load_config
 
@@ -10,14 +9,18 @@ class CustomGroup(click.Group):
         if '-h' in args:
             args[args.index('-h')] = '--help'
         return super().parse_args(ctx, args)
+
+    def format_help(self, ctx, formatter):
+        # Add your custom message
+        formatter.write(f"kgm version: {importlib.metadata.version('kgm')}\n")
+        super().format_help(ctx, formatter)
     
 @click.group(cls = CustomGroup)
-@click.option("--version", "-V", is_flag = True)
 @click.option("--config", "-c")
 @click.option("--verbose", "-v", is_flag = True)
 @click.pass_context
-def cli(ctx, version, config, verbose):
-    #print("cli pre-subcommand:", version, config)
+def cli(ctx, config, verbose):
+    #print("cli pre-subcommand:", config, verbose)
     ctx.ensure_object(dict)
     ctx.obj['config'] = load_config(config)
 

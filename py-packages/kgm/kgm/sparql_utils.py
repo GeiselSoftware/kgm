@@ -30,7 +30,8 @@ def to_rdfw(d):
 def rq_insert_graph(triples, graph_uri, *, config):
     # Serialize the graph to a string in N-Triples format
     ntriples_data = []
-    for t in triples:
+    #ipdb.set_trace()
+    for t in triples:        
         ntriples_data.append(f"{t[0].as_turtle()} {t[1].as_turtle()} {t[2].as_turtle()} .")
         
     ntriples_data_s = "\n".join(ntriples_data)
@@ -38,7 +39,7 @@ def rq_insert_graph(triples, graph_uri, *, config):
         assert(type(graph_uri) == URI)
         update_query = make_rq(f"""
         INSERT DATA {{
-        GRAPH <{graph_uri.uri}> {{
+        GRAPH {graph_uri.as_turtle()} {{
         {ntriples_data_s}
         }}
         }}

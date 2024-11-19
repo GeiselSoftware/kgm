@@ -3,7 +3,7 @@ import uuid
 from .sparql_utils import *
 
 def create_uri(rdfs_class: URI) -> URI:
-    return URI(rdfs_class.uri + "--" + str(uuid.uuid4()))
+    return URI(rdfs_class.as_turtle() + "--" + str(uuid.uuid4()))
         
 def create_kgm_graph(w_config, path):
     descr_g = []

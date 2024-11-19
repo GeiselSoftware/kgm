@@ -73,11 +73,11 @@ def parse_ttl(source):
         for r in [s, p, o]:
             #print(r)
             if type(r) == rdflib.URIRef:
-                new_spo.append(URI(r.toPython()))
+                new_spo.append(URI(collapse_prefix__(r.toPython())))
             elif type(r) == rdflib.BNode:
                 new_spo.append(BNode(r.toPython()))
             elif type(r) == rdflib.Literal:
-                new_spo.append(Literal(r.toPython(), URI(r.datatype.toPython())))
+                new_spo.append(Literal(r.toPython(), URI(collapse_prefix__(r.datatype.toPython()))))
             else:
                 raise Exception("parse_ttl conversion failed")
         triples.append(new_spo)
@@ -110,7 +110,7 @@ def do_import(w_config, path, ttl_file):
 def do_remove(w_config, path):
     graph_uri = get_kgm_graph(w_config, path)
     if graph_uri is None:
-        print("can't find graph at path {path}")
+        print(f"can't find graph at path {path}")
         return
     
     rq_queries = [make_rq(f"drop graph {graph_uri.as_turtle()}"),
@@ -148,7 +148,7 @@ def do_rename(w_config, path, new_path):
 
     graph_uri = get_kgm_graph(w_config, path)
     if graph_uri is None:
-        print("no graph at path {path}")
+        print(f"no graph at path {path}")
         return
 
     new_graph_uri = get_kgm_graph(w_config, new_path)
@@ -157,8 +157,8 @@ def do_rename(w_config, path, new_path):
         return
     del new_graph_uri
     
-    rq_queries = [make_rq(f'delete data {{ <{graph_uri.uri}> kgm:path "{path}" }}'),
-                  make_rq(f'insert data {{ <{graph_uri.uri}> kgm:path "{new_path}" }}')]
+    rq_queries = [make_rq(f'delete data {{ {graph_uri.as_turtle()} kgm:path "{path}" }}'),
+                  make_rq(f'insert data {{ {graph_uri.as_turtle()} kgm:path "{new_path}" }}')]
     for rq in rq_queries:
         print(rq)
         rq_update(rq, config = w_config)

@@ -84,7 +84,6 @@ class RDFObject:
 def build_uri__(prefix_cls, suffix):
     return URI(prefix_cls.prefix__ + ":" + suffix)
 
-
 class rdf:
     prefix__ = "rdf"
     prefix_uri__ = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"

@@ -90,7 +90,7 @@ def gencode_cs(w_config, uc_uri_s):
             cs_m_getsetter = f"    public {cs_m_type}? {cs_m_name} {{ get {{ return ref_.{cs_m_name}__; }} set {{ ref_.{cs_m_name}__ = value; }} }}"
         elif cs_m_min_card == Literal.from_python(1):
             member_decls.append(f"  public {cs_m_type} {cs_m_name}__;")
-            cs_m_getsetter = f"    public {cs_m_type} {cs_m_name} {{ get {{ return ref_.{cs_m_name}__; }} set {{ Debug.Assert(ref_.{cs_m_name}__ != null); ref_.{cs_m_name}__ = value; }} }}"
+            cs_m_getsetter = f"    public {cs_m_type} {cs_m_name} {{ get {{ return ref_.{cs_m_name}__; }} set {{ ref_.{cs_m_name}__ = value; }} }}"
         else:
             raise Exception("not supported minc > 1")
 

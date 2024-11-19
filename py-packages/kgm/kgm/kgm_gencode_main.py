@@ -1,9 +1,14 @@
 import click
+import importlib
 from .config_utils import load_config
-
 from .gencode import gencode_cs as mod_gencode_cs
 
 class CustomGroup(click.Group):
+    def format_help(self, ctx, formatter):
+        # Add your custom message
+        formatter.write(f"kgm version: {importlib.metadata.version('kgm')}\n")
+        super().format_help(ctx, formatter)    
+    
     def parse_args(self, ctx, args):
         # If '-h' is in the arguments, replace it with '--help'
         if '-h' in args:
@@ -11,10 +16,9 @@ class CustomGroup(click.Group):
         return super().parse_args(ctx, args)
     
 @click.group(cls = CustomGroup)
-@click.option("--version", "-V", is_flag = True)
 @click.option("--config", "-c")
 @click.pass_context
-def cli(ctx, version, config):
+def cli(ctx, config):
     #print("cli pre-subcommand:", version, config)
     ctx.ensure_object(dict)
     ctx.obj['config'] = load_config(config)
