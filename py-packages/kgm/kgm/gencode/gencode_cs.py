@@ -9,7 +9,9 @@ class UserClass:
 
 def get_cs_type(uc_m_type_uri):
     #ipdb.set_trace()
+    is_literal = False
     if uc_m_type_uri.get_prefix() == xsd.prefix__:
+        is_literal = True
         xsd_type_uri = uc_m_type_uri
         if xsd_type_uri == xsd.string:
             ret = "string"
@@ -22,7 +24,7 @@ def get_cs_type(uc_m_type_uri):
     else:
         ret = "URIRef_CD_" + uc_m_type_uri.get_suffix()
         
-    return ret    
+    return ret, is_literal    
 
 def get_cs_dflt_value(is_class_arg_l, m_type_uri, min_card_l):
     #ipdb.set_trace()
@@ -80,17 +82,23 @@ def gencode_cs(w_config, uc_uri_s):
     default_ctor_assignments = []
     uriref_member_getseters = []
     user_class_info_member_entries = []
+    uriref_create_args = []
+    uriref_create_member_init_statements = []
     #ipdb.set_trace()
     for ii, r in rq_res.iterrows():
         cs_m_name = r['uc_m'].get_suffix()
-        cs_m_type = get_cs_type(r['uc_m_type'])
+        cs_m_type, cs_m_is_literal = get_cs_type(r['uc_m_type'])
         cs_m_min_card = r['uc_m_minc']
         if cs_m_min_card == Literal.from_python(0):
             member_decls.append(f"  public {cs_m_type}? {cs_m_name}__;")
             cs_m_getsetter = f"    public {cs_m_type}? {cs_m_name} {{ get {{ return ref_.{cs_m_name}__; }} set {{ ref_.{cs_m_name}__ = value; }} }}"
         elif cs_m_min_card == Literal.from_python(1):
-            member_decls.append(f"  public {cs_m_type} {cs_m_name}__;")
-            cs_m_getsetter = f"    public {cs_m_type} {cs_m_name} {{ get {{ return ref_.{cs_m_name}__; }} set {{ ref_.{cs_m_name}__ = value; }} }}"
+            if cs_m_is_literal:
+                member_decls.append(f"  public {cs_m_type} {cs_m_name}__;")
+                cs_m_getsetter = f"    public {cs_m_type} {cs_m_name} {{ get {{ return ref_.{cs_m_name}__; }} set {{ ref_.{cs_m_name}__ = value; }} }}"
+            else:
+                member_decls.append(f"  public {cs_m_type}? {cs_m_name}__;")
+                cs_m_getsetter = f"    public {cs_m_type}? {cs_m_name} {{ get {{ return ref_.{cs_m_name}__; }} set {{ ref_.{cs_m_name}__ = value; }} }}"
         else:
             raise Exception("not supported minc > 1")
 
@@ -104,7 +112,7 @@ def gencode_cs(w_config, uc_uri_s):
         uc_member_info_initializer.append(f"Turtle.make_uri(\"{uc_m_type}\")")
         uc_member_info_initializer.append(f"typeof({uc.name}).GetField(\"{cs_m_name}__\")")
         if r['uc_m_is_class'] == Literal.from_python(True):
-            uc_member_info_initializer.append(f"() => {cs_m_type}.create(null)")
+            uc_member_info_initializer.append(f"() => {cs_m_type}.create_empty()")
         else:
             uc_member_info_initializer.append("null")
         
@@ -114,6 +122,11 @@ def gencode_cs(w_config, uc_uri_s):
         default_ctor_assignments.append(f"  {cs_m_name}__ = {cs_m_dflt_value};")
         uriref_member_getseters.append(cs_m_getsetter)
         user_class_info_member_entries.append(f"{{ \"{cs_m_name}\", new uc_member_info({','.join(uc_member_info_initializer)}) }}")
+
+        if cs_m_is_literal == False:
+            # only links can be assigned during create
+            uriref_create_args.append(f"{cs_m_type}? {cs_m_name}")
+            uriref_create_member_init_statements.append(f"ret.{cs_m_name} = {cs_m_name}")
         
     
     print("""
@@ -151,17 +164,26 @@ def gencode_cs(w_config, uc_uri_s):
       public override Dictionary<string, uc_member_info> get_user_class_info() { return {{uc.name}}.user_class_info; }
       public override URI get_uo_class_uri() { return {{uc.name}}.uo_class_uri; }
 
-      public static {{uc.uriref_class}} create(URI? uri)
+      public static {{uc.uriref_class}} create_empty()
       {
-        if (uri == null) {
-            uri = URI.new_uo_uri({{uc.name}}.uo_class_uri);
-        }
+        URI uri = URI.new_uo_uri({{uc.name}}.uo_class_uri);        
         {{uc.name}} new_uo_ref = new {{uc.name}}();
-        return new {{uc.uriref_class}}(uri, new_uo_ref);
+        {{uc.uriref_class}} ret = new {{uc.uriref_class}}(null!, new_uo_ref);
+        return ret;
+      }
+
+      public static {{uc.uriref_class}} create({{uriref_create_args}})
+      {
+        URI uri = URI.new_uo_uri({{uc.name}}.uo_class_uri);        
+        {{uc.name}} new_uo_ref = new {{uc.name}}();
+        {{uc.uriref_class}} ret = new {{uc.uriref_class}}(uri, new_uo_ref);
+        {{uriref_create_member_init_statements}};
+        return ret;
       }
 
       public static async Task<{{uc.uriref_class}}> load(GraphDB gdb, URI uo_uri) {
-        {{uc.uriref_class}} ret = {{uc.uriref_class}}.create(uo_uri);
+        {{uc.uriref_class}} ret = {{uc.uriref_class}}.create_empty();
+        ret.uri = uo_uri;
         await gdb.load(ret);
         return ret;
       }
@@ -178,4 +200,6 @@ def gencode_cs(w_config, uc_uri_s):
           .replace("{{default_ctor_assignments}}", "\n".join(default_ctor_assignments))
           .replace("{{uriref_member_getseters}}", "\n".join(uriref_member_getseters))
           .replace("{{user_class_info_member_entries}}", ",\n".join(user_class_info_member_entries))
+          .replace("{{uriref_create_args}}", ",\n".join(uriref_create_args))
+          .replace("{{uriref_create_member_init_statements}}", ";\n".join(uriref_create_member_init_statements))
           )
