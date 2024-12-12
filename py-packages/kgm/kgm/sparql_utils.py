@@ -21,7 +21,7 @@ def to_rdfw(d):
         if not 'datatype' in d:
             datatype = xsd.string
         else:
-            datatype = URI(d['datatype'])
+            datatype = URI(collapse_prefix__(d['datatype']))
         return Literal(d['value'], datatype)
     if d['type'] == 'bnode':
         return BNode(d['value'])

@@ -1,3 +1,5 @@
+#import ipdb
+
 class URI:
     def __init__(self, compact_uri):
         assert(type(compact_uri) == str)
@@ -42,7 +44,6 @@ class Literal:
             return Literal(f"{v}", xsd.integer)
         
         raise Exception(f"to_python: unsupported type {typeof(v)}")
-
         
     def __repr__(self):
         return f"{self.value_o}"
@@ -61,7 +62,18 @@ class Literal:
             return f"{self.value_o}"
         else:
             return '"' + f"{self.value_o}" + '"' + "^^" + self.datatype_uri.as_turtle()
-    
+
+    def as_python(self):
+        if self.datatype_uri == xsd.string:
+            return f"{self.value_o}"
+        elif self.datatype_uri == xsd.integer:
+            return int(self.value_o)
+        elif self.datatype_uri == xsd.boolean:
+            return self.value_o.lower() == "true"
+        else:
+            #ipdb.set_trace()
+            raise Exception(f"unsupported xsd type: {self.datatype_uri.as_turtle()}")        
+        
 class BNode:
     def __init__(self, s):
         self.bnode = s
