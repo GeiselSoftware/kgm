@@ -115,11 +115,15 @@ class xsd:
 xsd.string = build_uri__(xsd, "string")
 xsd.boolean = build_uri__(xsd, "boolean")
 xsd.integer = build_uri__(xsd, "integer")
+xsd.float = build_uri__(xsd, "float")
+xsd.double = build_uri__(xsd, "double")
 
 xsd_dflt_cs_values = {}
 xsd_dflt_cs_values[xsd.string] = "\"\""
 xsd_dflt_cs_values[xsd.boolean] = "\"false\""
 xsd_dflt_cs_values[xsd.integer] = "0"
+xsd_dflt_cs_values[xsd.float] = "0.0f"
+xsd_dflt_cs_values[xsd.double] = "0.0"
 
 class sh:
     prefix__ = "sh"

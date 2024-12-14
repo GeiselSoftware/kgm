@@ -1,4 +1,4 @@
-import ipdb
+#import ipdb
 from enum import Enum
 import pandas as pd
 from ..rdf_utils import xsd_dflt_cs_values, restore_prefix__, collapse_prefix__, xsd, URI, Literal
@@ -21,6 +21,10 @@ def get_cs_type(uc_m_type_uri):
             ret = "string"
         elif xsd_type_uri == xsd.integer:
             ret = "int"
+        elif xsd_type_uri == xsd.float:
+            ret = "float"
+        elif xsd_type_uri == xsd.double:
+            ret = "double"
         elif xsd_type_uri == xsd.boolean:
             ret = "bool"
         else:
