@@ -1,5 +1,6 @@
 import ipdb
 from lark import Lark, Visitor
+from ..rdf_utils import known_prefixes
 
 ksd_grammar = \
     """
@@ -54,6 +55,19 @@ class MyClassMemberVisitor(Visitor):
         self.max_c = int(maxc) if maxc not in ["n", "inf"] else -1
         #ipdb.set_trace()
         #print("class_member_cardinality:", minc, maxc)
+
+class ClassMemberDescriptor:
+    def __init__(self, member_name_uri, member_type_uri, minc, maxc):
+        self.member_name_uri = member_name_uri
+        self.member_type_uri = member_type_uri
+        self.minc = minc
+        self.maxc = maxc
+        
+class ClassDescriptor:
+    def __init__(self, class_uri, superclasses, members):
+        self.class_uri = class_uri
+        self.superclasses = superclasses
+        self.members = members
         
 class MyClassVisitor(Visitor):
     def __init__(self):
@@ -69,7 +83,7 @@ class MyClassVisitor(Visitor):
         #print("class_member:", m)
         v = MyClassMemberVisitor()
         v.visit(m)
-        self.members.append((v.member_type_uri, v.member_name_uri, v.min_c, v.max_c))
+        self.members.append(ClassMemberDescriptor(v.member_name_uri, v.member_type_uri, v.min_c, v.max_c))
     
 class MyVisitor(Visitor):
     def __init__(self):
@@ -86,21 +100,19 @@ class MyVisitor(Visitor):
         if class_uri in self.known_rdfs_classes:
             raise Exception(f"attempt to redefined rdfs class {class_uri}")
         v = MyClassVisitor(); v.visit(m)
-        self.known_rdfs_classes[class_uri] = (v.superclasses, v.members)
+        self.known_rdfs_classes[class_uri] = ClassDescriptor(class_uri, v.superclasses, v.members)
 
     def rdfs_class_ext(self, m):
         class_uri = "".join([x.value for x in m.children[0].children[0].children])
         if not class_uri in self.known_rdfs_classes:
             raise Exception(f"attempt to extend unknown rdfs class {class_uri}")        
         v = MyClassVisitor(); v.visit(m)
-        self.known_rdfs_classes[class_uri][0].extend(v.superclasses)
-        self.known_rdfs_classes[class_uri][1].extend(v.members)
+        class_desc = self.known_rdfs_classes[class_uri]
+        class_desc.superclasses.extend(v.superclasses)
+        class_desc.members.extend(v.members)
         
 class KSDParser:
-    def do_it(self, kgm_path, ksd_filename):
-        #print("ksd_filename:", ksd_filename, type(ksd_filename))
-        #print("kgm_path:", kgm_path)
-        
+    def do_it(self, ksd_filename):
         l = Lark(ksd_grammar)
         with open(ksd_filename, 'r') as f:
             ksd_code = f.read()
@@ -112,13 +124,36 @@ class KSDParser:
 
         v = MyVisitor()
         v.visit_topdown(tree)
-        print("+++++++++++++++")
-        for prefix, prefix_uri in v.local_prefixes.items():
-            print(prefix, prefix_uri)
 
-        print("---------------")
-        for rdfs_class_uri, cls in v.known_rdfs_classes.items():
-            print(rdfs_class_uri, cls[0]) # superclasses
-            print("  ", cls[1]) # members
+        wellknown_prefixes = ["rdf", "rdfs", "sh", "xsd"]
+        for prefix in wellknown_prefixes:
+            uri = known_prefixes[prefix]
+            print(f"@prefix {prefix}: <{uri}> .")
             
+        for prefix, prefix_uri in v.local_prefixes.items():
+            print(f"@prefix {prefix} <{prefix_uri}> .")
+
+        print()
+
+        for rdfs_class_uri, cls in v.known_rdfs_classes.items():
+            #print(cls.class_uri, cls.superclasses)
+            #print(" ", [x.__dict__ for x in cls.members])
+
+            print(f"{cls.class_uri} rdf:type rdfs:Class;")
+            for c in cls.superclasses:
+                print(f"    rdfs:subClassOf {c};")
+            print("     rdf:type sh:NodeShape; sh:closed true;")
+            
+            for m in cls.members:
+                shacl_m = []
+                shacl_m.append(f"sh:path {m.member_name_uri}")
+                if m.member_type_uri.startswith("xsd:"):
+                    shacl_m.append(f"sh:datatype {m.member_type_uri}")
+                else:
+                    shacl_m.append(f"sh:class {m.member_type_uri}")
+                shacl_m.append(f"sh:minCount {m.minc}")
+                if m.maxc >= 0:
+                    shacl_m.append(f"sh:maxCount {m.maxc}")
+                print(f" sh:property [{"; ".join(shacl_m)}];")
+            print(".\n")
         

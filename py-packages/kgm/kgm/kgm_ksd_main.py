@@ -11,10 +11,9 @@ class CustomHelp(click.Command):
         
 @click.command(cls = CustomHelp)
 @click.argument('ksd-file', required = True)
-@click.argument('kgm-path', required = True)
-def run_app(ksd_file, kgm_path):
+def run_app(ksd_file):
     ksd_parser = mod_ksd_parser.KSDParser()
-    ksd_parser.do_it(kgm_path, ksd_file)
+    ksd_parser.do_it(ksd_file)
     
 def main():
     run_app()
