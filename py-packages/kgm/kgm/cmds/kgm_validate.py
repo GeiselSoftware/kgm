@@ -2,6 +2,7 @@
 import os
 import tempfile
 import pandas as pd
+from ..rdf_utils import restore_prefix__
 from ..sparql_utils import rq_construct, rq_select, make_rq
 
 def do_validate(w_config, shacl_kgm_path, kgm_path):
@@ -15,9 +16,9 @@ def do_validate(w_config, shacl_kgm_path, kgm_path):
 
     res = pd.DataFrame(rq_select(make_rq(f'select ?g where {{ ?g kgm:path "{kgm_path}" }}'), config = w_config))
     kgm_graph_uri = res.iloc[0, 0]
-    #print("data graph:", kgm_graph_uri)
+    print("data graph:", kgm_graph_uri)
 
-    kgm_graph_uri = kgm_graph_uri.uri.replace("#", "%23")
+    kgm_graph_uri = restore_prefix__(kgm_graph_uri.as_turtle()).replace("#", "%23")
     validate_curl_cmd = f"curl -s -XPOST --data-binary @{temp_fn}  --header 'Content-type: text/turtle' {w_config['backend-url']}/shacl?graph={kgm_graph_uri}"
     #print(validate_curl_cmd)
     os.system(validate_curl_cmd)
