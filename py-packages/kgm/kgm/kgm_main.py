@@ -1,6 +1,6 @@
 import click
 import importlib.metadata
-from .cmds import kgm_graph, kgm_graph_shacled, kgm_validate, kgm_misc
+from .cmds import kgm_graph, kgm_validate, ksd_parser as mod_ksd_parser, kgm_misc
 from .config_utils import load_config
 
 class CustomGroup(click.Group):
@@ -96,14 +96,6 @@ def do_rename(ctx, path, new_path):
 def do_graph_select(ctx, select_query):
     _, w_config = ctx.obj["config"]
     kgm_graph.do_graph_select(w_config, select_query)
-
-@cli.command("shacled")
-@click.argument("path", required = True)
-@click.option("--public-access", "-P", is_flag = True, required = False)
-@click.pass_context
-def do_graph_shacled(ctx, path, public_access):
-    _, w_config = ctx.obj["config"]
-    kgm_graph_shacled.do_graph_shacled(w_config, path, public_access)
     
 @cli.command("validate")
 @click.argument("shacl-path")
@@ -113,6 +105,12 @@ def do_validate(ctx, shacl_path, path):
     _, w_config = ctx.obj["config"]
     kgm_validate.do_validate(w_config, shacl_path, path)
 
+@cli.command("ksd")
+@click.argument("ksd-file", required = True)
+@click.pass_context
+def do_ksd_dump(ctx, ksd_file):
+    ksd_parser = mod_ksd_parser.KSDParser()
+    ksd_parser.do_it(ksd_file)
 
 @cli.group("misc")
 def do_misc():
