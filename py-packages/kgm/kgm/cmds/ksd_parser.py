@@ -1,7 +1,8 @@
+#import ipdb
 from lark import Lark, Visitor
 from ..rdf_utils import known_prefixes
 from ..kgm_utils import get_kgm_graph
-from ..sparql_utils import make_rq, rq_construct, rq_select
+from ..sparql_utils import make_rq, rq_select
 import pandas as pd
 
 ksd_grammar = \
@@ -131,8 +132,8 @@ class KSDParser:
         }}
         """
         #print(make_rq(rq))
-        rq_res = rq_select(make_rq(rq), config = w_config)
-        print(pd.DataFrame(rq_res))
+        classes_dets = pd.DataFrame(rq_select(make_rq(rq), config = w_config))
+        #print(classes_dets)
 
         rq = f"""\
         select ?uc ?super_uc {{
@@ -142,8 +143,33 @@ class KSDParser:
          }}
         }}
         """
-        rq_res = rq_select(make_rq(rq), config = w_config)
-        print(pd.DataFrame(rq_res))
+        superclasses_dets = pd.DataFrame(rq_select(make_rq(rq), config = w_config))
+        #print(superclasses_dets)
+
+        #ipdb.set_trace()
+        print(f"prefix : <{known_prefixes[""]}>")
+        print()
+        
+        for class_uri in classes_dets.uc.unique():
+            #ipdb.set_trace()
+            F = superclasses_dets.uc == class_uri
+            superclasses = ""
+            if F.any():
+                superclasses = ";".join([f"subclass of {x}" for x in superclasses_dets.loc[F, 'super_uc']])
+            print(f"class {class_uri} {superclasses}")
+            
+            F = classes_dets.uc == class_uri
+            #ipdb.set_trace()
+            for m in classes_dets.loc[F, :].itertuples():
+                minc = m.uc_m_minc.as_python()
+                maxc = m.uc_m_maxc.as_python() if m.uc_m_maxc is not None else -1
+                card = ""
+                if not (minc == 1 and maxc == 1):
+                    maxc = f"{maxc}" if maxc != -1 else "inf"
+                    card = f"[{minc}..{maxc}]"                    
+                print(f" {m.uc_m_name} {m.uc_m_type}{card}")
+            print(f"end\n")
+        
         
     def parse_ksd_file(self, ksd_filename):
         l = Lark(ksd_grammar)
