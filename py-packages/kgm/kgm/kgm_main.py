@@ -55,10 +55,14 @@ def graph_import(ctx, path, ttl_file):
 
 @cli.command("cat", help = "prints graph to stdout")
 @click.argument("path", required = True)
+@click.option("--as-ksd", is_flag = True)
 @click.pass_context
-def graph_cat(ctx, path):
+def graph_cat(ctx, path, as_ksd):
     _, w_config = ctx.obj["config"]
-    kgm_graph.do_cat(w_config, path)
+    if as_ksd:
+        mod_ksd_parser.KSDParser.dump_ksd(w_config, path)
+    else:
+        kgm_graph.do_cat(w_config, path)
 
 @cli.command("show", help = "shows details about given URI")
 @click.argument("uri", required = True)
@@ -110,7 +114,7 @@ def do_validate(ctx, shacl_path, path):
 @click.pass_context
 def do_ksd_dump(ctx, ksd_file):
     ksd_parser = mod_ksd_parser.KSDParser()
-    ksd_parser.do_it(ksd_file)
+    ksd_parser.parse_ksd_file(ksd_file)
 
 @cli.group("misc")
 def do_misc():

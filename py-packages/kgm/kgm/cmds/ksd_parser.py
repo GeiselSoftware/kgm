@@ -1,5 +1,8 @@
 from lark import Lark, Visitor
 from ..rdf_utils import known_prefixes
+from ..kgm_utils import get_kgm_graph
+from ..sparql_utils import make_rq, rq_construct, rq_select
+import pandas as pd
 
 ksd_grammar = \
     """
@@ -111,7 +114,38 @@ class MyVisitor(Visitor):
         class_desc.members.extend(v.members)
         
 class KSDParser:
-    def do_it(self, ksd_filename):
+    @staticmethod
+    def dump_ksd(w_config, kgm_path):        
+        rq = f"""\
+        select ?uc ?uc_m_name ?uc_m_is_class ?uc_m_type ?uc_m_minc ?uc_m_maxc {{
+         ?g kgm:path "{kgm_path}"
+         graph ?g {{
+          ?uc rdf:type rdfs:Class .
+          ?uc sh:property ?uc_p.
+          ?uc_p sh:path ?uc_m_name filter(?uc_m_name != rdf:type).
+          ?uc_p sh:minCount ?uc_m_minc.
+          optional {{ ?uc_p sh:maxCount ?uc_m_maxc }}
+          {{ optional {{ ?uc_p sh:datatype ?uc_m_type bind(false as ?uc_m_is_class) }} }}
+          union {{ optional {{ ?uc_p sh:class ?uc_m_type bind(true as ?uc_m_is_class)}} }}
+         }}
+        }}
+        """
+        #print(make_rq(rq))
+        rq_res = rq_select(make_rq(rq), config = w_config)
+        print(pd.DataFrame(rq_res))
+
+        rq = f"""\
+        select ?uc ?super_uc {{
+         ?g kgm:path "{kgm_path}"
+         graph ?g {{
+          ?uc rdf:type rdfs:Class; rdfs:subClassOf ?super_uc .
+         }}
+        }}
+        """
+        rq_res = rq_select(make_rq(rq), config = w_config)
+        print(pd.DataFrame(rq_res))
+        
+    def parse_ksd_file(self, ksd_filename):
         l = Lark(ksd_grammar)
         with open(ksd_filename, 'r') as f:
             ksd_code = f.read()
