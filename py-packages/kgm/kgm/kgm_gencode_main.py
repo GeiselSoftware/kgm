@@ -26,18 +26,15 @@ def cli(ctx, config):
 
 @cli.command("cs", help = "C# generation")
 @click.argument("kgm-path", required = True)
-@click.argument("user-class-uri", required = True)
 @click.argument("cs-namespace", required = True)
+@click.option("--output-dir", required = True)
 @click.pass_context
-def gencode_cs(ctx, kgm_path, user_class_uri, cs_namespace):
+def gencode_cs(ctx, kgm_path, cs_namespace, output_dir):
     #print("gencode_cs:", ctx.obj)
     _, w_config = ctx.obj["config"]
-    if 0:
-        print("kgm_path:", kgm_path)
-        print("user_class_uri:", user_class_uri)
-        print("cs_namespace:", cs_namespace)
-        
-    mod_gencode_cs.gencode_cs(w_config, kgm_path, user_class_uri, cs_namespace)
+
+    #mod_gencode_cs.gencode_cs(w_config, kgm_path, user_class_uri, cs_namespace)
+    mod_gencode_cs.gencode_for_namespace(w_config, kgm_path, cs_namespace, output_dir)
 
 def main():
     cli(max_content_width = 120)
