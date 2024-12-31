@@ -1,4 +1,5 @@
 #import ipdb
+import sys, os
 from enum import Enum
 import pandas as pd
 from ..rdf_utils import xsd_dflt_cs_values, restore_prefix__, collapse_prefix__, xsd, URI, Literal
@@ -8,7 +9,7 @@ class UserClass:
     def __init__(self, uc_uri, cs_namespace):
         self.cs_namespace = cs_namespace
         self.name = f"{uc_uri.get_suffix()}"
-        self.uriref_class = "URIRef_" + self.name
+        self.uriref_class = self.name
         self.user_class_uri = uc_uri
 
 def get_cs_type(uc_m_type_uri):
@@ -30,7 +31,7 @@ def get_cs_type(uc_m_type_uri):
         else:
             raise Exception(f"not supported xsd type {xsd_type_uri}")
     else:
-        ret = "URIRef_" + uc_m_type_uri.get_suffix()
+        ret = uc_m_type_uri.get_suffix()
         
     return ret, is_literal
 
@@ -77,7 +78,7 @@ def get_cs_dflt_value(is_class_arg_l, m_type_uri, cardinality: member_cardinalty
 
     return ret
     
-def gencode_cs(w_config, kgm_path, uc_uri_s, cs_namespace):
+def gencode_cs_class(w_config, kgm_path, uc_uri_s, cs_namespace):    
     #ipdb.set_trace()
     uc_uri = URI(uc_uri_s)
     #print("gencode_cs")
@@ -109,7 +110,7 @@ def gencode_cs(w_config, kgm_path, uc_uri_s, cs_namespace):
     default_ctor_assignments = []
     uriref_member_getseters = []
     user_class_info_member_entries = []
-    uriref_create_args = []
+    uriref_create_args = ["GraphDB db"] # first arg of T::create
     uriref_create_member_init_statements = []
 
     for ii, r in rq_res.iterrows():
@@ -123,32 +124,22 @@ def gencode_cs(w_config, kgm_path, uc_uri_s, cs_namespace):
         match m_cardinality:
             case member_cardinalty_t.ZERO_ONE:
                 member_decls.append(f"public {cs_m_type}? {cs_m_name}__;")
-                cs_m_getsetter = f"public {cs_m_type}? {cs_m_name} {{ get {{ return ref_.{cs_m_name}__; }} set {{ ref_.{cs_m_name}__ = value; }} }}"
+                cs_m_getsetter = f"public {cs_m_type}? {cs_m_name} {{ get {{ return __ref.{cs_m_name}__; }} set {{ __ref.{cs_m_name}__ = value; }} }}"
             case member_cardinalty_t.ONE_ONE:
                 if cs_m_is_literal:
                     member_decls.append(f"public {cs_m_type} {cs_m_name}__;")
-                    cs_m_getsetter = f"public {cs_m_type} {cs_m_name} {{ get {{ return ref_.{cs_m_name}__; }} set {{ ref_.{cs_m_name}__ = value; }} }}"
+                    cs_m_getsetter = f"public {cs_m_type} {cs_m_name} {{ get {{ return __ref.{cs_m_name}__; }} set {{ __ref.{cs_m_name}__ = value; }} }}"
                 else:
                     member_decls.append(f"public {cs_m_type}? {cs_m_name}__;")
-                    cs_m_getsetter = f"public {cs_m_type}? {cs_m_name} {{ get {{ return ref_.{cs_m_name}__; }} set {{ ref_.{cs_m_name}__ = value; }} }}"
+                    cs_m_getsetter = f"public {cs_m_type}? {cs_m_name} {{ get {{ return __ref.{cs_m_name}__; }} set {{ __ref.{cs_m_name}__ = value; }} }}"
             case member_cardinalty_t.MANY:
                 #raise Exception("not supported cardinality: ", m_cardinality)
-                if cs_m_is_literal:
-                    member_decls.append(f"public HashSet<{cs_m_type}> {cs_m_name}__;")
-                    cs_m_getsetter = f"""
-                    public IEnumerable<{cs_m_type}> {cs_m_name} {{
-                      get {{ foreach (var o in ref_.{cs_m_name}__) yield return o; }}
-                      set {{ ref_.{cs_m_name}__.Clear(); foreach (var o in value) ref_.{cs_m_name}__.Add(o); }}
-                    }}
-                    """
-                else:
-                    member_decls.append(f"public HashSet<{cs_m_type}> {cs_m_name}__;")
-                    cs_m_getsetter = f"""
-                    public IEnumerable<{cs_m_type}> {cs_m_name} {{
-                      get {{ foreach (var o in ref_.{cs_m_name}__) yield return o; }}
-                      set {{ ref_.{cs_m_name}__.Clear(); foreach (var o in value) ref_.{cs_m_name}__.Add(o); }}
-                    }}
-                    """
+                member_decls.append(f"public HashSet<{cs_m_type}> {cs_m_name}__;")
+                cs_m_getsetter = f"""
+                public HashSet<{cs_m_type}> {cs_m_name} {{
+                get {{ return __ref.{cs_m_name}__; }}
+                }}
+                """
 
         uc_member_info_initializer = []
         uc_m = r['uc_m'].as_turtle()
@@ -165,7 +156,7 @@ def gencode_cs(w_config, kgm_path, uc_uri_s, cs_namespace):
         uc_member_info_initializer.append(f"{m_maxc}")
         uc_member_info_initializer.append("sh.class_" if r['uc_m_is_class'] == Literal.from_python(True) else "sh.datatype")
         uc_member_info_initializer.append(f"Turtle.make_uri(\"{uc_m_type}\")")
-        uc_member_info_initializer.append(f"typeof({uc.name}).GetField(\"{cs_m_name}__\")")
+        uc_member_info_initializer.append(f"typeof({uc.name}_Impl).GetField(\"{cs_m_name}__\")")
         if r['uc_m_is_class'].as_python() == True:
             uc_member_info_initializer.append(f"() => {cs_m_type}.create_empty()")
         else:
@@ -183,7 +174,7 @@ def gencode_cs(w_config, kgm_path, uc_uri_s, cs_namespace):
             # only links can be assigned during create
             if m_cardinality == member_cardinalty_t.MANY:
                 uriref_create_args.append(f"HashSet<{cs_m_type}>? {cs_m_name}")
-                uriref_create_member_init_statements.append(f"ret.{cs_m_name} = {cs_m_name} != null ? {cs_m_name} : new HashSet<{cs_m_type}>()")
+                uriref_create_member_init_statements.append(f"if ({cs_m_name} != null) {{ ret.{cs_m_name}.UnionWith({cs_m_name}); }}")
             else:
                 uriref_create_args.append(f"{cs_m_type}? {cs_m_name}")
                 uriref_create_member_init_statements.append(f"ret.{cs_m_name} = {cs_m_name}")
@@ -195,12 +186,11 @@ def gencode_cs(w_config, kgm_path, uc_uri_s, cs_namespace):
     using kgm;
 
     namespace {{cs_namespace}} {
-      public class {{uc.name}} {
-        public static URI uo_class_uri = Turtle.make_uri("{{uc.user_class_uri}}");
+      public class {{uc.name}}_Impl {
 
         {{member_decls}}
 
-        public {{uc.name}}() {
+        public {{uc.name}}_Impl() {
           {{default_ctor_assignments}}
         }
 
@@ -209,45 +199,34 @@ def gencode_cs(w_config, kgm_path, uc_uri_s, cs_namespace):
         };
       }
 
-      public class {{uc.uriref_class}} : URIRef {
+      public class {{uc.uriref_class}} : UserObject {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        public {{uc.name}} ref_;
-        public {{uc.uriref_class}}(URI uri, {{uc.name}} ref_) { this.uri = uri; this.ref_ = ref_; }
+        private {{uc.name}}_Impl __ref;
+        private {{uc.uriref_class}}(URI uri, {{uc.name}}_Impl ref_) { this.__uri = uri; this.__ref = ref_; }
 
+        public static URI uo_class_uri = Turtle.make_uri("{{uc.user_class_uri}}");
         {{uriref_member_getseters}}
 
         // public interface
 
-        public override object get_ref() { return this.ref_ as object; }
-        public override Dictionary<string, uc_member_info_base> get_user_class_info() { return {{uc.name}}.user_class_info; }
-        public override URI get_uo_class_uri() { return {{uc.name}}.uo_class_uri; }
+        public override object get_ref() { return this.__ref as object; }
+        public override Dictionary<string, uc_member_info_base> get_user_class_info() { return {{uc.name}}_Impl.user_class_info; }
+        public override URI get_uo_class_uri() { return uo_class_uri; }
 
         public static {{uc.uriref_class}} create_empty()
         {
-          URI uri = URI.new_uo_uri({{uc.name}}.uo_class_uri);        
-          {{uc.name}} new_uo_ref = new {{uc.name}}();
-          {{uc.uriref_class}} ret = new {{uc.uriref_class}}(null!, new_uo_ref);
+          URI new_uri = URI.new_uo_uri({{uc.name}}.uo_class_uri);        
+          {{uc.name}}_Impl new_uo_ref = new {{uc.name}}_Impl();
+          {{uc.uriref_class}} ret = new {{uc.uriref_class}}(new_uri, new_uo_ref);
           return ret;
         }
 
         public static {{uc.uriref_class}} create({{uriref_create_args}})
         {
-          URI uri = URI.new_uo_uri({{uc.name}}.uo_class_uri);        
-          {{uc.name}} new_uo_ref = new {{uc.name}}();
-          {{uc.uriref_class}} ret = new {{uc.uriref_class}}(uri, new_uo_ref);
+          var ret = create_empty();
           {{uriref_create_member_init_statements}};
+          db.add(ret);
           return ret;
-        }
-
-        public static async Task<{{uc.uriref_class}}> load(GraphDB gdb, URI uo_uri) {
-          {{uc.uriref_class}} ret = {{uc.uriref_class}}.create_empty();
-          ret.uri = uo_uri;
-          await gdb.load(ret);
-          return ret;
-        }
-
-        public async Task save(GraphDB gdb) {
-          await gdb.save(this);
         }
       }
     }
@@ -266,6 +245,79 @@ def gencode_cs(w_config, kgm_path, uc_uri_s, cs_namespace):
     .replace("{{uriref_create_member_init_statements}}", ";\n".join(uriref_create_member_init_statements))
 
     code = "\n".join([x for x in code.split("\n")])
+    return code
+
+def gencode_cs_namespace(cs_namespace, user_class_uris):    
+    class_factories_code = []
+    for user_class_uri in user_class_uris:
+        cs_user_class = user_class_uri.get_suffix()
+        class_factories_code.append(f"""
+        if (rdf_type.Equals(URI.create("{user_class_uri.as_turtle()}"))) {{
+         ret = {cs_user_class}.create_empty();
+        }}
+        """)
+    class_factories_code.append("""\
+    {
+      throw new System.Exception($"unknown rdf_type: {{rdf_type.as_turtle()}}");
+    }
+    """)
+        
+    class_factories_code = " else ".join(class_factories_code)
+    code = f"""\
+    // generated code - DO NOT EDIT
+
+    using kgm;
+
+    namespace {cs_namespace} {{
+     public class UserObjectFactory : kgm.UserObjectFactory {{
+      public override UserObject create_user_object(URI rdf_type) {{
+       UserObject ret = null;
+       {class_factories_code}
+       return ret;
+      }}
+     }}
+    }}
+
+    """
+    return code
     
-    print(code)
-    
+def gencode_for_namespace(w_config, kgm_path, cs_namespace, output_dir):
+    if output_dir != "-":
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+        
+    rq = make_rq("""
+    select ?uc
+    where {
+        ?g kgm:path "{{kgm_path}}" .
+        graph ?g { ?uc rdf:type rdfs:Class }
+    }
+    """.replace("{{kgm_path}}", kgm_path))
+
+    rq_res = pd.DataFrame(rq_select(rq, config = w_config))
+    #print(rq_res)
+
+    res_code = gencode_cs_namespace(cs_namespace, [r.uc for r in rq_res.itertuples()])
+    if output_dir != "-":
+        out_fn = os.path.join(output_dir, "ns.cs")
+        print(f"generating {out_fn}")
+        with open(out_fn, "w") as out:
+            print(res_code, file = out)
+    else:
+        print(res_code)
+
+    for r in rq_res.itertuples():
+        #print("UC:", r.uc)
+        cs_class = r.uc.get_suffix()
+        res_code = gencode_cs_class(w_config, kgm_path, r.uc.as_turtle(), cs_namespace)
+        if output_dir != "-":
+            out_fn = os.path.join(output_dir, f"{cs_class}.cs")
+            print(f"generating {out_fn}")
+            with open(out_fn, "w") as out:
+                print(res_code, file = out)
+        else:
+            print(res_code)
+
+            
+            
+                  
