@@ -9,7 +9,6 @@ class UserClass:
     def __init__(self, uc_uri, cs_namespace):
         self.cs_namespace = cs_namespace
         self.name = f"{uc_uri.get_suffix()}"
-        self.uriref_class = self.name
         self.user_class_uri = uc_uri
 
 def get_cs_type(uc_m_type_uri):
@@ -56,26 +55,18 @@ def classify_minc_maxc(min_c, max_c) -> member_cardinalty_t:
     
     return ret
 
-def get_cs_dflt_value(is_class_arg_l, m_type_uri, cardinality: member_cardinalty_t):
-    #ipdb.set_trace()
-    is_class = is_class_arg_l.as_python() == True
-    cs_type, _ = get_cs_type(m_type_uri)
+def get_cs_dflt_value(cs_m_type:str):
     ret = None
-    #ipdb.set_trace()
-    if cardinality == member_cardinalty_t.ZERO_ONE:
-        if is_class:
-            ret = "null"
-        else:
-            ret = "null"
-    elif cardinality == member_cardinalty_t.ONE_ONE:
-        #print("WOW:", is_class, is_class.literal)
-        if is_class:
-            ret = "null"
-        else:
-            ret = xsd_dflt_cs_values[m_type_uri]
+    if cs_m_type == "string":
+        ret = '""'
+    elif cs_m_type == "int":
+        ret = "0"
+    elif cs_m_type == "float":
+        ret = "0.0f"
+    elif cs_m_type == "double":
+        ret = "0.0"
     else:
-        ret = f"new HashSet<{cs_type}>()"
-
+        raise Exception(f"unsupported CS type {cs_m_type}")
     return ret
     
 def gencode_cs_class(w_config, kgm_path, uc_uri_s, cs_namespace):    
@@ -106,12 +97,12 @@ def gencode_cs_class(w_config, kgm_path, uc_uri_s, cs_namespace):
 
     uc = UserClass(uc_uri, cs_namespace)
     
-    member_decls = []
-    default_ctor_assignments = []
-    uriref_member_getseters = []
+    uc_member_decls = []
+    uo_members_setup = []
+    uo_members_assignment = []
+    uo_member_getseters = []
     user_class_info_member_entries = []
-    uriref_create_args = ["GraphDB db"] # first arg of T::create
-    uriref_create_member_init_statements = []
+    uo_create_func_args = ["GraphDB db"] # first arg of T::create
 
     for ii, r in rq_res.iterrows():
         m_cardinality = classify_minc_maxc(r['uc_m_minc'], r['uc_m_maxc'])
@@ -119,65 +110,78 @@ def gencode_cs_class(w_config, kgm_path, uc_uri_s, cs_namespace):
             raise Exception("failed to resolve cardinality")
 
         #ipdb.set_trace()
+        m_uri = r['uc_m']
         cs_m_name = r['uc_m'].get_suffix()
         cs_m_type, cs_m_is_literal = get_cs_type(r['uc_m_type'])
-        match m_cardinality:
-            case member_cardinalty_t.ZERO_ONE:
-                member_decls.append(f"public {cs_m_type}? {cs_m_name}__;")
-                cs_m_getsetter = f"public {cs_m_type}? {cs_m_name} {{ get {{ return __ref.{cs_m_name}__; }} set {{ __ref.{cs_m_name}__ = value; }} }}"
-            case member_cardinalty_t.ONE_ONE:
-                if cs_m_is_literal:
-                    member_decls.append(f"public {cs_m_type} {cs_m_name}__;")
-                    cs_m_getsetter = f"public {cs_m_type} {cs_m_name} {{ get {{ return __ref.{cs_m_name}__; }} set {{ __ref.{cs_m_name}__ = value; }} }}"
+        if m_cardinality == member_cardinalty_t.ZERO_ONE:
+            if cs_m_is_literal and cs_m_type != "string":
+                uc_member_decls.append(f"public UOStructScalar<{cs_m_type}> {cs_m_name}__;")
+                cs_m_getsetter = f"public {cs_m_type}? {cs_m_name} {{ get {{ return this.{cs_m_name}__.Get(); }} set {{ this.{cs_m_name}__.Set(value); }} }}"
+                create_func = "null"
+                uo_members_setup.append(f'this.{cs_m_name}__ = new UOStructScalar<{cs_m_type}>(db, this, URI.create("{m_uri.as_turtle()}"), {create_func});')
+            else:
+                uc_member_decls.append(f"public UOClassScalar<{cs_m_type}> {cs_m_name}__;")
+                cs_m_getsetter = f"public {cs_m_type}? {cs_m_name} {{ get {{ return this.{cs_m_name}__.Get(); }} set {{ this.{cs_m_name}__.Set(value); }} }}"
+                create_func = f"{cs_m_type}.create_empty" if cs_m_type != "string" else "null"
+                uo_members_setup.append(f'this.{cs_m_name}__ = new UOClassScalar<{cs_m_type}>(db, this, URI.create("{m_uri.as_turtle()}"), {create_func});')
+        elif m_cardinality == member_cardinalty_t.ONE_ONE:
+            if cs_m_is_literal and cs_m_type != "string":
+                uc_member_decls.append(f"public UOStructScalar<{cs_m_type}> {cs_m_name}__;")
+                cs_m_getsetter = f"public {cs_m_type} {cs_m_name} {{ get {{ return this.{cs_m_name}__.GetNN(); }} set {{ this.{cs_m_name}__.Set(value); }} }}"
+                dflt_v = get_cs_dflt_value(cs_m_type); create_func = "null"
+                uo_members_setup.append(f'this.{cs_m_name}__ = new UOStructScalar<{cs_m_type}>(db, this, URI.create("{m_uri.as_turtle()}"), {create_func}); this.{cs_m_name}__.SetInitialValue({dflt_v});')
+            else:
+                uc_member_decls.append(f"public UOClassScalar<{cs_m_type}> {cs_m_name}__;")
+                cs_m_getsetter = f"public {cs_m_type} {cs_m_name} {{ get {{ return this.{cs_m_name}__.Get(); }} set {{ this.{cs_m_name}__.Set(value); }} }}"
+                create_func = f"{cs_m_type}.create_empty" if cs_m_type != "string" else "null"
+                m_setup = f'this.{cs_m_name}__ = new UOClassScalar<{cs_m_type}>(db, this, URI.create("{m_uri.as_turtle()}"), {create_func});'
+                if cs_m_type == "string":
+                    dflt_v = get_cs_dflt_value(cs_m_type)
+                    m_setup += f" this.{cs_m_name}__.SetInitialValue({dflt_v});"
+                uo_members_setup.append(m_setup)            
+        elif m_cardinality == member_cardinalty_t.MANY:
+            if cs_m_is_literal and cs_m_type != "string":
+                uc_member_decls.append(f"public UOStructSet<{cs_m_type}> {cs_m_name}__;")
+                cs_m_getsetter = f"public UOStructSet<{cs_m_type}> {cs_m_name} {{ get {{ return this.{cs_m_name}__; }} }}"
+                create_func = "null"
+                uo_members_setup.append(f'this.{cs_m_name}__ = new UOStructSet<{cs_m_type}>(db, this, URI.create("{m_uri.as_turtle()}"), {create_func});')
+            else:
+                uc_member_decls.append(f"public UOClassSet<{cs_m_type}> {cs_m_name}__;")
+                cs_m_getsetter = f"public UOClassSet<{cs_m_type}> {cs_m_name} {{ get {{ return this.{cs_m_name}__; }} }}"                
+                if cs_m_type != "string":
+                    create_func = f"{cs_m_type}.create_empty"
                 else:
-                    member_decls.append(f"public {cs_m_type}? {cs_m_name}__;")
-                    cs_m_getsetter = f"public {cs_m_type}? {cs_m_name} {{ get {{ return __ref.{cs_m_name}__; }} set {{ __ref.{cs_m_name}__ = value; }} }}"
-            case member_cardinalty_t.MANY:
-                #raise Exception("not supported cardinality: ", m_cardinality)
-                member_decls.append(f"public HashSet<{cs_m_type}> {cs_m_name}__;")
-                cs_m_getsetter = f"""
-                public HashSet<{cs_m_type}> {cs_m_name} {{
-                get {{ return __ref.{cs_m_name}__; }}
-                }}
-                """
-
+                    create_func = "null"
+                uo_members_setup.append(f'this.{cs_m_name}__ = new UOClassSet<{cs_m_type}>(db, this, URI.create("{m_uri.as_turtle()}"), {create_func});')
+        else:
+            raise Exception("unknown cardinality")
+            
         uc_member_info_initializer = []
         uc_m = r['uc_m'].as_turtle()
         uc_m_type = r['uc_m_type'].as_turtle()
         if m_cardinality == member_cardinalty_t.MANY:
-            uc_member_info_class = "uc_list_member_info"
-            uc_member_adder = f'typeof(HashSet<{cs_m_type}>).GetMethod("Add")'
+            uc_member_info_class = "uc_member_info"
         else:
-            uc_member_info_class = "uc_scalar_member_info"
-            uc_member_adder = "null"
-        uc_member_info_initializer.append(f"Turtle.make_uri(\"{uc_m}\")")
+            uc_member_info_class = "uc_member_info"
+        uc_member_info_initializer.append(f"URI.create(\"{uc_m}\")")
         uc_member_info_initializer.append(f"{r['uc_m_minc']}")
         m_maxc = r['uc_m_maxc'].as_python() if r['uc_m_maxc'] is not None else -1
         uc_member_info_initializer.append(f"{m_maxc}")
         uc_member_info_initializer.append("sh.class_" if r['uc_m_is_class'] == Literal.from_python(True) else "sh.datatype")
-        uc_member_info_initializer.append(f"Turtle.make_uri(\"{uc_m_type}\")")
-        uc_member_info_initializer.append(f"typeof({uc.name}_Impl).GetField(\"{cs_m_name}__\")")
-        if r['uc_m_is_class'].as_python() == True:
-            uc_member_info_initializer.append(f"() => {cs_m_type}.create_empty()")
-        else:
-            uc_member_info_initializer.append("null")
-        uc_member_info_initializer.append(uc_member_adder)
+        uc_member_info_initializer.append(f"URI.create(\"{uc_m_type}\")")
+        uc_member_info_initializer.append(f"typeof({uc.name}).GetField(\"{cs_m_name}__\")")
         
-        #ipdb.set_trace()
-        cs_m_dflt_value = get_cs_dflt_value(r['uc_m_is_class'], r['uc_m_type'], m_cardinality)
-        
-        default_ctor_assignments.append(f"{cs_m_name}__ = {cs_m_dflt_value};")
-        uriref_member_getseters.append(cs_m_getsetter)
+        uo_member_getseters.append(cs_m_getsetter)
         user_class_info_member_entries.append(f"{{ \"{cs_m_name}\", new {uc_member_info_class}({','.join(uc_member_info_initializer)}) }}")
 
         if cs_m_is_literal == False:
             # only links can be assigned during create
             if m_cardinality == member_cardinalty_t.MANY:
-                uriref_create_args.append(f"HashSet<{cs_m_type}>? {cs_m_name}")
-                uriref_create_member_init_statements.append(f"if ({cs_m_name} != null) {{ ret.{cs_m_name}.UnionWith({cs_m_name}); }}")
+                uo_create_func_args.append(f"HashSet<{cs_m_type}>? {cs_m_name}")
+                uo_members_assignment.append(f"if ({cs_m_name} != null) {{ foreach (var el in {cs_m_name}) {{ {cs_m_name}.Add(el); }} }}")
             else:
-                uriref_create_args.append(f"{cs_m_type}? {cs_m_name}")
-                uriref_create_member_init_statements.append(f"ret.{cs_m_name} = {cs_m_name}")
+                uo_create_func_args.append(f"{cs_m_type}? {cs_m_name}")
+                uo_members_assignment.append(f"ret.{cs_m_name} = {cs_m_name};")
     
     code = """// generated code - DO NOT EDIT
     using System.Collections.Generic;
@@ -186,46 +190,39 @@ def gencode_cs_class(w_config, kgm_path, uc_uri_s, cs_namespace):
     using kgm;
 
     namespace {{cs_namespace}} {
-      public class {{uc.name}}_Impl {
+      public class {{uc.name}} : UserObject {
 
-        {{member_decls}}
+        {{uc_member_decls}}
 
-        public {{uc.name}}_Impl() {
-          {{default_ctor_assignments}}
+        private {{uc.name}}(GraphDB db) {
+          this.__uri = null;
+          {{uo_members_setup}}
         }
 
-        public static Dictionary<string, uc_member_info_base> user_class_info = new Dictionary<string, uc_member_info_base>{
+        private static Dictionary<string, uc_member_info> user_class_info = new Dictionary<string, uc_member_info>{
           {{user_class_info_member_entries}}
         };
-      }
 
-      public class {{uc.uriref_class}} : UserObject {
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private {{uc.name}}_Impl __ref;
-        private {{uc.uriref_class}}(URI uri, {{uc.name}}_Impl ref_) { this.__uri = uri; this.__ref = ref_; }
-
-        public static URI uo_class_uri = Turtle.make_uri("{{uc.user_class_uri}}");
-        {{uriref_member_getseters}}
+        public static URI uo_class_uri = URI.create("{{uc.user_class_uri}}");
+        {{uo_member_getseters}}
 
         // public interface
 
-        public override object get_ref() { return this.__ref as object; }
-        public override Dictionary<string, uc_member_info_base> get_user_class_info() { return {{uc.name}}_Impl.user_class_info; }
+        public override Dictionary<string, uc_member_info> get_user_class_info() { return user_class_info; }
         public override URI get_uo_class_uri() { return uo_class_uri; }
 
-        public static {{uc.uriref_class}} create_empty()
+        public static {{uc.name}} create_empty(GraphDB db)
         {
-          URI new_uri = URI.new_uo_uri({{uc.name}}.uo_class_uri);        
-          {{uc.name}}_Impl new_uo_ref = new {{uc.name}}_Impl();
-          {{uc.uriref_class}} ret = new {{uc.uriref_class}}(new_uri, new_uo_ref);
-          return ret;
+          {{uc.name}} new_uo = new {{uc.name}}(db);
+          return new_uo;
         }
 
-        public static {{uc.uriref_class}} create({{uriref_create_args}})
+        public static {{uc.name}} create({{uo_create_func_args}})
         {
-          var ret = create_empty();
-          {{uriref_create_member_init_statements}};
-          db.add(ret);
+          var ret = create_empty(db);
+          ret.__uri = UserObject.new_uo_uri({{uc.name}}.uo_class_uri);        
+          {{uo_members_assignment}};
+          db.add_user_object(ret);
           return ret;
         }
       }
@@ -234,15 +231,14 @@ def gencode_cs_class(w_config, kgm_path, uc_uri_s, cs_namespace):
 
     code = code \
     .replace("{{cs_namespace}}", cs_namespace) \
-    .replace("{{uc.uriref_class}}", uc.uriref_class) \
     .replace("{{uc.name}}", uc.name) \
     .replace("{{uc.user_class_uri}}", uc.user_class_uri.as_turtle()) \
-    .replace("{{member_decls}}", "\n".join(member_decls)) \
-    .replace("{{default_ctor_assignments}}", "\n".join(default_ctor_assignments)) \
-    .replace("{{uriref_member_getseters}}", "\n".join(uriref_member_getseters)) \
+    .replace("{{uc_member_decls}}", "\n".join(uc_member_decls)) \
+    .replace("{{uo_members_setup}}", "\n".join(uo_members_setup)) \
+    .replace("{{uo_members_assignment}}", "\n".join(uo_members_assignment)) \
+    .replace("{{uo_member_getseters}}", "\n".join(uo_member_getseters)) \
     .replace("{{user_class_info_member_entries}}", ",\n".join(user_class_info_member_entries)) \
-    .replace("{{uriref_create_args}}", ",\n".join(uriref_create_args)) \
-    .replace("{{uriref_create_member_init_statements}}", ";\n".join(uriref_create_member_init_statements))
+    .replace("{{uo_create_func_args}}", ",\n".join(uo_create_func_args))
 
     code = "\n".join([x for x in code.split("\n")])
     return code
@@ -253,7 +249,7 @@ def gencode_cs_namespace(cs_namespace, user_class_uris):
         cs_user_class = user_class_uri.get_suffix()
         class_factories_code.append(f"""
         if (rdf_type.Equals(URI.create("{user_class_uri.as_turtle()}"))) {{
-         ret = {cs_user_class}.create_empty();
+         ret = {cs_user_class}.create_empty(db);
         }}
         """)
     class_factories_code.append("""\
@@ -270,7 +266,7 @@ def gencode_cs_namespace(cs_namespace, user_class_uris):
 
     namespace {cs_namespace} {{
      public class UserObjectFactory : kgm.UserObjectFactory {{
-      public override UserObject create_user_object(URI rdf_type) {{
+      public override UserObject create_user_object(GraphDB db, URI rdf_type) {{
        UserObject ret = null;
        {class_factories_code}
        return ret;
