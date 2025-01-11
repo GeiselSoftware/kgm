@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "kgm"
-version = "0.1.2"
+version = "0.2.0"
 description = "Knowledge Graph Management - command line utilities"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -19,27 +19,10 @@ authors = [
 dependencies = ["click", "rdflib", "sparqlwrapper", "pandas", "graphviz", "lark"]
 
 [project.urls]
-"Source" = "https://github.com/GeiselSoftware/kgm/py-packages/kgm"
+"Source" = "https://github.com/GeiselSoftware/kgm"
 
 # The following would provide a command line executable called `sample`
 # which executes the function `main` from this package when invoked.
 [project.scripts]
 kgm = "kgm.kgm_main:main"
 kgm-gencode="kgm.kgm_gencode_main:main"
-kgm-editor = "kgm.kgm_editor_main:main"
-
-[tool.setuptools.package-data]
-"kgm" = [
-      	     "electron-dist/*",
-	     "electron-dist/*/*",
-	     "electron-dist/*/*/*",
-	     "electron-dist/*/*/*/*",
-	     "electron-dist/*/*/*/*/*",
-	     "electron-dist/*/*/*/*/*/*",
-	     "electron-dist/*/*/*/*/*/*/*",
-	     "electron-dist/*/*/*/*/*/*/*/*",
-	     "electron-dist/*/*/*/*/*/*/*/*/*",
-	     "electron-dist/*/*/*/*/*/*/*/*/*/*",
-	     "electron-dist/*/*/*/*/*/*/*/*/*/*/*",
-	     "electron-dist/*/*/*/*/*/*/*/*/*/*/*/*"
-	     ]

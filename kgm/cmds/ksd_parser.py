@@ -147,7 +147,7 @@ class KSDParser:
         #print(superclasses_dets)
 
         #ipdb.set_trace()
-        print(f"prefix : <{known_prefixes[""]}>")
+        print(f'prefix : <{known_prefixes[""]}>')
         print()
         
         for class_uri in classes_dets.uc.unique():
@@ -213,6 +213,6 @@ class KSDParser:
                 shacl_m.append(f"sh:minCount {m.minc}")
                 if m.maxc >= 0:
                     shacl_m.append(f"sh:maxCount {m.maxc}")
-                print(f" sh:property [{"; ".join(shacl_m)}];")
+                print(f' sh:property [{"; ".join(shacl_m)}];')
             print(".\n")
         
