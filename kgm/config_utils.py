@@ -1,58 +1,37 @@
 import os.path
 import configparser
 
-"""
-expected config file layout:
-------
+class Config:    
+    @staticmethod
+    def default_config_file_content__():
+        return """\
 [DEFAULT]
-default-config-name: localhost-fuseki
-
-[localhost-fuseki]
-backend-url: http://localhost:3030/kgm-default-dataset/query
-
-[<config-name>]
-...
-config
-...
-
+backend-url: http://localhost:3030/kgm-default-dataset
 """
 
-class Config:
-    def load_all_configs(self):
+    def load_config(self, create_ini = True):
         config_fn = os.path.expanduser("~/.kgm.ini")
         if not os.path.exists(config_fn):
-            return False
+            if create_ini == True:
+                print(f"creating default ini file: {config_fn}")
+                with open(config_fn, "w") as ofd:
+                    ofd.write(self.default_config_file_content__())                    
+            else:
+                raise Exception(f"failed to load kgm config from ~/.kgm.ini")
 
         config_fd = open(config_fn, "r")        
         self.configs = configparser.ConfigParser()
         self.configs.read(config_fn)
-        return True
     
-    def get_all_config_keys(self):
+    def get_config_keys(self):
         return [x for x in self.configs.keys()]
 
-    def get_config(self, config_name):
-        if config_name == None:
-            default_entries = self.configs["DEFAULT"]
-            w_config_name = default_entries["default-config-name"]
-        else:
-            w_config_name = config_name
-        
-        w_config = self.configs[w_config_name]
-        return w_config_name, {x:w_config[x] for x in w_config.keys() if x != 'default-config-name'}
-    
-def load_config(config_name):
-    c = Config()
-    if not c.load_all_configs():
-        print("can't find config file ~/.kgm.ini, will create one with default content")
-        with open(os.path.expanduser("~/.kgm.ini"), "w") as out_fd:
-            print("[DEFAULT]", file = out_fd)
-            print("default-config-name: localhost-fuseki", file = out_fd)
-            print("", file = out_fd)
-            print("[localhost-fuseki]", file = out_fd)
-            print("backend-url: http://localhost:3030/kgm-default-dataset", file = out_fd)
-        if not c.load_all_configs():
-            #raise Exception("can't proceed after load_all_configs failed")
-            return None
+    def get_config(self, config_name = "DEFAULT"):
+        w_config = self.configs[config_name]
+        return {x:w_config[x] for x in w_config.keys()}
 
-    return c.get_config(config_name)
+config = Config()
+config.load_config()
+
+def get_config(config_name = "DEFAULT"):
+    return config.get_config(config_name)

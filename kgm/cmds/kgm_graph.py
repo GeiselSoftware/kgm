@@ -3,16 +3,16 @@ import sys
 import rdflib
 import urllib
 import pandas as pd
-from ..config_utils import load_config
 from ..sparql_utils import make_rq, rq_select, rq_insert_graph, rq_update
 from ..kgm_utils import *
 
 def do_ls(w_config, path):
-    print("do_ls:", path)
+    #print("do_ls:", path)
     query = make_rq("""
     select ?kgm_path ?g { ?g rdf:type kgm:Graph; kgm:path ?kgm_path } 
     """)
     #print(query)
+    #ipdb.set_trace()
     
     res = rq_select(query, config = w_config)
     print(pd.DataFrame(res).map(lambda x: x.as_turtle()))

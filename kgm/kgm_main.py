@@ -1,7 +1,7 @@
 import click
 import importlib.metadata
+from .config_utils import get_config
 from .cmds import kgm_graph, kgm_validate, ksd_parser as mod_ksd_parser, kgm_misc
-from .config_utils import load_config
 
 class CustomGroup(click.Group):
     def parse_args(self, ctx, args):
@@ -22,11 +22,12 @@ class CustomGroup(click.Group):
 def cli(ctx, config, verbose):
     #print("cli pre-subcommand:", config, verbose)
     ctx.ensure_object(dict)
-    ctx.obj['config'] = load_config(config)
+    config_name = 'DEFAULT'
+    ctx.obj['config'] = (config_name, get_config(config_name))
 
 @cli.command("show-config")
 @click.pass_context
-def config(ctx):
+def show_config(ctx):
     w_config_name, w_config = ctx.obj["config"]
     print("current config name:", w_config_name)
     print("current config:", w_config)

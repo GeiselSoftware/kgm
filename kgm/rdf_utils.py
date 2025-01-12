@@ -37,7 +37,7 @@ class Literal:
     @staticmethod
     def from_python(v):
         if type(v) == str:
-            return Literal(f'"{v}"', xsd.string)
+            return Literal(f'{v}', xsd.string)
         elif type(v) == bool:
             return Literal("true" if v else "false", xsd.boolean)
         elif type(v) == int:
@@ -90,7 +90,13 @@ class RDFObject:
 
     def as_turtle(self):
         return self.object_.as_turtle()
-    
+
+class RDFTriple:
+    def __init__(self, s:URI, p:URI, o:RDFObject):
+        self.subject = s
+        self.pred = p
+        self.object_ = o
+
 ######################
 
 def build_uri__(prefix_cls, suffix):
@@ -130,6 +136,18 @@ class sh:
     prefix_uri__ = "http://www.w3.org/ns/shacl#"
 
 sh.property = build_uri__(sh, "property")
+sh.path = build_uri__(sh, "path")
+sh.datatype = build_uri__(sh, "datatype")
+sh.class_ = build_uri__(sh, "class")
+sh.min_c = build_uri__(sh, "minCount")
+sh.max_c = build_uri__(sh, "maxCount")
+sh.NodeShape = build_uri__(sh, "NodeShape")
+
+class dash:
+    prefix__ = "dash"
+    prefix_uri__ = "http://datashapes.org/dash#"
+
+dash.closedByType = build_uri__(dash, "closedByType")
 
 class kgm:
     prefix__ = "kgm"
@@ -155,6 +173,7 @@ known_prefixes = {
     rdfs.prefix__: rdfs.prefix_uri__,
     xsd.prefix__: xsd.prefix_uri__,
     sh.prefix__: sh.prefix_uri__,
+    dash.prefix__: dash.prefix_uri__,
     kgm.prefix__: kgm.prefix_uri__,
     ab.prefix__: ab.prefix_uri__,
     nw.prefix__: nw.prefix_uri__,

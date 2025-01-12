@@ -117,4 +117,22 @@ def rq_update(rq, *, config):
     results = sparql.query()
 
     return results
+
+def rq_delete_insert(kgm_path, dels_inss, *, config):
+    if len(dels_inss[0]) == 0 and len(dels_inss[1]) == 0:
+        return None
+
+    delete_triples = [f"{t.subject.as_turtle()} {t.pred.as_turtle()} {t.object_.as_turtle()} ." for t in dels_inss[0]]
+    insert_triples = [f"{t.subject.as_turtle()} {t.pred.as_turtle()} {t.object_.as_turtle()} ." for t in dels_inss[1]]
+    
+    rq = make_rq("")
+    if len(delete_triples) > 0:
+        rq += f"delete {{ graph ?g {{ \n {'\n'.join(delete_triples)} \n }} }}\n"
+    if len(insert_triples) > 0:
+        rq += f"insert {{ graph ?g {{ \n {'\n'.join(insert_triples)} \n }} }}\n"
+    rq += f'where {{ ?g kgm:path "{kgm_path}" }}'
+
+    print(rq)
+
+    rq_update(rq, config = config)
     
