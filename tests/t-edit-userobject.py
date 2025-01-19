@@ -12,7 +12,12 @@ if __name__ == "__main__":
     print("obj uri:", obj_uri)
     obj = gdb.load_user_object(obj_uri)
     print("address:", obj.address)
-    obj.address = "1 Main St"
 
+    obj.address = "1 Main St"
     ipdb.set_trace()
     gdb.save()
+
+    obj.address = "2 Main St"
+    ipdb.set_trace()    
+    gdb.save()
+    

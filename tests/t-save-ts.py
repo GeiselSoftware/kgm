@@ -18,7 +18,7 @@ class TimeSeries:
     def add(self, v:float):
         tn = self.ts_m.tablename
         q = f"insert into {tn}(serno, value) values({self.serno}, {v})"
-        print(q)
+        #print(q)
         self.clickhouse_db.command(q)
         self.serno += 1
     

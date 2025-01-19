@@ -125,7 +125,7 @@ class Database:
         #ipdb.set_trace()
         
         print(rq_res)
-        ipdb.set_trace()
+        #ipdb.set_trace()
         
         for ii, r in rq_res.iterrows():            
             uc_uri = r['uc']
@@ -197,7 +197,7 @@ class Database:
     def select_in_current_graph(self, rq_over_current_graph):
         rq = make_rq(f"""\
         select * {{
-         ?g kgm:path "{self.kgm_path}"
+         bind({self.kgm_g.as_turtle()} as ?g)
          graph ?g {{
           {rq_over_current_graph}
          }}

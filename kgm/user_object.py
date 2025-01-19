@@ -18,14 +18,14 @@ class UserClass:
     def add_member(self, m_path_uri:URI, m_type_uri:URI, min_c:int, max_c:int, just_created:bool = True):
         if m_path_uri in self.members:
             raise Exception(f"this member already added: {m_path_uri.as_turtle()}")
-        ipdb.set_trace()
+        #ipdb.set_trace()
         new_uc_m = UserClassMember(self, m_path_uri, m_type_uri, min_c, max_c)
         self.members[m_path_uri] = new_uc_m
         if just_created:
             self.db.just_created_uc_members.add(new_uc_m)
 
     def load_create_user_object(self, uo_uri:URI) -> "UserObject":
-        ret = UserObject(self.db, uo_uri, self.uc_uri)
+        ret = UserObject(self.db, uo_uri, self)
         for k, v in self.members.items():
             ret.load_add_member(v.m_path_uri, v.m_type_uri, v.min_c, v.max_c)
         return ret
@@ -175,7 +175,6 @@ class UserObject:
     def load_add_member(self, m_path_uri, m_type_uri, min_c, max_c):
         assert(isinstance(m_path_uri, URI))
         self._storage[m_path_uri] = UserObjectMemberEditor(self, m_path_uri, m_type_uri, min_c, max_c)
-
         
     def get_member(self, m_path_uri):
         return self._storage.get(m_path_uri)
