@@ -55,6 +55,13 @@ class UserObjectMemberEditor:
             v = v.as_python()
         self.s.add(v)
 
+    def load_set_scalar(self, v:object):
+        assert(self.is_scalar() and len(self.s) == 0)
+        if isinstance(v, Literal):
+            v = v.as_python()
+        self.s.add(v)
+        self.sync__()
+        
     def get_scalar(self):
         assert(self.is_scalar())
         for el in self.s:
@@ -67,6 +74,16 @@ class UserObjectMemberEditor:
             v = v.as_python()
         self.s.add(v)
 
+    def load_add(self, v):
+        assert(not self.is_scalar() and len(self.s) == 0)
+        if isinstance(v, Literal):
+            v = v.as_python()
+        self.s.add(v)
+        self.sync__()
+
+    def sync__(self):
+        self.loaded_s = set(self.s)
+        
     def remove(self, v):
         assert(not self.is_scalar())
         self.uo.get_impl().db.changed_uo_members.add(self)

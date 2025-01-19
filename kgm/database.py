@@ -92,6 +92,8 @@ class Database:
         self.just_created_uo.clear()
         self.just_created_uc.clear()
         self.just_created_uc_members.clear()
+        for m in self.changed_uo_members:
+            m.sync__()
         self.changed_uo_members.clear()
 
     def add_user_object__(self, uo: UserObject, is_just_created: bool):
@@ -147,7 +149,7 @@ class Database:
          graph ?g {{
           bind({req_uo_uri.as_turtle()} as ?s_uo)
           ?uo ?uo_member ?uo_member_value
-          filter(!(?uo_member in (sh:property, sh:path, sh:datatype, sh:class, sh:minCount, sh:maxCount, dash:closedByType)))
+          filter(!(?uo_member in (sh:property, sh:path, sh:datatype, sh:class, sh:minCount, sh:maxCount, dash:closedByType, sh:closed)))
           filter(!(?uo_member_value in (sh:NodeShape, rdfs:Class)))
           ?s_uo (<>|!<>)* ?uo
          }}
@@ -188,9 +190,9 @@ class Database:
                 #ipdb.set_trace()
                 uo_m = uo.get_member(uo_m_uri)
                 if uo_m.is_scalar():
-                    uo_m.set_scalar(m_v)
+                    uo_m.load_set_scalar(m_v)
                 else:
-                    uo_m.add(m_v)
+                    uo_m.load_add(m_v)
                     
         return self.all_user_objects[req_uo_uri]
 
