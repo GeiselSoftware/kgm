@@ -3,9 +3,8 @@ from kgm.database import *
 
 if __name__ == "__main__":
     ipdb.set_trace()
-    fuseki_url = "http://localhost:3030/kgm-default-dataset"
-    gdb = Database(fuseki_url, "/py-test")
+    gdb = Database("/py-test")
 
-    obj = gdb.load_user_object(URI(":Human--3f202842-6c51-45a2-876c-0caa47445847"))
+    obj = gdb.load_user_object(URI(":Human--1c822fbf-2ba6-4a52-8bf9-94bcdbe8285f"))
     print(obj.get_impl())
     ipdb.set_trace()

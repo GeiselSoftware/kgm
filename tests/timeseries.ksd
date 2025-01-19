@@ -1,0 +1,5 @@
+prefix : <http://www.geisel-software.com/RDF/KGM/TestUser#>
+
+class :TimeSeries
+ :tablename xsd:string
+end

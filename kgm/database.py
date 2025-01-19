@@ -1,7 +1,8 @@
-#import ipdb
+import ipdb
 import uuid
 import pandas as pd
 from kgm.config_utils import get_config
+from kgm.kgm_utils import get_kgm_graph
 from kgm.rdf_utils import rdf, xsd, URI, Literal, RDFObject, RDFTriple
 from kgm.rdf_utils import rdfs, sh, dash, BNode
 from kgm.sparql_utils import make_rq, rq_select, rq_delete_insert
@@ -11,7 +12,9 @@ class Database:
     def __init__(self, kgm_path, config_name = 'DEFAULT'):
         w_config = get_config(config_name)
         self.fuseki_url = w_config['backend-url']
-        self.kgm_path = kgm_path
+        self.kgm_g = get_kgm_graph(w_config, kgm_path)
+        if self.kgm_g is None:
+            raise Exception(f"can't find graph on kgm path {kgm_path}")
         self.all_user_classes = {} # URI -> UserClass
         self.all_user_objects = {} # URI -> UserObject
         self.just_created_uo = set()
@@ -37,8 +40,9 @@ class Database:
         return self.all_user_classes.get(uc_uri)        
         
     def create_user_object(self, uc_uri:URI) -> UserObject:
-        new_uri = URI(":" + uc_uri.get_suffix() + "--" + str(uuid.uuid4()))
-        ret = UserObject(self, new_uri, uc_uri)
+        uc = self.get_user_class(uc_uri)
+        new_uri = URI(":" + uc.uc_uri.get_suffix() + "--" + str(uuid.uuid4()))
+        ret = UserObject(self, new_uri, uc)
         self.just_created_uo.add(ret)
         return ret
 
@@ -83,7 +87,7 @@ class Database:
             for t in dels_inss[1]:
                 print("ins: ", t.subject.as_turtle(), t.pred.as_turtle(), t.object_.as_turtle())
 
-        rq_delete_insert(self.kgm_path, dels_inss, config = {'backend-url': self.fuseki_url})
+        rq_delete_insert(self.kgm_g, dels_inss, config = {'backend-url': self.fuseki_url})
 
         self.just_created_uo.clear()
         self.just_created_uc.clear()
@@ -103,7 +107,7 @@ class Database:
     def load_user_classes__(self):
         rq = make_rq("""\
         select ?uc ?uc_m_name ?uc_m_is_class ?uc_m_type ?uc_m_minc ?uc_m_maxc {
-          ?g kgm:path "%kgm_path%"
+          bind(%kgm_g% as ?g)
           graph ?g {
            ?uc rdf:type rdfs:Class.
            ?uc sh:property ?uc_p.
@@ -115,11 +119,13 @@ class Database:
            }
           }
         }
-        """.replace("%kgm_path%", self.kgm_path))
+        """.replace("%kgm_g%", self.kgm_g.as_turtle()))
 
         rq_res = pd.DataFrame.from_dict(rq_select(rq, config = {'backend-url': self.fuseki_url}))
-        #print(rq_res)
         #ipdb.set_trace()
+        
+        print(rq_res)
+        ipdb.set_trace()
         
         for ii, r in rq_res.iterrows():            
             uc_uri = r['uc']
@@ -129,17 +135,17 @@ class Database:
             max_c = r['uc_m_maxc'].as_python() if r['uc_m_maxc'] is not None else -1
             uc.add_member(r['uc_m_name'], r['uc_m_type'], r['uc_m_minc'].as_python(), max_c, just_created = False)
     
-    def load_user_object(self, uo_uri: URI) -> UserObject:
+    def load_user_object(self, req_uo_uri: URI) -> UserObject:
         #ipdb.set_trace()
-        if isinstance(uo_uri, str):
-            uo_uri = URI(uo_uri)
+        if isinstance(req_uo_uri, str):
+            req_uo_uri = URI(req_uo_uri)
         
         rq = make_rq(f"""\
         select ?uo ?uo_member ?uo_member_value
         where {{
-         ?g kgm:path \"{self.kgm_path}\" .
+         bind({self.kgm_g.as_turtle()} as ?g)
          graph ?g {{
-          bind({uo_uri.as_turtle()} as ?s_uo)
+          bind({req_uo_uri.as_turtle()} as ?s_uo)
           ?uo ?uo_member ?uo_member_value
           filter(!(?uo_member in (sh:property, sh:path, sh:datatype, sh:class, sh:minCount, sh:maxCount, dash:closedByType)))
           filter(!(?uo_member_value in (sh:NodeShape, rdfs:Class)))
@@ -186,7 +192,7 @@ class Database:
                 else:
                     uo_m.add(m_v)
                     
-        return self.all_user_objects[uo_uri]
+        return self.all_user_objects[req_uo_uri]
 
     def select_in_current_graph(self, rq_over_current_graph):
         rq = make_rq(f"""\

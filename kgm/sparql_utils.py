@@ -118,7 +118,8 @@ def rq_update(rq, *, config):
 
     return results
 
-def rq_delete_insert(kgm_path, dels_inss, *, config):
+def rq_delete_insert(kgm_g, dels_inss, *, config):
+    assert(isinstance(kgm_g, URI))           
     if len(dels_inss[0]) == 0 and len(dels_inss[1]) == 0:
         return None
 
@@ -127,10 +128,12 @@ def rq_delete_insert(kgm_path, dels_inss, *, config):
     
     rq = make_rq("")
     if len(delete_triples) > 0:
-        rq += f"delete {{ graph ?g {{ \n {'\n'.join(delete_triples)} \n }} }}\n"
+        delete_triples_s = '\n'.join(delete_triples)
+        rq += f"delete {{ graph ?g {{ \n {delete_triples_s} \n }} }}\n"
     if len(insert_triples) > 0:
-        rq += f"insert {{ graph ?g {{ \n {'\n'.join(insert_triples)} \n }} }}\n"
-    rq += f'where {{ ?g kgm:path "{kgm_path}" }}'
+        insert_triples_s = '\n'.join(insert_triples)
+        rq += f"insert {{ graph ?g {{ \n {insert_triples_s} \n }} }}\n"
+    rq += f'where {{ bind({kgm_g.as_turtle()} as ?g) }}'
 
     print(rq)
 

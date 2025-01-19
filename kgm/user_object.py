@@ -1,3 +1,4 @@
+import ipdb
 from kgm.rdf_utils import rdf, xsd, URI, Literal, RDFObject, RDFTriple
 
 class UserClassMember:
@@ -17,6 +18,7 @@ class UserClass:
     def add_member(self, m_path_uri:URI, m_type_uri:URI, min_c:int, max_c:int, just_created:bool = True):
         if m_path_uri in self.members:
             raise Exception(f"this member already added: {m_path_uri.as_turtle()}")
+        ipdb.set_trace()
         new_uc_m = UserClassMember(self, m_path_uri, m_type_uri, min_c, max_c)
         self.members[m_path_uri] = new_uc_m
         if just_created:
@@ -27,7 +29,12 @@ class UserClass:
         for k, v in self.members.items():
             ret.load_add_member(v.m_path_uri, v.m_type_uri, v.min_c, v.max_c)
         return ret
-        
+
+    def show(self):
+        print("uc_uri:", self.uc_uri)
+        for k, v in self.members.items():
+            print(k, "   ", v)
+    
 class UserObjectMemberEditor:
     def __init__(self, uo, m_path_uri, m_type_uri, min_c, max_c):
         self.uo = uo
@@ -105,13 +112,22 @@ class UOImpl:
         self.uc_uri = uc_uri
     
 class UserObject:
-    def __init__(self, db, uo_uri, uc_uri):
-        self._uo_impl = UOImpl(db, uo_uri, uc_uri)
+    def __init__(self, db, uo_uri, uc):
+        assert(isinstance(uc, UserClass))
+        self._uo_impl = UOImpl(db, uo_uri, uc.uc_uri)
         self._storage = {}  # m_path URI -> UserObjectmemberEditor
+        for k, v in uc.members.items():
+            #ipdb.set_trace()
+            m_path_uri = v.m_path_uri; m_type_uri = v.m_type_uri
+            min_c = v.min_c; max_c = v.max_c
+            self._storage[m_path_uri] = UserObjectMemberEditor(self, m_path_uri, m_type_uri, min_c, max_c)
 
     def get_uri(self):
         return self.get_impl().uo_uri
-        
+
+    def get_db(self):
+        return self.get_impl().db
+    
     def get_impl(self):
         return getattr(self, "_uo_impl")
         
