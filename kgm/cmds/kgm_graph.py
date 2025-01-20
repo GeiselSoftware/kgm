@@ -169,7 +169,9 @@ def do_show(w_config, curie):
       graph ?g
       {{ 
         bind({curie} as ?s_uo)
-        ?uo ?uo_member ?uo_member_value .
+        ?uo ?uo_member ?uo_member_value 
+        filter(!(?uo_member in (sh:property, sh:path, sh:datatype, sh:class, sh:minCount, sh:maxCount, dash:closedByType, sh:closed)))
+        filter(!(?uo_member_value in (sh:NodeShape, rdfs:Class)))
         ?s_uo (<>|!<>)* ?uo .
       }}
     }}

@@ -9,9 +9,15 @@ from kgm.sparql_utils import make_rq, rq_select, rq_delete_insert
 from kgm.user_object import UserClass, UserObject
 
 class Database:
-    def __init__(self, kgm_path, config_name = 'DEFAULT'):
+    def __init__(self, kgm_path, config_name = 'DEFAULT', init_clickhouse = False):
         w_config = get_config(config_name)
         self.fuseki_url = w_config['backend-url']
+        if init_clickhouse:
+            import clickhouse_connect
+            self.clickhouse_db = clickhouse_connect.get_client(host=w_config['clickhouse-host'], port=w_config['clickhouse-port'],
+                                                               username=w_config['clickhouse-username'],
+                                                               password=w_config['clickhouse-password'] if 'clickhouse-password' in w_config else '')
+            
         self.kgm_g = get_kgm_graph(w_config, kgm_path)
         if self.kgm_g is None:
             raise Exception(f"can't find graph on kgm path {kgm_path}")
@@ -67,7 +73,7 @@ class Database:
                 inss.append(RDFTriple(prop, sh.max_c, Literal.from_python(uc_m.max_c)))
         
         for uo in self.just_created_uo:
-            inss.append(RDFTriple(uo.get_impl().uo_uri, rdf.type, uo.get_impl().uc_uri))
+            inss.append(RDFTriple(uo.get_impl().uo_uri, rdf.type, uo.get_impl().uc.uc_uri))
             
         for uo_m in self.changed_uo_members:
             m_dels_inss = uo_m.get_dels_inss__()

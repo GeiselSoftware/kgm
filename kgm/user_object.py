@@ -123,21 +123,24 @@ class UserObjectMemberEditor:
         return (dels, inss)
     
 class UOImpl:
-    def __init__(self, db, uo_uri, uc_uri):
+    def __init__(self, db, uo_uri, uc):
         self.db = db
         self.uo_uri = uo_uri
-        self.uc_uri = uc_uri
+        self.uc = uc
     
 class UserObject:
     def __init__(self, db, uo_uri, uc):
         assert(isinstance(uc, UserClass))
-        self._uo_impl = UOImpl(db, uo_uri, uc.uc_uri)
-        self._storage = {}  # m_path URI -> UserObjectmemberEditor
+        self._uo_impl = UOImpl(db, uo_uri, uc)
+        self._storage = {}  # py member name -> UserObjectmemberEditor
         for k, v in uc.members.items():
             #ipdb.set_trace()
             m_path_uri = v.m_path_uri; m_type_uri = v.m_type_uri
             min_c = v.min_c; max_c = v.max_c
-            self._storage[m_path_uri] = UserObjectMemberEditor(self, m_path_uri, m_type_uri, min_c, max_c)
+            py_m_name = m_path_uri.get_suffix()
+            if py_m_name in self._storage:
+                raise Exception(f"dup member name {py_m_name} on member path URI {m_path_uri.as_turtle()}")
+            self._storage[py_m_name] = UserObjectMemberEditor(self, m_path_uri, m_type_uri, min_c, max_c)
 
     def get_uri(self):
         return self.get_impl().uo_uri
@@ -154,9 +157,9 @@ class UserObject:
             # Bypass restriction for internal attributes
             super().__setattr__(name, value)
         else:
-            uri = URI(":" + name)
-            if uri in self._storage:
-                uoe = self._storage[uri]
+            #ipdb.set_trace()
+            if name in self._storage:
+                uoe = self._storage[name]
                 print("setting value:", value)
                 if uoe.is_scalar():
                     uoe.set_scalar(value)
@@ -168,10 +171,9 @@ class UserObject:
     
     def __getattr__(self, name):
         # Provide access to restricted attributes
-        uri = URI(":" + name)
-        if uri in self._storage:
+        if name in self._storage:
             #ipdb.set_trace()
-            uoe = self._storage.get(uri)
+            uoe = self._storage.get(name)
             if uoe.is_scalar():
                 return uoe.get_scalar() # will return python object
             else:
@@ -185,7 +187,7 @@ class UserObject:
         assert(isinstance(m_path_s, str))
         m_path_uri = URI(":" + m_path_s)
         db = self.get_impl().db
-        uc = db.get_user_class(self.get_impl().uc_uri)
+        uc = db.get_impl().uc
         uc.add_member(m_path_uri, m_type_uri, min_c, max_c)
         self._storage[m_path_uri] = UserObjectMemberEditor(self, m_path_uri, m_type_uri, min_c, max_c)
 

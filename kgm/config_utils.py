@@ -6,7 +6,13 @@ class Config:
     def default_config_file_content__():
         return """\
 [DEFAULT]
+# fuseki
 backend-url: http://localhost:3030/kgm-default-dataset
+# clickhouse
+#clickhouse-host: localhost
+#clickhouse-port: 18123
+#clickhouse-username: default
+#clickhouse-password:
 """
 
     def load_config(self, create_ini = True):
