@@ -3,7 +3,7 @@ import kgm
 import clickhouse_connect
 import numpy as np
 
-class TimeSeries:
+class Series:
     def __init__(self, ts_m:kgm.UserObject, clickhouse_db):
         self.ts_m = ts_m
         self.clickhouse_db = clickhouse_db
@@ -11,7 +11,7 @@ class TimeSeries:
 
         tn = self.ts_m.tablename = str(uuid.uuid4()).replace("-", "_")
         q = f"create table {tn} ( serno Int64, value Float64 ) engine = MergeTree() order by (serno)"
-        print(q)
+        #print(q)
         self.clickhouse_db.command(q)
         self.ts_m.get_db().save()
         
@@ -31,7 +31,7 @@ if __name__ == "__main__":
     gdb.save()
 
     print("ts_m:", ts_m.get_uri())
-    ts = TimeSeries(ts_m, ccdb)
+    ts = Series(ts_m, ccdb)
 
     if 1:
         for i in range(100):
