@@ -1,10 +1,99 @@
-#import ipdb
+import ipdb
 import sys
 import rdflib
 import urllib
 import pandas as pd
 from ..sparql_utils import make_rq, rq_select, rq_insert_graph, rq_update
 from ..kgm_utils import *
+
+
+# initialize new fuseki server dataset
+def do_server_init(w_config):
+    # this list of prefixes used only in update queries during init to create kgm server defult graph
+    w_prefixes = """\
+    prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+    prefix xsd: <http://www.w3.org/2001/XMLSchema#>
+    prefix sh: <http://www.w3.org/ns/shacl#>
+    prefix kgm: <http://www.geisel-software.com/RDF/KGM#>
+    """
+
+    #ipdb.set_trace()
+    rq_res = rq_select(f"""\
+    {w_prefixes}
+    select ?s {{ ?s rdf:type kgm:DefaultServerGraph }}
+    """, config = w_config)
+
+    if len(rq_res["s"]) > 0:
+        raise Exception("kgm init failed: dataset is already initialized")
+
+    # start shaping kgm default graph
+    """
+    class kgm:RDFPrefix
+      kgm:prefix xsd:string
+      kgm:prefix_uri xsd:string
+    end
+
+    class kgm:DefaultServerGraph
+      kgm:fuseki_dataset_name xsd:string
+      kgm:known_prefixes kgm:RDFPrefix[0..n]
+    end
+
+    class kgm:Graph
+      kgm:path xsd:string
+    end
+    """
+
+    raw_rq = []
+    
+    raw_rq.append("""\
+    kgm:RDFPrefix rdf:type rdfs:Class; rdf:type sh:NodeShape; sh:closed true;
+    sh:property [ sh:path kgm:prefix; sh:datatype xsd:string; sh:minCount 1; sh:maxCount 1];
+    sh:property [ sh:path kgm:prefix_uri; sh:datatype xsd:string; sh:minCount 1; sh:maxCount 1];
+    .
+
+    kgm:DefaultServerGraph rdf:type rdfs:Class; rdf:type sh:NodeShape; sh:closed true;
+    sh:property [ sh:path kgm:fuseki_dataset_name; sh:datatype xsd:string; sh:minCount 1; sh:maxCount 1 ];
+    sh:property [ sh:path kgm:known_prefixes; sh:class kgm:RDFPrefix; sh:minCount 0 ];
+    .
+    
+    kgm:Graph rdf:type rdfs:Class; rdf:type sh:NodeShape; sh:closed true;
+    sh:property [ sh:path kgm:path; sh:datatype xsd:string; sh:minCount 1; sh:maxCount 1];
+    .
+    """)
+
+    raw_rq.append("""\
+    kgm:dsg rdf:type kgm:DefaultServerGraph; kgm:fuseki_dataset_name "kgm-default-dataset" .
+    """)
+
+    default_kgm_dataset_prefixes = {
+        "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+        "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+        "xsd": "http://www.w3.org/2001/XMLSchema#",
+        "sh": "http://www.w3.org/ns/shacl#",
+        "dash": "http://datashapes.org/dash#",
+        "kgm": "http://www.geisel-software.com/RDF/KGM#"
+    }
+
+    for prefix, prefix_uri in default_kgm_dataset_prefixes.items():
+        raw_rq.append(f"""\
+        kgm:dsg kgm:prefix [ 
+          rdf:type kgm:RDFPrefix; 
+          kgm:prefix "{prefix}"; 
+          kgm:prefix_uri "{prefix_uri}"
+        ].
+        """)        
+
+    raw_rq = "\n".join(raw_rq)
+    update_rq = f"""\
+    {w_prefixes}
+    insert data {{
+      {raw_rq}
+    }}
+    """
+    #ipdb.set_trace()
+    rq_update(update_rq, config = w_config)
+
 
 def do_ls(w_config, path):
     #print("do_ls:", path)

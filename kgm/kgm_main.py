@@ -32,6 +32,12 @@ def show_config(ctx):
     print("current config name:", w_config_name)
     print("current config:", w_config)
 
+@cli.command("init", help = "initializes server")
+@click.pass_context
+def graph_init(ctx):
+    _, w_config = ctx.obj["config"]
+    kgm_graph.do_server_init(w_config)
+    
 @cli.command("ls", help = "lists available graphs")
 @click.argument("path", required = False)
 @click.pass_context
