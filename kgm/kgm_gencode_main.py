@@ -1,6 +1,7 @@
 import click
 import importlib
-from .config_utils import load_config
+from .config_utils import get_config
+from .database import Database
 from .gencode import gencode_cs as mod_gencode_cs
 
 class CustomGroup(click.Group):
@@ -21,8 +22,8 @@ class CustomGroup(click.Group):
 def cli(ctx, config):
     #print("cli pre-subcommand:", version, config)
     ctx.ensure_object(dict)
-    ctx.obj['config'] = load_config(config)
-    #print(ctx.obj['config'])
+    config_name = 'DEFAULT'
+    ctx.obj['config'] = (config_name, get_config(config_name))
 
 @cli.command("cs", help = "C# generation")
 @click.argument("kgm-path", required = True)
@@ -32,9 +33,9 @@ def cli(ctx, config):
 def gencode_cs(ctx, kgm_path, cs_namespace, output_dir):
     #print("gencode_cs:", ctx.obj)
     _, w_config = ctx.obj["config"]
-
-    #mod_gencode_cs.gencode_cs(w_config, kgm_path, user_class_uri, cs_namespace)
-    mod_gencode_cs.gencode_for_namespace(w_config, kgm_path, cs_namespace, output_dir)
+    fuseki_url = w_config['backend-url']    
+    db = Database(fuseki_url)
+    mod_gencode_cs.gencode_for_namespace(db, kgm_path, cs_namespace, output_dir)
 
 def main():
     cli(max_content_width = 120)

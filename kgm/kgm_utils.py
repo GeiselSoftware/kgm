@@ -11,7 +11,7 @@ def create_kgm_graph(db, path):
     descr_g.append((graph_uri, rdf.type, RDFObject(kgm.Graph)))
     descr_g.append((graph_uri, kgm.path, RDFObject(Literal(path, xsd.string))))
 
-    rq_insert_graph(db, descr_g, None)
+    db.rq_insert_triples(descr_g, None)
     return graph_uri
 
 # returns uri on kgm path

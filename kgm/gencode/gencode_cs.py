@@ -2,8 +2,8 @@
 import sys, os
 from enum import Enum
 import pandas as pd
-from ..rdf_utils import xsd_dflt_cs_values, restore_prefix__, collapse_prefix__, xsd, URI, Literal
-from ..sparql_utils import make_rq, rq_select, rq_insert_graph, rq_update
+from ..rdf_utils import xsd_dflt_cs_values, xsd, URI, Literal
+from ..database import Database
 
 class UserClass:
     def __init__(self, uc_uri, cs_namespace):
@@ -69,12 +69,12 @@ def get_cs_dflt_value(cs_m_type:str):
         raise Exception(f"unsupported CS type {cs_m_type}")
     return ret
     
-def gencode_cs_class(w_config, kgm_path, uc_uri_s, cs_namespace):    
+def gencode_cs_class(db, kgm_path, uc_uri_s, cs_namespace):    
     #ipdb.set_trace()
     uc_uri = URI(uc_uri_s)
     #print("gencode_cs")
     
-    rq = make_rq("""
+    rq = """
     select ?uc ?uc_m ?uc_m_minc ?uc_m_maxc ?uc_m_is_class ?uc_m_type {
       ?g kgm:path "{{kgm_path}}".
       graph ?g {
@@ -87,11 +87,10 @@ def gencode_cs_class(w_config, kgm_path, uc_uri_s, cs_namespace):
           union { optional { ?uc_p sh:class ?uc_m_type bind(true as ?uc_m_is_class)} }
         }
     }
-    """.replace("{{kgm_path}}", kgm_path)
-                 .replace("{{uc_uri.as_turtle()}}", uc_uri.as_turtle())
-    )
+    """.replace("{{kgm_path}}", kgm_path).replace("{{uc_uri.as_turtle()}}", uc_uri.as_turtle())
+    
     #print(rq)
-    rq_res = pd.DataFrame(rq_select(rq, config = w_config))
+    rq_res = pd.DataFrame(db.rq_select(rq))
     #ipdb.set_trace()
     #print(rq_res)
 
@@ -277,20 +276,20 @@ def gencode_cs_namespace(cs_namespace, user_class_uris):
     """
     return code
     
-def gencode_for_namespace(w_config, kgm_path, cs_namespace, output_dir):
+def gencode_for_namespace(db:Database, kgm_path, cs_namespace, output_dir):
     if output_dir != "-":
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
         
-    rq = make_rq("""
+    rq = """
     select ?uc
     where {
         ?g kgm:path "{{kgm_path}}" .
         graph ?g { ?uc rdf:type rdfs:Class }
     }
-    """.replace("{{kgm_path}}", kgm_path))
+    """.replace("{{kgm_path}}", kgm_path)
 
-    rq_res = pd.DataFrame(rq_select(rq, config = w_config))
+    rq_res = pd.DataFrame(db.rq_select(rq))
     #print(rq_res)
 
     res_code = gencode_cs_namespace(cs_namespace, [r.uc for r in rq_res.itertuples()])
@@ -305,7 +304,7 @@ def gencode_for_namespace(w_config, kgm_path, cs_namespace, output_dir):
     for r in rq_res.itertuples():
         #print("UC:", r.uc)
         cs_class = r.uc.get_suffix()
-        res_code = gencode_cs_class(w_config, kgm_path, r.uc.as_turtle(), cs_namespace)
+        res_code = gencode_cs_class(db, kgm_path, r.uc.as_turtle(), cs_namespace)
         if output_dir != "-":
             out_fn = os.path.join(output_dir, f"{cs_class}.cs")
             print(f"generating {out_fn}")

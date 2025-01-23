@@ -39,8 +39,8 @@ def show_config(ctx):
 def graph_ls(ctx, path):
     _, w_config = ctx.obj["config"]
     fuseki_url = w_config['backend-url']
-    db = Database(path, fuseki_url)
-    kgm_graph.do_ls(db, path)
+    db = Database(fuseki_url)
+    kgm_graph.do_ls(db, path_mask = path)
 
 @cli.command("new", help = "creates new empty graph at given path")
 @click.argument("path", required = True)
@@ -48,7 +48,7 @@ def graph_ls(ctx, path):
 def graph_new(ctx, path):
     _, w_config = ctx.obj["config"]
     fuseki_url = w_config['backend-url']
-    db = Database(path, fuseki_url)
+    db = Database(fuseki_url)
     kgm_graph.do_new(db, path)
     
 @cli.command("import", help = "import ttl file into the graph")
@@ -58,7 +58,7 @@ def graph_new(ctx, path):
 def graph_import(ctx, path, ttl_file):
     _, w_config = ctx.obj["config"]
     fuseki_url = w_config['backend-url']
-    db = Database(path, fuseki_url)    
+    db = Database(fuseki_url)    
     kgm_graph.do_import(db, path, ttl_file)
 
 @cli.command("cat", help = "prints graph to stdout")
@@ -68,7 +68,7 @@ def graph_import(ctx, path, ttl_file):
 def graph_cat(ctx, path, as_ksd):
     _, w_config = ctx.obj["config"]
     fuseki_url = w_config['backend-url']
-    db = Database(path, fuseki_url)
+    db = Database(fuseki_url)
     if as_ksd:
         mod_ksd_parser.KSDParser.dump_ksd(db, path)
     else:
@@ -80,7 +80,7 @@ def graph_cat(ctx, path, as_ksd):
 def graph_show(ctx, uri):
     _, w_config = ctx.obj["config"]
     fuseki_url = w_config['backend-url']
-    db = Database(path, fuseki_url)    
+    db = Database(fuseki_url)    
     kgm_graph.do_show(db, uri)
     
 @cli.command("remove", help = "removes graph")
@@ -89,7 +89,7 @@ def graph_show(ctx, uri):
 def graph_remove(ctx, path):
     _, w_config = ctx.obj["config"]
     fuseki_url = w_config['backend-url']
-    db = Database(path, fuseki_url)    
+    db = Database(fuseki_url)    
     kgm_graph.do_remove(db, path)
 
 @cli.command("copy", help = "copy graph to new path")
@@ -99,7 +99,7 @@ def graph_remove(ctx, path):
 def do_copy(ctx, source_path, dest_path):
     _, w_config = ctx.obj["config"]
     fuseki_url = w_config['backend-url']
-    db = Database(path, fuseki_url)    
+    db = Database(fuseki_url)    
     kgm_graph.do_copy(db, source_path, dest_path)
 
 @cli.command("rename", help = "changes the path of the graph leaving graph content intact")
@@ -109,7 +109,7 @@ def do_copy(ctx, source_path, dest_path):
 def do_rename(ctx, path, new_path):
     _, w_config = ctx.obj["config"]
     fuseki_url = w_config['backend-url']
-    db = Database(path, fuseki_url)    
+    db = Database(fuseki_url)    
     kgm_graph.do_rename(db, path, new_path)
 
 @cli.command("query")

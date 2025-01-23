@@ -2,9 +2,6 @@
 import os
 import tempfile
 import pandas as pd
-from kgm.rdf_utils import prefix_man
-#from ..rdf_utils import restore_prefix__
-#from ..sparql_utils import rq_construct, rq_select, make_rq
 
 def do_validate(db, shacl_kgm_path, kgm_path):
     #ipdb.set_trace()

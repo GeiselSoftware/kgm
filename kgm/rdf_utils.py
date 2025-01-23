@@ -1,6 +1,6 @@
 #import ipdb
 
-class PrefixMan:
+class PrefixManager:
     def __init__(self):
         self.is_initialized = False
         self.prefixes = {} # prefix -> prefix_uri
@@ -21,8 +21,6 @@ class PrefixMan:
             if curie.find(prefix) == 0:
                 return curie.replace(prefix + ":", prefix_uri)
         raise Exception("can't restore prefix in curie", curie)
-
-prefix_man = PrefixMan()
 
 class URI:
     def __init__(self, uri:str):

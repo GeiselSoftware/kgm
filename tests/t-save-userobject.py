@@ -1,15 +1,17 @@
 import ipdb
-from kgm.database import *
+from kgm import Database, KGMGraph
+from kgm import URI, xsd
 
 if __name__ == "__main__":
     #ipdb.set_trace()
     fuseki_url = "http://localhost:3030/kgm-default-dataset"
-    gdb = Database(fuseki_url, "/py-test")
+    db = Database(fuseki_url)
+    kgm_g = KGMGraph(db, "/py-test")
     uc = URI(":Human")
-    if not gdb.has_user_class(uc):
-        gdb.create_user_class(uc)
+    if not kgm_g.has_user_class(uc):
+        kgm_g.create_user_class(uc)
     
-    obj = gdb.create_user_object(URI(":Human"))
+    obj = kgm_g.create_user_object(URI(":Human"))
     print(obj.get_impl())
     
     # Adding new accessible attributes dynamically
@@ -34,8 +36,8 @@ if __name__ == "__main__":
     except AttributeError as e:
         print(e)  # Output: Attribute 'salary' is not accessible.
 
-    gdb.create_user_class(URI(":Pet"))
-    bim = gdb.create_user_object(URI(":Pet"))
+    kgm_g.create_user_class(URI(":Pet"))
+    bim = kgm_g.create_user_object(URI(":Pet"))
     bim.add_member("name", xsd.string, 1, 1)
     bim.name = "Bim"
     print(bim.name)
@@ -45,4 +47,4 @@ if __name__ == "__main__":
     obj.pet = bim
     obj.pets.add(bim)
     
-    gdb.save()
+    kgm_g.save()
