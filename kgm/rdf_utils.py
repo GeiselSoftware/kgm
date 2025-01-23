@@ -1,13 +1,39 @@
 #import ipdb
 
+class PrefixMan:
+    def __init__(self):
+        self.is_initialized = False
+        self.prefixes = {} # prefix -> prefix_uri
+
+    def collapse_prefix(self, uri:str) -> str:
+        assert(self.is_initialized)
+        assert(type(uri) == str)
+        for p, p_uri in self.prefixes.items():
+            #print(uri, p_uri)
+            if uri.find(p_uri) == 0:
+                return uri.replace(p_uri, p + ":")
+        raise Exception("can't collapse prefix for URI:", uri)
+
+    def restore_prefix(self, curie:str) -> str:
+        assert(self.is_initialized)
+        assert(type(curie) == str)    
+        for prefix, prefix_uri in self.prefixes.items():
+            if curie.find(prefix) == 0:
+                return curie.replace(prefix + ":", prefix_uri)
+        raise Exception("can't restore prefix in curie", curie)
+
+prefix_man = PrefixMan()
+
 class URI:
-    def __init__(self, compact_uri):
-        assert(type(compact_uri) == str)
-        if len(compact_uri) >= 2 and compact_uri[0] == "<" and compact_uri[-1] == ">":
+    def __init__(self, uri:str):
+        global prefix_man
+        assert(type(uri) == str)
+        self.compact_uri = None
+        if len(uri) >= 2 and uri[0] == "<" and uri[-1] == ">":
             # need to convert to compact uri
-            self.compact_uri = collapse_prefix__(compact_uri)
+            self.compact_uri = prefix_man.collapse_prefix(uri)
         else:
-            self.compact_uri = compact_uri
+            self.compact_uri = uri
 
     def __repr__(self):
         return self.compact_uri
@@ -156,18 +182,6 @@ class kgm:
 kgm.Graph = build_uri__(kgm, "Graph")
 kgm.path = build_uri__(kgm, "path")
 
-class ab:
-    prefix__ = "ab"
-    prefix_uri__ = "http://www.geisel-software.com/RDF/alice-bob#"
-    
-class nw:
-    prefix__ = "nw"
-    prefix_uri__ = "http://www.geisel-software.com/RDF/NorthWind#"
-
-class __:
-    prefix__ = ""
-    prefix_uri__ = "http://www.geisel-software.com/RDF/KGM/TestUser#"
-
 known_prefixes = {
     rdf.prefix__: rdf.prefix_uri__,
     rdfs.prefix__: rdfs.prefix_uri__,
@@ -175,23 +189,5 @@ known_prefixes = {
     sh.prefix__: sh.prefix_uri__,
     dash.prefix__: dash.prefix_uri__,
     kgm.prefix__: kgm.prefix_uri__,
-    ab.prefix__: ab.prefix_uri__,
-    nw.prefix__: nw.prefix_uri__,
-    __.prefix__: __.prefix_uri__
 }
-
-def collapse_prefix__(uri:str):
-    assert(type(uri) == str)
-    for p, p_uri in known_prefixes.items():
-        #print(uri, p_uri)
-        if uri.find(p_uri) == 0:
-            return uri.replace(p_uri, p + ":")
-    raise Exception("can't collapse prefix for URI:", uri)
-
-def restore_prefix__(curie:str):
-    assert(type(curie) == str)    
-    for prefix, prefix_uri in known_prefixes.items():
-        if curie.find(prefix) == 0:
-            return curie.replace(prefix + ":", prefix_uri)
-    raise Exception("can't restore prefix in curie", curie)
 

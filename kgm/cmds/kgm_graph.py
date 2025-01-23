@@ -3,31 +3,29 @@ import sys
 import rdflib
 import urllib
 import pandas as pd
-from ..sparql_utils import make_rq, rq_select, rq_insert_graph, rq_update
+#from ..sparql_utils import make_rq, rq_select, rq_insert_graph, rq_update
 from ..kgm_utils import *
 
-def do_ls(w_config, path):
+def do_ls(db, path):
     #print("do_ls:", path)
-    query = make_rq("""
-    select ?kgm_path ?g { ?g rdf:type kgm:Graph; kgm:path ?kgm_path } 
-    """)
+    query = "select ?kgm_path ?g { ?g rdf:type kgm:Graph; kgm:path ?kgm_path }"
     #print(query)
     #ipdb.set_trace()
     
-    res = rq_select(query, config = w_config)
+    res = db.rq_select(query)
     print(pd.DataFrame(res).map(lambda x: x.as_turtle()))
 
-def do_new(w_config, path):
+def do_new(db, path):
     print("do_graph_new:", path)
 
-    graph_uri = get_kgm_graph(w_config, path)
+    graph_uri = get_kgm_graph(db, path)
     if graph_uri is not None:
-        print(f"graph exists on path {path}, giving up, graph was {graph_uri.uri}")
+        print(f"graph exists on path {path}, giving up, graph was {graph_uri}")
         return
     del graph_uri
 
     #ipdb.set_trace()
-    graph_uri = create_kgm_graph(w_config, path)
+    graph_uri = create_kgm_graph(db, path)
     print(f"created graph at path {path}: {graph_uri}")
 
 def do_cat(w_config, path):

@@ -5,21 +5,21 @@ from .sparql_utils import *
 def create_uri(rdfs_class: URI) -> URI:
     return URI(rdfs_class.as_turtle() + "--" + str(uuid.uuid4()))
         
-def create_kgm_graph(w_config, path):
+def create_kgm_graph(db, path):
     descr_g = []
     graph_uri = create_uri(kgm.Graph)
     descr_g.append((graph_uri, rdf.type, RDFObject(kgm.Graph)))
     descr_g.append((graph_uri, kgm.path, RDFObject(Literal(path, xsd.string))))
 
-    rq_insert_graph(descr_g, None, config = w_config)
+    rq_insert_graph(db, descr_g, None)
     return graph_uri
 
 # returns uri on kgm path
-def get_kgm_graph(w_config, path):
-    rq = make_rq(f'select ?s ?p ?o where {{ ?s kgm:path "{path}"; rdf:type kgm:Graph }}')
+def get_kgm_graph(db, path):
+    rq = f'select ?s ?p ?o where {{ ?s kgm:path "{path}"; rdf:type kgm:Graph }}'
     #print(rq)
 
-    rq_res = rq_select(rq, config = w_config)
+    rq_res = db.rq_select(rq)
     graph_uris = rq_res['s']
     #ipdb.set_trace()
     #print(rq_res)

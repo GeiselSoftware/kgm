@@ -2,16 +2,18 @@
 import uuid
 import pandas as pd
 from kgm.config_utils import get_config
+from kgm.rdf_utils import prefix_man
 from kgm.rdf_utils import rdf, xsd, URI, Literal, RDFObject, RDFTriple
 from kgm.rdf_utils import rdfs, sh, dash, BNode
-from kgm.sparql_utils import make_rq, rq_select, rq_delete_insert
+#from kgm.sparql_utils import make_rq, rq_select, rq_delete_insert
+import kgm.sparql_utils as sparql_utils
 from kgm.user_object import UserClass, UserObject
 
 class Database:
-    def __init__(self, kgm_path, config_name = 'DEFAULT'):
-        w_config = get_config(config_name)
-        self.fuseki_url = w_config['backend-url']
+    def __init__(self, kgm_path, fuseki_url):
         self.kgm_path = kgm_path
+        self.fuseki_url = fuseki_url
+
         self.all_user_classes = {} # URI -> UserClass
         self.all_user_objects = {} # URI -> UserObject
         self.just_created_uo = set()
@@ -19,8 +21,21 @@ class Database:
         self.just_created_uc_members = set()
         self.changed_uo_members = set()
 
+        self.init_prefix_manager__()
         self.load_user_classes__()
 
+    def init_prefix_manager__(self):
+        """
+        rq = "select prefix, prefix_uri { kgm:dsg kgm:prefixes [ kgm:prefix ?prefix; kgm:prefix_uri ?prefix_uri ] }"
+        """
+
+        # this version uses constants defined in rdf_utils
+        # NB: replace with query to DSG prefixes set
+        from kgm.rdf_utils import known_prefixes
+        for prefix, prefix_uri in known_prefixes.items():
+            prefix_man.prefixes[prefix] = prefix_uri
+        prefix_man.is_initialized = True
+        
     def create_user_class(self, uc_uri:URI) -> UserClass:
         if uc_uri in self.all_user_classes:
             raise Exception(f"such user class already defined: {uc_uri.as_turtle()}")
@@ -101,7 +116,7 @@ class Database:
         return None
 
     def load_user_classes__(self):
-        rq = make_rq("""\
+        rq = """\
         select ?uc ?uc_m_name ?uc_m_is_class ?uc_m_type ?uc_m_minc ?uc_m_maxc {
           ?g kgm:path "%kgm_path%"
           graph ?g {
@@ -115,9 +130,9 @@ class Database:
            }
           }
         }
-        """.replace("%kgm_path%", self.kgm_path))
+        """.replace("%kgm_path%", self.kgm_path)
 
-        rq_res = pd.DataFrame.from_dict(rq_select(rq, config = {'backend-url': self.fuseki_url}))
+        rq_res = pd.DataFrame.from_dict(self.rq_select(rq))
         #print(rq_res)
         #ipdb.set_trace()
         
@@ -134,7 +149,7 @@ class Database:
         if isinstance(uo_uri, str):
             uo_uri = URI(uo_uri)
         
-        rq = make_rq(f"""\
+        rq = f"""\
         select ?uo ?uo_member ?uo_member_value
         where {{
          ?g kgm:path \"{self.kgm_path}\" .
@@ -146,9 +161,9 @@ class Database:
           ?s_uo (<>|!<>)* ?uo
          }}
         }}
-        """)
+        """
         print(rq)
-        res = rq_select(rq, config = {'backend-url': self.fuseki_url})
+        res = self.rq_select(rq)
         res_df = pd.DataFrame.from_dict(res)
         print(res_df)
 
@@ -189,14 +204,21 @@ class Database:
         return self.all_user_objects[uo_uri]
 
     def select_in_current_graph(self, rq_over_current_graph):
-        rq = make_rq(f"""\
+        rq = f"""\
         select * {{
          ?g kgm:path "{self.kgm_path}"
          graph ?g {{
           {rq_over_current_graph}
          }}
         }}
-        """)
+        """
 
-        rq_res = rq_select(rq, config = {'backend-url': self.fuseki_url})
+        rq_res = self.rq_select(rq)
         return pd.DataFrame.from_dict(rq_res)
+
+    def rq_select(self, query:str):
+        return sparql_utils.rq_select__(prefix_man, query, config = {'backend-url': self.fuseki_url})
+
+    def rq_update(self, query:str):
+        return sparql_utils.rq_update__(prefix_man, query, config = {'backend-url': self.fuseki_url})
+    
