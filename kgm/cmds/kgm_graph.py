@@ -3,26 +3,15 @@ import sys
 import rdflib
 import urllib
 import pandas as pd
+from ..rdf_utils import well_known_prefixes
 from ..sparql_utils import make_rq, rq_select, rq_insert_graph, rq_update
 from ..kgm_utils import *
 
-
 # initialize new fuseki server dataset
 def do_server_init(w_config):
-    # this list of prefixes used only in update queries during init to create kgm server defult graph
-    w_prefixes = """\
-    prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-    prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-    prefix xsd: <http://www.w3.org/2001/XMLSchema#>
-    prefix sh: <http://www.w3.org/ns/shacl#>
-    prefix kgm: <http://www.geisel-software.com/RDF/KGM#>
-    """
-
     #ipdb.set_trace()
-    rq_res = rq_select(f"""\
-    {w_prefixes}
-    select ?s {{ ?s rdf:type kgm:DefaultServerGraph }}
-    """, config = w_config)
+    rq = make_rq("select ?s { ?s rdf:type kgm:DefaultServerGraph }")
+    rq_res = rq_select(rq, config = w_config)
 
     if len(rq_res["s"]) > 0:
         raise Exception("kgm init failed: dataset is already initialized")
@@ -36,11 +25,13 @@ def do_server_init(w_config):
 
     class kgm:DefaultServerGraph
       kgm:fuseki_dataset_name xsd:string
-      kgm:known_prefixes kgm:RDFPrefix[0..n]
+      kgm:well_known_prefixes kgm:RDFPrefix[6..6]
+      kgm:locally_known_prefixes kgm:RDFPrefix[0..n]
     end
 
     class kgm:Graph
       kgm:path xsd:string
+      kgm:dependent_graphs xsd:string[0..n] # dependent graphs idenitied by pathes
     end
     """
 
@@ -54,11 +45,13 @@ def do_server_init(w_config):
 
     kgm:DefaultServerGraph rdf:type rdfs:Class; rdf:type sh:NodeShape; sh:closed true;
     sh:property [ sh:path kgm:fuseki_dataset_name; sh:datatype xsd:string; sh:minCount 1; sh:maxCount 1 ];
-    sh:property [ sh:path kgm:known_prefixes; sh:class kgm:RDFPrefix; sh:minCount 0 ];
+    sh:property [ sh:path kgm:well_known_prefixes; sh:class kgm:RDFPrefix; sh:minCount 6; sh:maxCount 6 ];
+    sh:property [ sh:path kgm:locally_known_prefixes; sh:class kgm:RDFPrefix; sh:minCount 0 ];
     .
-    
+
     kgm:Graph rdf:type rdfs:Class; rdf:type sh:NodeShape; sh:closed true;
     sh:property [ sh:path kgm:path; sh:datatype xsd:string; sh:minCount 1; sh:maxCount 1];
+    sh:property [ sh:path kgm:dependent_graphs; sh:datatype xsd:string; sh:minCount 0];
     .
     """)
 
@@ -66,18 +59,9 @@ def do_server_init(w_config):
     kgm:dsg rdf:type kgm:DefaultServerGraph; kgm:fuseki_dataset_name "kgm-default-dataset" .
     """)
 
-    default_kgm_dataset_prefixes = {
-        "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-        "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-        "xsd": "http://www.w3.org/2001/XMLSchema#",
-        "sh": "http://www.w3.org/ns/shacl#",
-        "dash": "http://datashapes.org/dash#",
-        "kgm": "http://www.geisel-software.com/RDF/KGM#"
-    }
-
-    for prefix, prefix_uri in default_kgm_dataset_prefixes.items():
+    for prefix, prefix_uri in well_known_prefixes.items():
         raw_rq.append(f"""\
-        kgm:dsg kgm:prefix [ 
+        kgm:dsg kgm:well_known_prefix [ 
           rdf:type kgm:RDFPrefix; 
           kgm:prefix "{prefix}"; 
           kgm:prefix_uri "{prefix_uri}"
@@ -85,12 +69,11 @@ def do_server_init(w_config):
         """)        
 
     raw_rq = "\n".join(raw_rq)
-    update_rq = f"""\
-    {w_prefixes}
+    update_rq = make_rq(f"""\
     insert data {{
       {raw_rq}
     }}
-    """
+    """)
     #ipdb.set_trace()
     rq_update(update_rq, config = w_config)
 
@@ -280,3 +263,26 @@ def do_graph_select(w_config, select_query):
     rq_res = rq_select(query_text, config = w_config)
     print(rq_res)
 
+def do_graph_list_dependent_graphs(w_config, path):
+    rq = make_rq(f'select ?dep_g_path ?dep_g {{ ?g kgm:path "{path}"; kgm:dependent_graphs ?dep_g_path. ?dep_g kgm:path ?dep_g_path }}')
+    rq_res = pd.DataFrame(rq_select(rq, config = w_config))
+    print(rq_res)
+
+def do_graph_add_dependent_graph(w_config, path, dep_path):
+    rq_res = rq_select(make_rq(f'select ?dep_g {{ ?dep_g kgm:path "{dep_path}" }}'), config = w_config)
+    if len(rq_res['dep_g']) == 0:
+        raise Exception(f"can't find dep graph at path {dep_path}")
+    elif len(rq_res['dep_g']) > 1:
+        raise Exception(f"ERROR: multiple graphs at path {dep_path}")
+    else:
+        pass
+            
+    rq = make_rq(f"""\
+    insert {{ ?g kgm:dependent_graphs "{dep_path}" }}
+    where {{ ?g kgm:path "{path}" }}
+    """)
+    rq_update(rq, config = w_config)
+    
+def do_add_local_prefix(w_config, prefix, prefix_uri):
+    rq = make_rq(f'insert {{ ?dsg kgm:locally_known_prefix [rdf:type kgm:RDFPrefix; kgm:prefix "{prefix}"; kgm:prefix_uri "{prefix_uri}"] }} where {{ ?dsg rdf:type kgm:DefaultServerGraph }}')
+    rq_update(rq, config = w_config)

@@ -9,7 +9,7 @@ from .rdf_utils import *
 
 def make_rq(rq):
     #ipdb.set_trace()
-    ret = "\n".join([f"prefix {prefix}: <{prefix_uri}>" for prefix, prefix_uri in known_prefixes.items()]) + "\n" + rq
+    ret = "\n".join([f"prefix {prefix}: <{prefix_uri}>" for prefix, prefix_uri in well_known_prefixes.items()]) + "\n" + rq
     return ret
 
 def to_rdfw(d):

@@ -45,6 +45,29 @@ def graph_ls(ctx, path):
     _, w_config = ctx.obj["config"]
     kgm_graph.do_ls(w_config, path)
 
+@cli.command("ls-deps", help = "lists graph dependencies")
+@click.argument("path", required = True)
+@click.pass_context
+def graph_ls_deps(ctx, path):
+    _, w_config = ctx.obj["config"]
+    kgm_graph.do_graph_list_dependent_graphs(w_config, path)
+
+@cli.command("add-dep", help = "add graph dependencies")
+@click.argument("path", required = True)
+@click.argument("dep-path", required = True)
+@click.pass_context
+def graph_add_dep(ctx, path, dep_path):
+    _, w_config = ctx.obj["config"]
+    kgm_graph.do_graph_add_dependent_graph(w_config, path, dep_path)
+
+@cli.command("add-prefix", help = "add locally-known prefix")
+@click.argument("prefix", required = True)
+@click.argument("prefix-uri", required = True)
+@click.pass_context
+def add_local_prefix(ctx, prefix, prefix_uri):
+    _, w_config = ctx.obj["config"]
+    kgm_graph.do_add_local_prefix(w_config, prefix, prefix_uri)
+    
 @cli.command("new", help = "creates new empty graph at given path")
 @click.argument("path", required = True)
 @click.pass_context

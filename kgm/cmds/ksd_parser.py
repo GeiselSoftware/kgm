@@ -1,6 +1,6 @@
 #import ipdb
 from lark import Lark, Visitor
-from ..rdf_utils import known_prefixes
+from ..rdf_utils import well_known_prefixes
 from ..kgm_utils import get_kgm_graph
 from ..sparql_utils import make_rq, rq_select
 import pandas as pd

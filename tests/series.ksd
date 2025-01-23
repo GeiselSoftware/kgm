@@ -1,5 +1,6 @@
-prefix kgm: <http://www.geisel-software.com/RDF/KGM#>
+graph /clickhouse/series
+prefix cc: <cc#>
 
-class kgm:Series
- kgm:tablename xsd:string
+class cc:Series
+ cc:tablename xsd:string
 end

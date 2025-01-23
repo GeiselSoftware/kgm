@@ -156,33 +156,22 @@ class kgm:
 kgm.Graph = build_uri__(kgm, "Graph")
 kgm.path = build_uri__(kgm, "path")
 
-class ab:
-    prefix__ = "ab"
-    prefix_uri__ = "http://www.geisel-software.com/RDF/alice-bob#"
-    
-class nw:
-    prefix__ = "nw"
-    prefix_uri__ = "http://www.geisel-software.com/RDF/NorthWind#"
-
-class __:
-    prefix__ = ""
-    prefix_uri__ = "http://www.geisel-software.com/RDF/KGM/TestUser#"
-
-known_prefixes = {
+well_known_prefixes = {
     rdf.prefix__: rdf.prefix_uri__,
     rdfs.prefix__: rdfs.prefix_uri__,
     xsd.prefix__: xsd.prefix_uri__,
     sh.prefix__: sh.prefix_uri__,
     dash.prefix__: dash.prefix_uri__,
     kgm.prefix__: kgm.prefix_uri__,
-    ab.prefix__: ab.prefix_uri__,
-    nw.prefix__: nw.prefix_uri__,
-    __.prefix__: __.prefix_uri__
 }
+
+locally_known_prefixes = {}
 
 def collapse_prefix__(uri:str):
     assert(type(uri) == str)
-    for p, p_uri in known_prefixes.items():
+    prefix_items = [x for x in well_known_prefixes.items()]
+    prefix_items.extend([x for x in locally_known_prefixes.items()])
+    for p, p_uri in prefix_items:
         #print(uri, p_uri)
         if uri.find(p_uri) == 0:
             return uri.replace(p_uri, p + ":")
@@ -190,8 +179,9 @@ def collapse_prefix__(uri:str):
 
 def restore_prefix__(curie:str):
     assert(type(curie) == str)    
-    for prefix, prefix_uri in known_prefixes.items():
+    prefix_items = [x for x in well_known_prefixes.items()]
+    prefix_items.extend([x for x in locally_known_prefixes.items()])
+    for prefix, prefix_uri in prefix_items:
         if curie.find(prefix) == 0:
             return curie.replace(prefix + ":", prefix_uri)
     raise Exception("can't restore prefix in curie", curie)
-
