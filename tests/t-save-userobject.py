@@ -1,4 +1,5 @@
 import ipdb
+from kgm import get_kgm_graph
 from kgm import Database, KGMGraph
 from kgm import URI, xsd
 
@@ -6,8 +7,13 @@ if __name__ == "__main__":
     #ipdb.set_trace()
     fuseki_url = "http://localhost:3030/kgm-default-dataset"
     db = Database(fuseki_url)
-    kgm_g = KGMGraph(db, "/py-test")
+    kgm_path = "/py-test"
+    kgm_g_uri = get_kgm_graph(db, kgm_path)
+    if kgm_g_uri is None:
+        raise Exception(f"can't find kgm path {kgm_path}")
+    kgm_g = KGMGraph(db, kgm_g_uri, None)
     uc = URI(":Human")
+    ipdb.set_trace()
     if not kgm_g.has_user_class(uc):
         kgm_g.create_user_class(uc)
     
@@ -46,5 +52,6 @@ if __name__ == "__main__":
     obj.add_member("pets", URI(":Pet"), 0, -1)
     obj.pet = bim
     obj.pets.add(bim)
-    
+
+    ipdb.set_trace()
     kgm_g.save()

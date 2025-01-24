@@ -35,7 +35,7 @@ class Database:
     def rq_construct(self, query:str):
         return sparql_utils.rq_construct__(self.prefix_man, query, config = {'backend-url': self.fuseki_url})
     
-    def rq_insert_triples(self, triples, graph_uri):
+    def rq_insert_triples(self, graph_uri:URI, triples:list[RDFTriple]):
         # Serialize the graph to a string in N-Triples format
         ntriples_data = []
         #ipdb.set_trace()
@@ -61,7 +61,7 @@ class Database:
 
         self.rq_update(update_query)
 
-    def rq_delete_insert(self, kgm_path, dels_inss):
+    def rq_delete_insert(self, graph_uri:URI, dels_inss):
         if len(dels_inss[0]) == 0 and len(dels_inss[1]) == 0:
             return None
 
@@ -71,14 +71,25 @@ class Database:
         rq = ""
         if len(delete_triples) > 0:
             delete_triples_s = '\n'.join(delete_triples)
-            rq += f"delete {{ graph ?g {{ \n {delete_triples_s} \n }} }}\n"
+            rq += f"""\
+            delete data {{
+             graph {graph_uri.as_turtle()}
+             {{
+              {delete_triples_s}
+             }}
+            }}
+            """
         if len(insert_triples) > 0:
             insert_triples_s = '\n'.join(insert_triples)
-            rq += f"insert {{ graph ?g {{ \n {insert_triples_s} \n }} }}\n"
-        rq += f'where {{ ?g kgm:path "{kgm_path}" }}'
+            rq += f"""\
+            insert data {{
+             graph {graph_uri.as_turtle()}
+             {{
+              {insert_triples_s}
+             }}
+            }}
+            """
 
         print(rq)
 
         self.rq_update(rq)
-
-    

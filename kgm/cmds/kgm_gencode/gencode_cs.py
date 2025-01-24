@@ -2,8 +2,8 @@
 import sys, os
 from enum import Enum
 import pandas as pd
-from ..rdf_utils import xsd_dflt_cs_values, xsd, URI, Literal
-from ..database import Database
+from kgm.rdf_utils import xsd_dflt_cs_values, xsd, URI, Literal
+from kgm.database import Database
 
 class UserClass:
     def __init__(self, uc_uri, cs_namespace):

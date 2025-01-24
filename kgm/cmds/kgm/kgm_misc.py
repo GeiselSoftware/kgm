@@ -1,7 +1,7 @@
 #import ipdb
 import os.path
 import rdflib
-from .. import graphviz_utils
+import kgm.graphviz_utils
 
 def do_misc_gv(ttl_file, construct_query):
     output_png_file = os.path.basename(ttl_file) + ".png"

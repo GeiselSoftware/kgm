@@ -1,15 +1,17 @@
 #import ipdb
 import uuid
 import pandas as pd
+from kgm.rdf_utils import URI, Literal, BNode, RDFTriple
+from kgm.rdf_utils import rdf, rdfs, xsd, sh, dash
 from kgm.database import Database
-from kgm.rdf_utils import rdf, xsd, URI, Literal, RDFObject, RDFTriple
-from kgm.rdf_utils import rdfs, sh, dash, BNode
 from kgm.user_object import UserClass, UserObject
 
 class KGMGraph:
-    def __init__(self, db:Database, kgm_path):
+    def __init__(self, db:Database, g:URI, dep_gs:list[URI]):
+        assert(isinstance(g, URI))
         self.db = db
-        self.kgm_path = kgm_path
+        self.g = g
+        self.dep_gs = dep_gs
 
         self.all_user_classes = {} # URI -> UserClass
         self.all_user_objects = {} # URI -> UserObject
@@ -82,7 +84,7 @@ class KGMGraph:
             for t in dels_inss[1]:
                 print("ins: ", t.subject.as_turtle(), t.pred.as_turtle(), t.object_.as_turtle())
 
-        self.db.rq_delete_insert(self.kgm_path, dels_inss)
+        self.db.rq_delete_insert(self.g, dels_inss)
 
         self.just_created_uo.clear()
         self.just_created_uc.clear()
@@ -99,22 +101,28 @@ class KGMGraph:
             return self.all_user_objects.get(uri)
         return None
 
+    def get_from_clause__(self, include_dep_graphs = True):
+        from_parts = [self.g.as_turtle()]
+        if self.dep_gs is not None and include_dep_graphs == True:
+            for g in self.dep_gs:
+                from_parts.append(g.as_turtle())
+        return "\n".join(["from " + g_uri for g_uri in from_parts])
+    
     def load_user_classes__(self):
-        rq = """\
-        select ?uc ?uc_m_name ?uc_m_is_class ?uc_m_type ?uc_m_minc ?uc_m_maxc {
-          ?g kgm:path "%kgm_path%"
-          graph ?g {
+        rq = f"""\
+        select ?uc ?uc_m_name ?uc_m_is_class ?uc_m_type ?uc_m_minc ?uc_m_maxc
+        {self.get_from_clause__()}
+        {{
            ?uc rdf:type rdfs:Class.
            ?uc sh:property ?uc_p.
            ?uc_p sh:path ?uc_m_name filter(?uc_m_name != rdf:type).
            ?uc_p sh:minCount ?uc_m_minc.
-           optional { ?uc_p sh:maxCount ?uc_m_maxc }
-           { optional { ?uc_p sh:datatype ?uc_m_type bind(false as ?uc_m_is_class) } }
-              union { optional { { ?uc_p sh:class ?uc_m_type bind(true as ?uc_m_is_class)} }
-           }
-          }
-        }
-        """.replace("%kgm_path%", self.kgm_path)
+           optional {{ ?uc_p sh:maxCount ?uc_m_maxc }}
+           {{ optional {{ ?uc_p sh:datatype ?uc_m_type bind(false as ?uc_m_is_class) }} }}
+              union {{ optional {{ {{ ?uc_p sh:class ?uc_m_type bind(true as ?uc_m_is_class)}} }}
+           }}
+        }}
+        """
 
         rq_res = pd.DataFrame.from_dict(self.db.rq_select(rq))
         #print(rq_res)
@@ -135,15 +143,13 @@ class KGMGraph:
         
         rq = f"""\
         select ?uo ?uo_member ?uo_member_value
+        {self.get_from_clause__()}
         where {{
-         ?g kgm:path \"{self.kgm_path}\" .
-         graph ?g {{
           bind({uo_uri.as_turtle()} as ?s_uo)
           ?uo ?uo_member ?uo_member_value
           filter(!(?uo_member in (sh:property, sh:path, sh:datatype, sh:class, sh:minCount, sh:maxCount, dash:closedByType)))
           filter(!(?uo_member_value in (sh:NodeShape, rdfs:Class)))
           ?s_uo (<>|!<>)* ?uo
-         }}
         }}
         """
         print(rq)
@@ -187,16 +193,14 @@ class KGMGraph:
                     
         return self.all_user_objects[uo_uri]
 
-    def select_in_current_graph(self, rq_over_current_graph):
+    def select_in_current_graph(self, rq_over_current_graph, include_dep_graphs = True):
         rq = f"""\
-        select * {{
-         ?g kgm:path "{self.kgm_path}"
-         graph ?g {{
-          {rq_over_current_graph}
-         }}
+        select *
+        {self.get_from_clause__(include_dep_graphs)}
+        {{
+           {rq_over_current_graph}          
         }}
         """
 
         rq_res = self.db.rq_select(rq)
         return pd.DataFrame.from_dict(rq_res)
-

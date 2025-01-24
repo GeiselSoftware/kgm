@@ -11,12 +11,12 @@ def create_kgm_graph(db, path):
     descr_g.append((graph_uri, rdf.type, RDFObject(kgm.Graph)))
     descr_g.append((graph_uri, kgm.path, RDFObject(Literal(path, xsd.string))))
 
-    db.rq_insert_triples(descr_g, None)
+    db.rq_insert_triples(None, descr_g)
     return graph_uri
 
 # returns uri on kgm path
-def get_kgm_graph(db, path):
-    rq = f'select ?s ?p ?o where {{ ?s kgm:path "{path}"; rdf:type kgm:Graph }}'
+def get_kgm_graph(db, path) -> URI:
+    rq = f'select ?s where {{ ?s kgm:path "{path}"; rdf:type kgm:Graph }}'
     #print(rq)
 
     rq_res = db.rq_select(rq)

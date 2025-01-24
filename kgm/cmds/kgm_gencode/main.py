@@ -1,8 +1,8 @@
 import click
 import importlib
-from .config_utils import get_config
-from .database import Database
-from .gencode import gencode_cs as mod_gencode_cs
+from kgm.config_utils import get_config
+from kgm.database import Database
+from . import gencode_cs as mod_gencode_cs
 
 class CustomGroup(click.Group):
     def format_help(self, ctx, formatter):

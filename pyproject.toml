@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "kgm"
-version = "0.2.1"
+version = "0.2.2"
 description = "Knowledge Graph Management - command line utilities"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -24,5 +24,5 @@ dependencies = ["click", "rdflib", "sparqlwrapper", "pandas", "graphviz", "lark"
 # The following would provide a command line executable called `sample`
 # which executes the function `main` from this package when invoked.
 [project.scripts]
-kgm = "kgm.kgm_main:main"
-kgm-gencode="kgm.kgm_gencode_main:main"
+kgm = "kgm.cmds.kgm.main:main"
+kgm-gencode="kgm.cmds.kgm_gencode.main:main"
