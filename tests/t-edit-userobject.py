@@ -18,7 +18,7 @@ if __name__ == "__main__":
     print("obj uri:", obj_uri)
     obj = kgm_g.load_user_object(obj_uri)
     print("address:", obj.address)
-    obj.address = "1 Main St"
+    obj.address = "2 Main St"
 
     ipdb.set_trace()
     kgm_g.save()

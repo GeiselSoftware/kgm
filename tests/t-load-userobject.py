@@ -12,6 +12,8 @@ if __name__ == "__main__":
         raise Exception(f"can't find kgm path {kgm_path}")
     kgm_g = KGMGraph(db, kgm_g_uri, None)
 
-    obj = kgm_g.load_user_object(URI(":Human--b9fec1ba-10fb-470a-b4fa-f78496514211"))
+    obj_uris = kgm_g.select_in_current_graph("select ?uo { ?uo rdf:type :Human }").uo
+    obj_uri = obj_uris[0]
+    obj = kgm_g.load_user_object(obj_uri)    
     print(obj.get_impl())
     ipdb.set_trace()

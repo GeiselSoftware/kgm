@@ -1,4 +1,4 @@
-#import ipdb
+import ipdb
 import uuid
 import pandas as pd
 from kgm.rdf_utils import URI, Literal, BNode, RDFTriple
@@ -33,13 +33,15 @@ class KGMGraph:
         return uc_uri in self.all_user_classes
     
     def get_user_class(self, uc_uri:URI) -> UserClass:
+        assert(isinstance(uc_uri, URI))
         if not uc_uri in self.all_user_classes:
             raise Exception(f"no such user class defined: {uc_uri.as_turtle()}")
-        return self.all_user_classes.get(uc_uri)        
+        return self.all_user_classes.get(uc_uri)
         
     def create_user_object(self, uc_uri:URI) -> UserObject:
-        new_uri = URI(":" + uc_uri.get_suffix() + "--" + str(uuid.uuid4()))
-        ret = UserObject(self, new_uri, uc_uri)
+        uc = self.get_user_class(uc_uri)
+        new_uri = URI(":" + uc.uc_uri.get_suffix() + "--" + str(uuid.uuid4()))
+        ret = UserObject(self, new_uri, uc)
         self.just_created_uo.add(ret)
         return ret
 
@@ -64,7 +66,7 @@ class KGMGraph:
                 inss.append(RDFTriple(prop, sh.max_c, Literal.from_python(uc_m.max_c)))
         
         for uo in self.just_created_uo:
-            inss.append(RDFTriple(uo.get_impl().uo_uri, rdf.type, uo.get_impl().uc_uri))
+            inss.append(RDFTriple(uo.get_impl().uo_uri, rdf.type, uo.get_impl().uc.uc_uri))
             
         for uo_m in self.changed_uo_members:
             m_dels_inss = uo_m.get_dels_inss__()
@@ -89,6 +91,8 @@ class KGMGraph:
         self.just_created_uo.clear()
         self.just_created_uc.clear()
         self.just_created_uc_members.clear()
+        for m in self.changed_uo_members:
+            m.sync__()
         self.changed_uo_members.clear()
 
     def add_user_object__(self, uo: UserObject, is_just_created: bool):
@@ -136,23 +140,23 @@ class KGMGraph:
             max_c = r['uc_m_maxc'].as_python() if r['uc_m_maxc'] is not None else -1
             uc.add_member(r['uc_m_name'], r['uc_m_type'], r['uc_m_minc'].as_python(), max_c, just_created = False)
     
-    def load_user_object(self, uo_uri: URI) -> UserObject:
+    def load_user_object(self, req_uo_uri: URI) -> UserObject:
         #ipdb.set_trace()
-        if isinstance(uo_uri, str):
-            uo_uri = URI(uo_uri)
+        if isinstance(req_uo_uri, str):
+            req_uo_uri = URI(req_uo_uri)
         
         rq = f"""\
         select ?uo ?uo_member ?uo_member_value
         {self.get_from_clause__()}
         where {{
-          bind({uo_uri.as_turtle()} as ?s_uo)
+          bind({req_uo_uri.as_turtle()} as ?s_uo)
           ?uo ?uo_member ?uo_member_value
           filter(!(?uo_member in (sh:property, sh:path, sh:datatype, sh:class, sh:minCount, sh:maxCount, dash:closedByType)))
           filter(!(?uo_member_value in (sh:NodeShape, rdfs:Class)))
           ?s_uo (<>|!<>)* ?uo
         }}
         """
-        print(rq)
+        #print(rq)
         res = self.db.rq_select(rq)
         res_df = pd.DataFrame.from_dict(res)
         print(res_df)
@@ -185,13 +189,14 @@ class KGMGraph:
                     raise Exception(f"unexpected type on {uo_m_uri.as_turtle()}, user object {uo_uri.as_turtle()}")
 
                 #ipdb.set_trace()
-                uo_m = uo.get_member(uo_m_uri)
+                uo_m_name = uo_m_uri.get_suffix()
+                uo_m = uo.get_member(uo_m_name)
                 if uo_m.is_scalar():
-                    uo_m.set_scalar(m_v)
+                    uo_m.load_set_scalar(m_v)
                 else:
-                    uo_m.add(m_v)
+                    uo_m.load_add(m_v)
                     
-        return self.all_user_objects[uo_uri]
+        return self.all_user_objects[req_uo_uri]
 
     def select_in_current_graph(self, rq_over_current_graph, include_dep_graphs = True):
         rq = f"""\

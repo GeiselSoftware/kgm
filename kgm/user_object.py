@@ -17,17 +17,23 @@ class UserClass:
     def add_member(self, m_path_uri:URI, m_type_uri:URI, min_c:int, max_c:int, just_created:bool = True):
         if m_path_uri in self.members:
             raise Exception(f"this member already added: {m_path_uri.as_turtle()}")
+        #ipdb.set_trace()
         new_uc_m = UserClassMember(self, m_path_uri, m_type_uri, min_c, max_c)
         self.members[m_path_uri] = new_uc_m
         if just_created:
             self.db.just_created_uc_members.add(new_uc_m)
 
     def load_create_user_object(self, uo_uri:URI) -> "UserObject":
-        ret = UserObject(self.db, uo_uri, self.uc_uri)
+        ret = UserObject(self.db, uo_uri, self)
         for k, v in self.members.items():
             ret.load_add_member(v.m_path_uri, v.m_type_uri, v.min_c, v.max_c)
         return ret
-        
+
+    def show(self):
+        print("uc_uri:", self.uc_uri)
+        for k, v in self.members.items():
+            print(k, "   ", v)
+    
 class UserObjectMemberEditor:
     def __init__(self, uo, m_path_uri, m_type_uri, min_c, max_c):
         self.uo = uo
@@ -48,6 +54,13 @@ class UserObjectMemberEditor:
             v = v.as_python()
         self.s.add(v)
 
+    def load_set_scalar(self, v:object):
+        assert(self.is_scalar() and len(self.s) == 0)
+        if isinstance(v, Literal):
+            v = v.as_python()
+        self.s.add(v)
+        self.sync__()
+        
     def get_scalar(self):
         assert(self.is_scalar())
         for el in self.s:
@@ -60,6 +73,16 @@ class UserObjectMemberEditor:
             v = v.as_python()
         self.s.add(v)
 
+    def load_add(self, v):
+        assert(not self.is_scalar() and len(self.s) == 0)
+        if isinstance(v, Literal):
+            v = v.as_python()
+        self.s.add(v)
+        self.sync__()
+
+    def sync__(self):
+        self.loaded_s = set(self.s)
+        
     def remove(self, v):
         assert(not self.is_scalar())
         self.uo.get_impl().db.changed_uo_members.add(self)
@@ -99,19 +122,31 @@ class UserObjectMemberEditor:
         return (dels, inss)
     
 class UOImpl:
-    def __init__(self, db, uo_uri, uc_uri):
+    def __init__(self, db, uo_uri, uc):
         self.db = db
         self.uo_uri = uo_uri
-        self.uc_uri = uc_uri
+        self.uc = uc
     
 class UserObject:
-    def __init__(self, db, uo_uri, uc_uri):
-        self._uo_impl = UOImpl(db, uo_uri, uc_uri)
-        self._storage = {}  # m_path URI -> UserObjectmemberEditor
+    def __init__(self, db, uo_uri, uc):
+        assert(isinstance(uc, UserClass))
+        self._uo_impl = UOImpl(db, uo_uri, uc)
+        self._storage = {}  # py member name -> UserObjectmemberEditor
+        for k, v in uc.members.items():
+            #ipdb.set_trace()
+            m_path_uri = v.m_path_uri; m_type_uri = v.m_type_uri
+            min_c = v.min_c; max_c = v.max_c
+            py_m_name = m_path_uri.get_suffix()
+            if py_m_name in self._storage:
+                raise Exception(f"dup member name {py_m_name} on member path URI {m_path_uri.as_turtle()}")
+            self._storage[py_m_name] = UserObjectMemberEditor(self, m_path_uri, m_type_uri, min_c, max_c)
 
     def get_uri(self):
         return self.get_impl().uo_uri
-        
+
+    def get_db(self):
+        return self.get_impl().db
+    
     def get_impl(self):
         return getattr(self, "_uo_impl")
         
@@ -121,45 +156,42 @@ class UserObject:
             # Bypass restriction for internal attributes
             super().__setattr__(name, value)
         else:
-            uri = URI(":" + name)
-            if uri in self._storage:
-                uoe = self._storage[uri]
-                print("setting value:", value)
-                if uoe.is_scalar():
-                    uoe.set_scalar(value)
-                else:
-                    uoe.Add(value)
+            if not name in self._storage:
+                raise Exception(f"member {name} was never added")
+
+            uoe = self._storage[name]
+            print("setting value:", value)
+            if uoe.is_scalar():
+                uoe.set_scalar(value)
             else:
-                # Allow unrestricted attributes to behave normally
-                super().__setattr__(name, value)
+                uoe.Add(value)
     
     def __getattr__(self, name):
         # Provide access to restricted attributes
-        uri = URI(":" + name)
-        if uri in self._storage:
+        if name in self._storage:
             #ipdb.set_trace()
-            uoe = self._storage.get(uri)
+            uoe = self._storage.get(name)
             if uoe.is_scalar():
                 return uoe.get_scalar() # will return python object
             else:
                 return uoe # will return UOMemberEditor
 
         # Raise AttributeError if attribute not found or restricted
-        raise AttributeError(f"member '{uri.as_turtle()}' is not accessible.")
+        raise AttributeError(f"member '{name}' is not accessible.")
     
-    def add_member(self, m_path_s:str, m_type_uri:URI, min_c, max_c):
+    def add_member(self, m_name:str, m_type_uri:URI, min_c, max_c):
         """Add new attributes to the accessible list."""
-        assert(isinstance(m_path_s, str))
-        m_path_uri = URI(":" + m_path_s)
-        db = self.get_impl().db
-        uc = db.get_user_class(self.get_impl().uc_uri)
+        assert(isinstance(m_name, str))
+        m_path_uri = URI(":" + m_name)
+        uc = self.get_impl().uc
         uc.add_member(m_path_uri, m_type_uri, min_c, max_c)
-        self._storage[m_path_uri] = UserObjectMemberEditor(self, m_path_uri, m_type_uri, min_c, max_c)
+        self._storage[m_name] = UserObjectMemberEditor(self, m_path_uri, m_type_uri, min_c, max_c)
 
     def load_add_member(self, m_path_uri, m_type_uri, min_c, max_c):
         assert(isinstance(m_path_uri, URI))
-        self._storage[m_path_uri] = UserObjectMemberEditor(self, m_path_uri, m_type_uri, min_c, max_c)
-
+        m_name = m_path_uri.get_suffix()
+        self._storage[m_name] = UserObjectMemberEditor(self, m_path_uri, m_type_uri, min_c, max_c)
         
-    def get_member(self, m_path_uri):
-        return self._storage.get(m_path_uri)
+    def get_member(self, m_name):
+        assert(isinstance(m_name, str))
+        return self._storage.get(m_name)

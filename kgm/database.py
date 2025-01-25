@@ -72,7 +72,7 @@ class Database:
         if len(delete_triples) > 0:
             delete_triples_s = '\n'.join(delete_triples)
             rq += f"""\
-            delete data {{
+            delete {{
              graph {graph_uri.as_turtle()}
              {{
               {delete_triples_s}
@@ -82,14 +82,15 @@ class Database:
         if len(insert_triples) > 0:
             insert_triples_s = '\n'.join(insert_triples)
             rq += f"""\
-            insert data {{
+            insert {{
              graph {graph_uri.as_turtle()}
              {{
               {insert_triples_s}
              }}
             }}
             """
-
+        rq += "where {}"
+        
         print(rq)
 
         self.rq_update(rq)

@@ -21,6 +21,7 @@ if __name__ == "__main__":
     print(obj.get_impl())
     
     # Adding new accessible attributes dynamically
+    ipdb.set_trace()
     obj.add_member("address", xsd.string, 1, 1)
     obj.add_member("phone", xsd.string, 1, 1)
     obj.add_member("cars", xsd.string, 0, -1)

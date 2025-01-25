@@ -1,8 +1,10 @@
 import click
 import importlib.metadata
 from kgm.config_utils import get_config
-from . import kgm_validate, ksd_parser as mod_ksd_parser, kgm_misc
+from . import kgm_validate, kgm_misc
 from . import toplevel_cmds
+from . import ksd_cmds
+from . import graph_cmds
 
 class CustomGroup(click.Group):
     def parse_args(self, ctx, args):
@@ -37,14 +39,9 @@ cli.add_command(toplevel_cmds.graph_copy)
 cli.add_command(toplevel_cmds.graph_import)
 cli.add_command(toplevel_cmds.graph_show)
 
-@cli.command("query")
-@click.option("--select-query", "-Q", required = True, help = "select query")
-@click.pass_context
-def do_graph_select(ctx, select_query):
-    _, w_config = ctx.obj["config"]
-    fuseki_url = w_config['backend-url']
-    db = Database(path, fuseki_url)    
-    graph_select__(db, select_query)
+cli.add_command(ksd_cmds.ksd)
+
+cli.add_command(graph_cmds.graph)
 
 def graph_select__(w_config, select_query):
     query_text = make_rq(select_query)
@@ -66,13 +63,6 @@ def do_validate(ctx, shacl_path, path):
     db = Database(path, fuseki_url)    
     kgm_validate.do_validate(db, shacl_path, path)
 
-@cli.command("ksd")
-@click.argument("ksd-file", required = True)
-@click.pass_context
-def do_ksd_dump(ctx, ksd_file):
-    ksd_parser = mod_ksd_parser.KSDParser()
-    ksd_parser.parse_ksd_file(ksd_file)
-
 @cli.group("misc")
 def do_misc():
     pass
@@ -82,12 +72,6 @@ def do_misc():
 @click.option("--construct-rq", help = "construct query file")
 def do_misc_graphvis(ttl_file, construct_rq):
     kgm_misc.do_misc_gv(ttl_file, construct_rq)
-
-@do_misc.command("select")
-@click.option("--ttl-file", required = True, help = "RDF/Turtle file")
-@click.option("--select-query", required = False, help = "select query file")
-def do_misc_select(ttl_file, select_query):
-    kgm_misc.do_misc_select(ttl_file, select_query)
     
 def main():
     cli(max_content_width = 120)

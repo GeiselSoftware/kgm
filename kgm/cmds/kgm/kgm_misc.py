@@ -30,20 +30,3 @@ def do_misc_gv(ttl_file, construct_query):
 
     print("all done.")        
 
-def do_misc_select(ttl_file, select_query):
-    g = rdflib.Graph()
-    g.parse(ttl_file)
-    print("loaded", len(g), "triples")
-
-    with open(select_query) as fd:
-        query_text = fd.read()
-        print("got query:")
-        print(query_text)
-        print("---")
-        rq_res = g.query(query_text)
-        #ipdb.set_trace()
-        #df = pd.DataFrame(columns = [str(x) for x in rq_res.vars], 
-        print([str(x) for x in rq_res.vars])
-        print("-------")
-        for row in rq_res:
-            print([str(x) for x in row], len(row))
