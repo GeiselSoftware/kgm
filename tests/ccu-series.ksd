@@ -1,0 +1,5 @@
+prefix ccu: <http://www.geisel-software.com/RDF/KGM/ClickHouseUtils#>
+
+class ccu:Series
+ ccu:tablename xsd:string
+end

@@ -317,7 +317,7 @@ def do_import(db, path, ttl_file):
     
     #ipdb.set_trace()
     graph_uri = create_kgm_graph(db, path)
-    db.rq_insert_triples(source_triples, graph_uri)
+    db.rq_insert_triples(graph_uri, source_triples)
 
     print(path, graph_uri)
 

@@ -15,6 +15,9 @@ class UserClass:
         self.members = {} # m_path_uri => member attrs
 
     def add_member(self, m_path_uri:URI, m_type_uri:URI, min_c:int, max_c:int, just_created:bool = True):
+        assert(isinstance(m_path_uri, URI))
+        assert(isinstance(m_type_uri, URI))
+        
         if m_path_uri in self.members:
             raise Exception(f"this member already added: {m_path_uri.as_turtle()}")
         #ipdb.set_trace()

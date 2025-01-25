@@ -24,14 +24,12 @@ class PrefixManager:
 
 class URI:
     def __init__(self, uri:str):
-        global prefix_man
         assert(type(uri) == str)
-        self.compact_uri = None
         if len(uri) >= 2 and uri[0] == "<" and uri[-1] == ">":
-            # need to convert to compact uri
-            self.compact_uri = prefix_man.collapse_prefix(uri)
-        else:
-            self.compact_uri = uri
+            # NB: prefix_man should be available - but how?
+            #self.compact_uri = prefix_man.collapse_prefix(uri)
+            raise Exception(f"uri {uri} is not compact, need to convert to compact uri using collapse_prefix")
+        self.compact_uri = uri
 
     def __repr__(self):
         return self.compact_uri

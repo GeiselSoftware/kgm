@@ -21,7 +21,11 @@ class Database:
         for prefix, prefix_uri in known_prefixes.items():
             self.prefix_man.prefixes[prefix] = prefix_uri
 
-        for prefix, prefix_uri in [('', 'http://www.geisel-software.com/RDF/KGM/TestUser#')]:
+        temp_hardcoded_prefixes = {
+            'ccu': 'http://www.geisel-software.com/RDF/KGM/ClickHouseUtils#',
+            '': 'http://www.geisel-software.com/RDF/KGM/TestUser#'
+        }
+        for prefix, prefix_uri in temp_hardcoded_prefixes.items():
             self.prefix_man.prefixes[prefix] = prefix_uri
             
         self.prefix_man.is_initialized = True
@@ -35,7 +39,7 @@ class Database:
     def rq_construct(self, query:str):
         return sparql_utils.rq_construct__(self.prefix_man, query, config = {'backend-url': self.fuseki_url})
     
-    def rq_insert_triples(self, graph_uri:URI, triples:list[RDFTriple]):
+    def rq_insert_triples(self, graph_uri:URI, triples):
         # Serialize the graph to a string in N-Triples format
         ntriples_data = []
         #ipdb.set_trace()

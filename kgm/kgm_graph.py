@@ -23,11 +23,13 @@ class KGMGraph:
         self.load_user_classes__()
         
     def create_user_class(self, uc_uri:URI) -> UserClass:
+        assert(isinstance(uc_uri, URI))
         if uc_uri in self.all_user_classes:
             raise Exception(f"such user class already defined: {uc_uri.as_turtle()}")
         new_uc = UserClass(self, uc_uri)
         self.all_user_classes[uc_uri] = new_uc
         self.just_created_uc.add(new_uc)
+        return new_uc
 
     def has_user_class(self, uc_uri:URI) -> bool:
         return uc_uri in self.all_user_classes
@@ -114,7 +116,7 @@ class KGMGraph:
     
     def load_user_classes__(self):
         rq = f"""\
-        select ?uc ?uc_m_name ?uc_m_is_class ?uc_m_type ?uc_m_minc ?uc_m_maxc
+        select ?uc ?uc_m_name ?uc_m_class ?uc_m_datatype ?uc_m_minc ?uc_m_maxc
         {self.get_from_clause__()}
         {{
            ?uc rdf:type rdfs:Class.
@@ -122,9 +124,8 @@ class KGMGraph:
            ?uc_p sh:path ?uc_m_name filter(?uc_m_name != rdf:type).
            ?uc_p sh:minCount ?uc_m_minc.
            optional {{ ?uc_p sh:maxCount ?uc_m_maxc }}
-           {{ optional {{ ?uc_p sh:datatype ?uc_m_type bind(false as ?uc_m_is_class) }} }}
-              union {{ optional {{ {{ ?uc_p sh:class ?uc_m_type bind(true as ?uc_m_is_class)}} }}
-           }}
+           optional {{ ?uc_p sh:datatype ?uc_m_datatype }}
+           optional {{ ?uc_p sh:class ?uc_m_class }}
         }}
         """
 
@@ -137,8 +138,17 @@ class KGMGraph:
             if not uc_uri in self.all_user_classes:
                 self.all_user_classes[uc_uri] = UserClass(self, uc_uri)
             uc = self.all_user_classes.get(uc_uri)
+
+            # we assume that query will return either datatype or class
+            if r['uc_m_class'] is None and r['uc_m_datatype'] is None:
+                raise Exception(f"for member {r['uc_m_name']} both class and datatype are None")
+            if r['uc_m_class'] is not None and r['uc_m_datatype'] is not None:
+                raise Exception(f"for member {r['uc_m_name']} both class and datatype are both not None")
+            
+            uc_m_type = r['uc_m_class'] if r['uc_m_class'] is not None else r['uc_m_datatype']
+            uc_m_class = r['uc_m_class']
             max_c = r['uc_m_maxc'].as_python() if r['uc_m_maxc'] is not None else -1
-            uc.add_member(r['uc_m_name'], r['uc_m_type'], r['uc_m_minc'].as_python(), max_c, just_created = False)
+            uc.add_member(r['uc_m_name'], uc_m_type, r['uc_m_minc'].as_python(), max_c, just_created = False)
     
     def load_user_object(self, req_uo_uri: URI) -> UserObject:
         #ipdb.set_trace()
