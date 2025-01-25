@@ -26,6 +26,7 @@ def cli(ctx, config, verbose):
     config_name = 'DEFAULT'
     ctx.obj['config'] = (config_name, get_config(config_name))
 
+cli.add_command(toplevel_cmds.do_init)    
 cli.add_command(toplevel_cmds.show_config)
 cli.add_command(toplevel_cmds.graph_ls)    
 cli.add_command(toplevel_cmds.graph_new)
