@@ -1,7 +1,18 @@
 #import ipdb
+import click
 import os.path
 import rdflib
 import kgm.graphviz_utils
+
+@click.group("misc")
+def misc():
+    pass
+
+@misc.command("graphviz")
+@click.option("--ttl-file", required = True, help = "RDF/Turtle file")
+@click.option("--construct-rq", help = "construct query file")
+def do_misc_graphvis(ttl_file, construct_rq):
+    do_misc_gv(ttl_file, construct_rq)
 
 def do_misc_gv(ttl_file, construct_query):
     output_png_file = os.path.basename(ttl_file) + ".png"
