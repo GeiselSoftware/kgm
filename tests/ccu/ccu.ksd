@@ -1,0 +1,6 @@
+# declare prefix ccu: <http://www.geisel-software.com/kgm/ClickHouseUtils#>
+prefix ccu: <http://www.geisel-software.com/kgm/ClickHouseUtils#>
+
+class ccu:Series
+ ccu:tablename xsd:string
+end

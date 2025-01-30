@@ -1,0 +1,50 @@
+# file ccu.ksd
+prefix ccu: <http://www.geisel-software.com/kgm/ClickHouseUtils#>
+
+class ccu:Series
+ ccu:tablename xsd:string
+end
+
+# --------
+
+# file t.ksd
+# prefix : .. this graph uri ..
+
+class :TestData
+ :testdata xsd:float
+end
+
+class :Test
+ :tdata :TestData
+ :vs ccu:Series
+end
+
+:t1 rdf:type :Test .
+:t1 :tdata [ rdf:type TestData; :testdata 1.0 ];
+:s1 rdf:type ccu:Series; ccu:tablename "hkjhkj" .
+:t1 :vs :s1 .
+
+# -------
+
+kgm graph import /ccu/ccu-series ccu.ksd
+kgm graph import /tests/t t.ksd
+
+# -------
+
+if 1:
+   g = KGMGraph()
+   g.add("/tests/t", {":": "t:"})
+   g.add("/ccu/*", {"ccu:": "ccu1:"})
+   g.select("select * { ?t rdf:type t:Test; t:tdata ?v; t:vs ?vs. ?vs ccu1:tablename ?vs_tn }")
+
+if 1:
+   g = KGMGraph()
+   g.add("/tests/t", {":": "t:"})
+   g.add("/ccu/*")
+   g.select("select * { ?t rdf:type t:Test; t:tdata ?v; t:vs ?vs. ?vs ccu:tablename ?vs_tn }")
+
+if 1:
+   g = KGMGraph()
+   g.add("/tests/t", {":": "tt:"})
+   g.add("/ccu/*", {"ccu:": ":"})
+   g.select("select * { ?t rdf:type tt:Test; tt:tdata ?v; tt:vs ?vs. ?vs :tablename ?vs_tn }")

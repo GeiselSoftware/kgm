@@ -66,19 +66,18 @@ def do_init(ctx, reset):
     .
     kgm:DefaultServerGraph rdf:type rdfs:Class; rdf:type sh:NodeShape; sh:closed true;
     sh:property [ sh:path kgm:fuseki_dataset_name; sh:datatype xsd:string; sh:minCount 1; sh:maxCount 1 ];
-    sh:property [ sh:path kgm:known_prefixes; sh:class kgm:RDFPrefix; sh:minCount 0 ];
+    sh:property [ sh:path kgm:well_known_prefixes; sh:class kgm:RDFPrefix; sh:minCount 0 ];
     .
     kgm:Graph rdf:type rdfs:Class; rdf:type sh:NodeShape; sh:closed true;
     sh:property [ sh:path kgm:path; sh:datatype xsd:string; sh:minCount 1; sh:maxCount 1];
-    sh:property [ sh:path kgm:included_graphs; sh:datatype xsd:string; sh:minCount 0];
     .
     """)
 
     raw_rq.append('kgm:dsg rdf:type kgm:DefaultServerGraph; kgm:fuseki_dataset_name "kgm-default-dataset" .')
 
-    for prefix, prefix_uri in db.prefix_man.prefixes.items():
+    for prefix, prefix_uri in db.prefix_man.well_known_prefixes.items():
         raw_rq.append(f"""\
-        kgm:dsg kgm:known_prefixes [ 
+        kgm:dsg kgm:well_known_prefixes [ 
           rdf:type kgm:RDFPrefix; 
           kgm:prefix "{prefix}"; 
           kgm:prefix_uri "{prefix_uri}"

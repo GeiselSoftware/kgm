@@ -17,15 +17,8 @@ class Database:
 
         # this version uses constants defined in rdf_utils
         # NB: replace with query to DSG prefixes set
-        from kgm.rdf_utils import known_prefixes
-        for prefix, prefix_uri in known_prefixes.items():
-            self.prefix_man.prefixes[prefix] = prefix_uri
-
-        temp_hardcoded_prefixes = {
-            'ccu': 'http://www.geisel-software.com/RDF/KGM/ClickHouseUtils#',
-            '': 'http://www.geisel-software.com/RDF/KGM/TestUser#'
-        }
-        for prefix, prefix_uri in temp_hardcoded_prefixes.items():
+        from kgm.rdf_utils import well_known_prefixes
+        for prefix, prefix_uri in well_known_prefixes.items():
             self.prefix_man.prefixes[prefix] = prefix_uri
             
         self.prefix_man.is_initialized = True

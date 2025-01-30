@@ -12,6 +12,9 @@
 # pip install clickhouse-connect
 #
 
+# kgm graph add /kgm/ccu ccu.ksd
+# kgm graph add /tests/test-ccu test-ccu.ksd
+
 import ipdb
 import uuid
 import kgm
@@ -19,30 +22,40 @@ from kgm import xsd
 import numpy as np
 import clickhouse_connect
 
-class Series:
-    def __init__(self, g:kgm.KGMGraph, cc_db):        
-        self.ts_m = g.create_user_object(kgm.URI("ccu:Series"))
+class CCUSeries:
+    def __init__(self, series_uo:UserObject):        
+        self.series_uo = series_uo
         self.clickhouse_db = cc_db
 
         #ipdb.set_trace()
-        self.tn = self.ts_m.tablename = str(uuid.uuid4()).replace("-", "_")
+        self.series_uo.tablename = str(uuid.uuid4()).replace("-", "_")
         self.serno = 0
-        q = f"create table {self.tn} ( serno Int64, value Float64 ) engine = MergeTree() order by (serno)"
+        q = f"create table {self.series_uo.tablename} ( serno Int64, value Float64 ) engine = MergeTree() order by (serno)"
         #print(q)
         self.clickhouse_db.command(q)
         
     def add(self, v:float):
-        q = f"insert into {self.tn}(serno, value) values({self.serno}, {v})"
+        q = f"insert into {self.series_uo.tablename}(serno, value) values({self.serno}, {v})"
         #print(q)
         self.clickhouse_db.command(q)
         self.serno += 1
-    
+
+class Test:
+    def __init__(self, g:kgm.KGMGraph):
+        self.tdata = g.create_user_object(":Test")
+        self.tdata.testdata = 1.0
+        self.tdata.vs_pyo = CCUSeries(g.create_user_object("ccu:Series"))
+        self.tdata = CCUSeries(self.tdata_uo.vs)
+        
 if __name__ == "__main__":
     ipdb.set_trace()
     fuseki_url = "http://localhost:3030/kgm-default-dataset"
     db = kgm.Database(fuseki_url)
-    g_uri = kgm.get_kgm_graph(db, "/ccu-series-test.new")
-    g = kgm.KGMGraph(db, g_uri, None)
+    #g_uri = kgm.create_kgm_graph(db, "/tests/test-ccu")
+    #ccu_uri = kgm.get_kgm_graph(db, "/kgm/ccu")
+    g = db.create_graph("/tests/test-ccu")
+    g.add("/sys/ccu")
+
     ipdb.set_trace()
     if 0:
         ccu_series_uc = g.create_user_class(kgm.URI("ccu:Series"))
@@ -50,7 +63,11 @@ if __name__ == "__main__":
         g.save()
         
     ccc = clickhouse_connect.get_client(host='h1', port=18123, username='default', password='')
-    ts = Series(g, ccc)
+    test_pyo = Test(g.create_user_object(":Test"))
+    test_pyo.tdata = g.create_user_object(":TestData")
+    test_pyo.tdata.testdata = 1.0
+    test_pyo.vs = g.create_user_object("ccu:Series")
+    
     #ipdb.set_trace()
     g.save()
     print("ts_m:", ts.ts_m.get_uri())

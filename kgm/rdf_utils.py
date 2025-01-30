@@ -173,12 +173,12 @@ dash.closedByType = build_uri__(dash, "closedByType")
 
 class kgm:
     prefix__ = "kgm"
-    prefix_uri__ = "http://www.geisel-software.com/RDF/KGM#"
+    prefix_uri__ = "http://www.geisel-software.com/kgm/kgm#"
 
 kgm.Graph = build_uri__(kgm, "Graph")
 kgm.path = build_uri__(kgm, "path")
 
-known_prefixes = {
+well_known_prefixes = {
     rdf.prefix__: rdf.prefix_uri__,
     rdfs.prefix__: rdfs.prefix_uri__,
     xsd.prefix__: xsd.prefix_uri__,
@@ -186,4 +186,3 @@ known_prefixes = {
     dash.prefix__: dash.prefix_uri__,
     kgm.prefix__: kgm.prefix_uri__,
 }
-
