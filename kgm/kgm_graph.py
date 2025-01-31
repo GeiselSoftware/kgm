@@ -1,18 +1,21 @@
 import ipdb
 import uuid
 import pandas as pd
-from kgm.rdf_utils import URI, Literal, BNode, RDFTriple
-from kgm.rdf_utils import rdf, rdfs, xsd, sh, dash
+from kgm.rdf_terms import URI, Literal, BNode, RDFTriple
+from kgm.rdf_utils import to_turtle
+from kgm.known_prefixes import rdf, rdfs, xsd, sh, dash
+from kgm.prefix_manager import PrefixManager
 from kgm.database import Database
 from kgm.user_object import UserClass, UserObject
 
 class KGMGraph:
-    def __init__(self, db:Database, g:URI, dep_gs:list[URI]):
-        assert(isinstance(g, URI))
+    def __init__(self, db:Database, kgm_g:URI, additional_kgm_pathes:list[str] = None):
+        assert(isinstance(kgm_g, URI))
         self.db = db
-        self.g = g
-        self.dep_gs = dep_gs
-
+        self.g = kgm_g
+        self.dep_gs = additional_kgm_pathes
+        self.prefix_man = PrefixManager()
+        
         self.all_user_classes = {} # URI -> UserClass
         self.all_user_objects = {} # URI -> UserObject
         self.just_created_uo = set()
@@ -20,29 +23,35 @@ class KGMGraph:
         self.just_created_uc_members = set()
         self.changed_uo_members = set()
 
+        ipdb.set_trace()
+        self.prefix_man.init(self.db, self.g)
         self.load_user_classes__()
-        
-    def create_user_class(self, uc_uri:URI) -> UserClass:
-        assert(isinstance(uc_uri, URI))
+            
+    def create_user_class(self, uc_curie:str) -> UserClass:
+        assert(isinstance(uc_curie, str))
+        uc_uri = self.prefix_man.restore_prefix(uc_curie)
         if uc_uri in self.all_user_classes:
-            raise Exception(f"such user class already defined: {uc_uri.as_turtle()}")
+            raise Exception(f"such user class already defined: {to_turtle(uc_uri)}")
         new_uc = UserClass(self, uc_uri)
         self.all_user_classes[uc_uri] = new_uc
         self.just_created_uc.add(new_uc)
         return new_uc
 
-    def has_user_class(self, uc_uri:URI) -> bool:
+    def has_user_class(self, uc_curie:str) -> bool:
+        assert(isinstance(uc_curie, str))
+        uc_uri = self.prefix_man.restore_prefix(uc_curie)
         return uc_uri in self.all_user_classes
     
-    def get_user_class(self, uc_uri:URI) -> UserClass:
-        assert(isinstance(uc_uri, URI))
+    def get_user_class(self, uc_curie:str) -> UserClass:
+        assert(isinstance(uc_curie, str))
+        uc_uri = self.prefix_man.restore_prefix(uc_curie)
         if not uc_uri in self.all_user_classes:
-            raise Exception(f"no such user class defined: {uc_uri.as_turtle()}")
+            raise Exception(f"no such user class defined: {to_turtle(uc_uri)}")
         return self.all_user_classes.get(uc_uri)
         
-    def create_user_object(self, uc_uri:URI) -> UserObject:
-        uc = self.get_user_class(uc_uri)
-        new_uri = URI(":" + uc.uc_uri.get_suffix() + "--" + str(uuid.uuid4()))
+    def create_user_object(self, uc_curie:str) -> UserObject:
+        uc = self.get_user_class(uc_curie)
+        new_uri = URI(uc.uc_uri.uri + "--" + str(uuid.uuid4()))
         ret = UserObject(self, new_uri, uc)
         self.just_created_uo.add(ret)
         return ret
@@ -84,9 +93,9 @@ class KGMGraph:
         dels_inss = self.get_dels_inss__()
         if 1:
             for t in dels_inss[0]:
-                print("del: ", t.subject.as_turtle(), t.pred.as_turtle(), t.object_.as_turtle())
+                print("del: ", to_turtle(t.subject), to_turtle(t.pred), to_turtle(t.object_))
             for t in dels_inss[1]:
-                print("ins: ", t.subject.as_turtle(), t.pred.as_turtle(), t.object_.as_turtle())
+                print("ins: ", to_turtle(t.subject), to_turtle(t.pred), to_turtle(t.object_))
 
         self.db.rq_delete_insert(self.g, dels_inss)
 
@@ -108,10 +117,10 @@ class KGMGraph:
         return None
 
     def get_from_clause__(self, include_dep_graphs = True):
-        from_parts = [self.g.as_turtle()]
+        from_parts = [to_turtle(self.g)]
         if self.dep_gs is not None and include_dep_graphs == True:
             for g in self.dep_gs:
-                from_parts.append(g.as_turtle())
+                from_parts.append(to_turtle(g))
         return "\n".join(["from " + g_uri for g_uri in from_parts])
     
     def load_user_classes__(self):
@@ -159,7 +168,7 @@ class KGMGraph:
         select ?uo ?uo_member ?uo_member_value
         {self.get_from_clause__()}
         where {{
-          bind({req_uo_uri.as_turtle()} as ?s_uo)
+          bind({to_turtle(req_uo_uri)} as ?s_uo)
           ?uo ?uo_member ?uo_member_value
           filter(!(?uo_member in (sh:property, sh:path, sh:datatype, sh:class, sh:minCount, sh:maxCount, dash:closedByType)))
           filter(!(?uo_member_value in (sh:NodeShape, rdfs:Class)))
@@ -192,11 +201,11 @@ class KGMGraph:
                     if m_uo_uri in self.all_user_objects:
                         m_v = self.all_user_objects.get(m_uo_uri)
                     else:
-                        raise Exception(f"unable to find user object with URI {m_uo_uri.as_turtle()}")
+                        raise Exception(f"unable to find user object with URI {to_turtle(m_uo_uri)}")
                 elif isinstance(uo_m_value, Literal):
                     m_v = uo_m_value
                 else:
-                    raise Exception(f"unexpected type on {uo_m_uri.as_turtle()}, user object {uo_uri.as_turtle()}")
+                    raise Exception(f"unexpected type on {to_turtle(uo_m_uri)}, user object {to_turtle(uo_uri)}")
 
                 #ipdb.set_trace()
                 uo_m_name = uo_m_uri.get_suffix()

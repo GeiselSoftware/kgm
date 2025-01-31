@@ -1,4 +1,4 @@
-from kgm.rdf_utils import rdf, xsd, URI, Literal, RDFObject, RDFTriple
+from kgm.rdf_terms import URI, Literal, RDFObject, RDFTriple
 
 class UserClassMember:
     def __init__(self, uc, m_path_uri, m_type_uri, min_c, max_c):
@@ -9,22 +9,26 @@ class UserClassMember:
         self.max_c = max_c
 
 class UserClass:
-    def __init__(self, db:"Database", uc_uri:URI):
-        self.db = db
+    def __init__(self, g:"KGMGraph", uc_uri:URI):
+        self.g = g
         self.uc_uri = uc_uri
         self.members = {} # m_path_uri => member attrs
 
-    def add_member(self, m_path_uri:URI, m_type_uri:URI, min_c:int, max_c:int, just_created:bool = True):
+    def add_member(self, m_path_uri, m_type_uri, min_c:int, max_c:int, just_created:bool = True):
+        if isinstance(m_path_uri, str):
+            m_path_uri = self.g.prefix_man.restore_prefix(":" + m_path_uri)
+        if isinstance(m_type_uri, str):
+            m_type_uri = self.g.prefix_man.restore_prefix(m_type_uri)
         assert(isinstance(m_path_uri, URI))
         assert(isinstance(m_type_uri, URI))
         
         if m_path_uri in self.members:
-            raise Exception(f"this member already added: {m_path_uri.as_turtle()}")
+            raise Exception(f"this member already added: {to_turtle(m_path_uri)}")
         #ipdb.set_trace()
         new_uc_m = UserClassMember(self, m_path_uri, m_type_uri, min_c, max_c)
         self.members[m_path_uri] = new_uc_m
         if just_created:
-            self.db.just_created_uc_members.add(new_uc_m)
+            self.g.just_created_uc_members.add(new_uc_m)
 
     def load_create_user_object(self, uo_uri:URI) -> "UserObject":
         ret = UserObject(self.db, uo_uri, self)
@@ -141,7 +145,7 @@ class UserObject:
             min_c = v.min_c; max_c = v.max_c
             py_m_name = m_path_uri.get_suffix()
             if py_m_name in self._storage:
-                raise Exception(f"dup member name {py_m_name} on member path URI {m_path_uri.as_turtle()}")
+                raise Exception(f"dup member name {py_m_name} on member path URI {to_turtle(m_path_uri)}")
             self._storage[py_m_name] = UserObjectMemberEditor(self, m_path_uri, m_type_uri, min_c, max_c)
 
     def get_uri(self):
@@ -185,7 +189,7 @@ class UserObject:
     def add_member(self, m_name:str, m_type_uri:URI, min_c, max_c):
         """Add new attributes to the accessible list."""
         assert(isinstance(m_name, str))
-        m_path_uri = URI(":" + m_name)
+        m_path_uri = URI(self.prefix_manager.restore_prefix(":" + m_name))
         uc = self.get_impl().uc
         uc.add_member(m_path_uri, m_type_uri, min_c, max_c)
         self._storage[m_name] = UserObjectMemberEditor(self, m_path_uri, m_type_uri, min_c, max_c)

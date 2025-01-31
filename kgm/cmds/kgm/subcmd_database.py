@@ -1,3 +1,4 @@
+import ipdb
 import click
 import pandas as pd
 from kgm.database import Database
@@ -22,7 +23,7 @@ def do_init(ctx, reset):
     fuseki_url = w_config['backend-url']
     db = Database(fuseki_url)
     
-    #ipdb.set_trace()
+    ipdb.set_trace()
     rq = "select ?s { ?s rdf:type kgm:DefaultServerGraph }"
     rq_res = db.rq_select(rq)
 
@@ -31,7 +32,7 @@ def do_init(ctx, reset):
             raise Exception("kgm init failed: server is already initialized")
         else:            
             print("removing default graph")
-            ipdb.set_trace()
+            #ipdb.set_trace()
             rq = "delete { ?s ?p ?o } where { ?s ?p ?o }"
             db.rq_update(rq)
         
@@ -56,7 +57,7 @@ def do_init(ctx, reset):
     end
     """
     
-    ipdb.set_trace()    
+    #ipdb.set_trace()    
     raw_rq = []
     
     raw_rq.append("""\
@@ -75,7 +76,7 @@ def do_init(ctx, reset):
 
     raw_rq.append('kgm:dsg rdf:type kgm:DefaultServerGraph; kgm:fuseki_dataset_name "kgm-default-dataset" .')
 
-    for prefix, prefix_uri in db.prefix_man.well_known_prefixes.items():
+    for prefix, prefix_uri in db.well_known_prefixes.items():
         raw_rq.append(f"""\
         kgm:dsg kgm:well_known_prefixes [ 
           rdf:type kgm:RDFPrefix; 
@@ -91,18 +92,5 @@ def do_init(ctx, reset):
     }}
     """
 
-    ipdb.set_trace()
+    #ipdb.set_trace()
     db.rq_update(update_rq)    
-
-@database.command("ls", help = "lists available graphs")
-@click.argument("path", required = False)
-@click.pass_context
-def graph_ls(ctx, path):
-    _, w_config = ctx.obj["config"]
-    fuseki_url = w_config['backend-url']
-    db = Database(fuseki_url)
-
-    #print("do_ls:", path)
-    query = "select ?kgm_path ?g { ?g rdf:type kgm:Graph; kgm:path ?kgm_path }"
-    res = db.rq_select(query)
-    print(pd.DataFrame(res).map(lambda x: x.as_turtle()))

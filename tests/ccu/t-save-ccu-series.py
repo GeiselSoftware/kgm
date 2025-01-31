@@ -49,20 +49,17 @@ class Test:
         
 if __name__ == "__main__":
     ipdb.set_trace()
+    ccc = clickhouse_connect.get_client(host='h1', port=18123, username='default', password='')
     fuseki_url = "http://localhost:3030/kgm-default-dataset"
-    db = kgm.Database(fuseki_url)
-    #g_uri = kgm.create_kgm_graph(db, "/tests/test-ccu")
-    #ccu_uri = kgm.get_kgm_graph(db, "/kgm/ccu")
-    g = db.create_graph("/tests/test-ccu")
-    g.add("/sys/ccu")
+    db = kgm.Database(fuseki_url, ccc)
+    g = db.open_graph("/tests/test-ccu", additional_graphs = ["/sys/ccu"])
 
     ipdb.set_trace()
     if 0:
-        ccu_series_uc = g.create_user_class(kgm.URI("ccu:Series"))
-        ccu_series_uc.add_member(kgm.URI("ccu:tablename"), xsd.string, 1, 1)
+        ccu_series_uc = g.create_user_class("ccu:Series")
+        ccu_series_uc.add_member("ccu:tablename", xsd.string, 1, 1)
         g.save()
         
-    ccc = clickhouse_connect.get_client(host='h1', port=18123, username='default', password='')
     test_pyo = Test(g.create_user_object(":Test"))
     test_pyo.tdata = g.create_user_object(":TestData")
     test_pyo.tdata.testdata = 1.0

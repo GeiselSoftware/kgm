@@ -1,33 +1,37 @@
 import ipdb
-from kgm import get_kgm_graph
 from kgm import Database, KGMGraph
-from kgm import URI, xsd
+from kgm import xsd
 
 if __name__ == "__main__":
-    #ipdb.set_trace()
+    ipdb.set_trace()
     fuseki_url = "http://localhost:3030/kgm-default-dataset"
     db = Database(fuseki_url)
     kgm_path = "/py-test"
-    kgm_g_uri = get_kgm_graph(db, kgm_path)
-    if kgm_g_uri is None:
+    g_uri = db.get_kgm_graph(kgm_path)
+    g = KGMGraph(db, g_uri)
+    if g is None:
         raise Exception(f"can't find kgm path {kgm_path}")
-    kgm_g = KGMGraph(db, kgm_g_uri, None)
-    uc = URI(":Human")
     ipdb.set_trace()
-    if not kgm_g.has_user_class(uc):
-        kgm_g.create_user_class(uc)
-    
-    obj = kgm_g.create_user_object(URI(":Human"))
+
+    if not g.has_user_class(":Human"):
+        g.create_user_class(":Human")
+
+    human_uc = g.get_user_class(":Human")    
+    ipdb.set_trace()
+    human_uc.add_member("address", xsd.string, 1, 1)
+    human_uc.add_member("phone", xsd.string, 1, 1)
+    human_uc.add_member("cars", xsd.string, 0, -1)
+    human_uc.add_member("age", xsd.integer, 1, 1)
+
+    pet_uc = g.create_user_class(":Pet")
+    pet_uc.add_member("name", xsd.string, 1, 1)
+    human_uc.add_member("pet", ":Pet", 1, 1)
+    human_uc.add_member("pets", ":Pet", 0, -1)
+
+    obj = g.create_user_object(":Human")
     print(obj.get_impl())
-    
-    # Adding new accessible attributes dynamically
-    ipdb.set_trace()
-    obj.add_member("address", xsd.string, 1, 1)
-    obj.add_member("phone", xsd.string, 1, 1)
-    obj.add_member("cars", xsd.string, 0, -1)
     obj.address = "123 Main St"
     obj.phone = "555-1234"
-    obj.add_member("age", xsd.integer, 1, 1)
     obj.age = 1
     obj.cars.add("hi")
     
@@ -43,16 +47,12 @@ if __name__ == "__main__":
     except AttributeError as e:
         print(e)  # Output: Attribute 'salary' is not accessible.
 
-    kgm_g.create_user_class(URI(":Pet"))
-    bim = kgm_g.create_user_object(URI(":Pet"))
-    bim.add_member("name", xsd.string, 1, 1)
+    bim = g.create_user_object(":Pet")
     bim.name = "Bim"
     print(bim.name)
-
-    obj.add_member("pet", URI(":Pet"), 1, 1)
-    obj.add_member("pets", URI(":Pet"), 0, -1)
     obj.pet = bim
     obj.pets.add(bim)
 
     ipdb.set_trace()
-    kgm_g.save()
+    g.save() # ??? db.save
+    

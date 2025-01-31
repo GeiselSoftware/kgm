@@ -1,14 +1,30 @@
+import ipdb
 import click
 import pandas as pd
 import rdflib
 from kgm.database import Database
-from kgm.kgm_utils import *
+from kgm.rdf_utils import to_turtle
 from kgm.kgm_graph import KGMGraph
 from . import kgm_validate
 
 @click.group()
 def graph():
     pass
+
+@graph.command("ls", help = "lists available graphs")
+@click.argument("path", required = False)
+@click.pass_context
+def graph_ls(ctx, path):
+    _, w_config = ctx.obj["config"]
+    fuseki_url = w_config['backend-url']
+    db = Database(fuseki_url)
+
+    #print("do_ls:", path)
+    query = "select ?kgm_path ?g { ?g rdf:type kgm:Graph; kgm:path ?kgm_path }"
+    res = db.rq_select(query)
+    #ipdb.set_trace()
+    print(pd.DataFrame(res).map(lambda x: to_turtle(x, prefixes = db.well_known_prefixes)))
+
 
 @graph.command("new", help = "creates new empty graph at given path")
 @click.argument("path", required = True)
@@ -17,14 +33,14 @@ def graph_new(ctx, path):
     _, w_config = ctx.obj["config"]
     fuseki_url = w_config['backend-url']
     db = Database(fuseki_url)
-    graph_uri = get_kgm_graph(db, path)
+    graph_uri = db.get_kgm_graph(path)
     if graph_uri is not None:
         print(f"graph exists on path {path}, giving up, graph was {graph_uri}")
         return
     del graph_uri
 
     #ipdb.set_trace()
-    graph_uri = create_kgm_graph(db, path)
+    graph_uri = db.create_kgm_graph(path)
     print(f"created graph at path {path}: {graph_uri}")
 
 @graph.command("remove", help = "removes graph")
@@ -34,13 +50,13 @@ def graph_remove(ctx, path):
     _, w_config = ctx.obj["config"]
     fuseki_url = w_config['backend-url']
     db = Database(fuseki_url)    
-    graph_uri = get_kgm_graph(db, path)
+    graph_uri = db.get_kgm_graph(path)
     if graph_uri is None:
         print(f"can't find graph at path {path}")
         return
     
-    rq_queries = [f"drop graph {graph_uri.as_turtle()}",
-                  f'delete {{ ?s ?p ?o }} where {{ bind({graph_uri.as_turtle()} as ?s) {{ ?s ?p ?o }} }}']
+    rq_queries = [f"drop graph {to_turtle(graph_uri)}",
+                  f'delete {{ ?s ?p ?o }} where {{ bind({to_turtle(graph_uri)} as ?s) {{ ?s ?p ?o }} }}']
 
     #ipdb.set_trace()
     for rq in rq_queries:
@@ -57,20 +73,29 @@ def graph_copy(ctx, source_path, dest_path):
     db = Database(fuseki_url)    
     print("do_copy:", source_path, dest_path)
 
-    source_graph_uri = get_kgm_graph(db, source_path)
+    source_graph_uri = db.get_kgm_graph(source_path)
     if source_graph_uri is None:
         print(f"no graph at source path {source_path}")
         return
 
-    dest_graph_uri = get_kgm_graph(db, dest_path)
+    dest_graph_uri = db.get_kgm_graph(dest_path)
     if dest_graph_uri is not None:
         print(f"there is a graph at dest path {dest_path}: {dest_graph_uri}, giving up")
         return    
     del dest_graph_uri
     
-    dest_graph_uri = create_kgm_graph(db, dest_path)    
-    rq_queries = [f'insert {{ {dest_graph_uri.as_turtle()} kgm:path "{dest_path}"; ?p ?o }} where {{ {source_graph_uri.as_turtle()} ?p ?o filter(?p != kgm:path) }}',
-                  f'copy {source_graph_uri.as_turtle()} to {dest_graph_uri.as_turtle()}']
+    dest_graph_uri = db.create_kgm_graph(dest_path)    
+    rq_queries = [f'insert {{ {to_turtle(dest_graph_uri)} kgm:path "{dest_path}"; ?p ?o }} where {{ {to_turtle(source_graph_uri)} ?p ?o filter(?p != kgm:path) }}',
+                  #f'copy {to_turtle(source_graph_uri)} to {to_turtle(dest_graph_uri)}'
+                  f'''
+                  insert {{
+                    graph {to_turtle(dest_graph_uri)} {{ ?s ?p ?o }}
+                  }} where {{
+                    graph {to_turtle(source_graph_uri)} {{ ?s ?p ?o }}
+                  }}
+                  '''
+                  ]
+    #ipdb.set_trace()
     for rq in rq_queries:
         print(rq)
         db.rq_update(rq)
@@ -85,19 +110,19 @@ def graph_rename(ctx, path, new_path):
     db = Database(fuseki_url)    
     print("do_rename:", path, new_path)
 
-    graph_uri = get_kgm_graph(db, path)
+    graph_uri = db.get_kgm_graph(path)
     if graph_uri is None:
         print(f"no graph at path {path}")
         return
 
-    new_graph_uri = get_kgm_graph(db, new_path)
+    new_graph_uri = db.get_kgm_graph(new_path)
     if new_graph_uri is not None:
         print(f"there is a graph at new path {new_path}: {new_graph_uri}, giving up")
         return
     del new_graph_uri
     
-    rq_queries = [f'delete data {{ {graph_uri.as_turtle()} kgm:path "{path}" }}',
-                  f'insert data {{ {graph_uri.as_turtle()} kgm:path "{new_path}" }}']
+    rq_queries = [f'delete data {{ {to_turtle(graph_uri)} kgm:path "{path}" }}',
+                  f'insert data {{ {to_turtle(graph_uri)} kgm:path "{new_path}" }}']
     for rq in rq_queries:
         print(rq)
         db.rq_update(rq)
@@ -133,7 +158,7 @@ def graph_cat(ctx, path, as_ksd):
         do_cat(db, path)
 
 def do_cat(db, path):
-    graph_uri = get_kgm_graph(db, path)
+    graph_uri = db.get_kgm_graph(path)
     if graph_uri is None:
         print(f"can't find graph at path {path}", file = sys.stderr)
         return

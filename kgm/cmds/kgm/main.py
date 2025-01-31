@@ -4,7 +4,7 @@ from kgm.config_utils import get_config
 from . import subcmd_toplevel
 from . import subcmd_database
 from . import subcmd_graph
-from . import subcmd_ksd
+#from . import subcmd_ksd
 from . import subcmd_misc
 
 class CustomGroup(click.Group):
@@ -33,7 +33,7 @@ cli.add_command(subcmd_toplevel.show_uri)
 
 cli.add_command(subcmd_database.database)
 cli.add_command(subcmd_graph.graph)
-cli.add_command(subcmd_ksd.ksd)
+#cli.add_command(subcmd_ksd.ksd)
 cli.add_command(subcmd_misc.misc)
     
 def main():

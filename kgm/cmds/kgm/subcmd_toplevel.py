@@ -2,7 +2,7 @@ import ipdb
 import click
 import pandas as pd
 from kgm.database import Database
-from kgm.kgm_utils import *
+#from kgm.kgm_utils import *
 from kgm.kgm_graph import KGMGraph
 
 @click.command("show", help = "shows details about given URI")
@@ -26,4 +26,4 @@ def show_uri(ctx, uri):
 
     #ipdb.set_trace()
     rq_res = db.rq_select(rq)
-    print(pd.DataFrame(rq_res).map(lambda x: x.as_turtle()))
+    print(pd.DataFrame(rq_res).map(lambda x: to_turtle(x)))
