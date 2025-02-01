@@ -1,8 +1,8 @@
 import ipdb
 import uuid
 from kgm.rdf_terms import RDFTermFactory, URI, Literal, BNode
+from kgm.rdf_terms import rdf, xsd, kgm
 from kgm.rdf_utils import RDFObject, RDFTriple
-#from kgm.known_prefixes import rdf, xsd, rdfs, sh, dash, kgm
 import kgm.sparql_utils as sparql_utils
 
 class Database:
@@ -103,15 +103,10 @@ class Database:
         self.rq_update(rq, rdftf = rdftf)
 
     def create_kgm_graph(self, kgm_path_s:str) -> URI:
-        rdf_type = self.rdftf.restore_prefix("rdf:type")
-        kgm_path = self.rdftf.restore_prefix("kgm:path")
-        xsd_string = self.rdftf.restore_prefix("xsd:string")
-        kgm_Graph = self.rdftf.restore_prefix("kgm:Graph")
-
         descr_g = []
         new_graph_uri = self.rdftf.make_URI_from_parts(kgm_Graph, "--" + str(uuid.uuid4()) + "--")
-        descr_g.append((new_graph_uri, rdf_type, RDFObject(kgm_Graph)))
-        descr_g.append((new_graph_uri, kgm_path, RDFObject(self.rdftf.make_Literal(kgm_path_s, xsd_string))))
+        descr_g.append((new_graph_uri, rdf.type, RDFObject(kgm.Graph)))
+        descr_g.append((new_graph_uri, kgm.path, RDFObject(self.rdftf.make_Literal(kgm_path_s, xsd.string))))
 
         ipdb.set_trace()
         descr_g = [[x.to_turtle() for x in y] for y in descr_g]

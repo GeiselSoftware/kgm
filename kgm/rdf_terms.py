@@ -1,8 +1,18 @@
 import ipdb
+from collections import namedtuple
+
+well_known_prefixes = {
+    "rdf": ("http://www.w3.org/1999/02/22-rdf-syntax-ns#", ["type"]),
+    "rdfs": ("http://www.w3.org/2000/01/rdf-schema#", ["Class"]),
+    "xsd": ("http://www.w3.org/2001/XMLSchema#", ["string", "boolean", "integer", "float", "double"]),
+    "sh": ("http://www.w3.org/ns/shacl#", ["property", "path", "datatype", "class___", "minCount", "maxCount", "NodeShape"]),
+    "dash": ("http://datashapes.org/dash#", ["closedByType"]),
+    "kgm": ("http://www.geisel-software.com/kgm/kgm#", ["Graph", "path"])
+}
 
 class URI:
     def __init__(self, rdftf: "RDFTermFactory", uri_s:str):
-        assert(rdftf is not None)
+        # NOTE that rdftf can be None only for well known prefixes
         assert(type(uri_s) == str)
         assert(len(uri_s) > 2 and uri_s[0] != "<" and uri_s[-1] != ">")
         self.rdftf = rdftf
@@ -18,8 +28,24 @@ class URI:
     def __hash__(self):
         return self.uri_s.__hash__()
 
-    def to_turtle(self):
+    def to_turtle(self) -> str:
+        if self.rdftf is None:
+            for p, p_uri in well_known_prefixes.items():
+                #print(uri, p_uri)
+                if self.uri_s.find(p_uri[0]) == 0:
+                    return self.uri_s.replace(p_uri[0], p + ":")
+            raise Exception("can't collapse prefix for well-known uri:", self.uri_s)
+        
         return self.rdftf.collapse_prefix(self)
+
+
+if 1:
+    for k, v in well_known_prefixes.items():
+        #print(k, v)
+        prefixes = [x.replace("___", "_") for x in v[1]]
+        WNP = namedtuple('WNP', prefixes)
+        globals()[k] = WNP(*[URI(None, v[0] + x.replace("___", "")) for x in v[1]])
+
     
 class Literal:
     def __init__(self, rdftf: "RDFTermFactory", value_o, datatype_uri):
@@ -78,15 +104,6 @@ class BNode:
         ret = "_:" + self.bnode
         return ret
     
-well_known_prefixes = {
-    "rdf": ("http://www.w3.org/1999/02/22-rdf-syntax-ns#", ["type"]),
-    "rdfs": ("http://www.w3.org/2000/01/rdf-schema#", ["Class"]),
-    "xsd": ("http://www.w3.org/2001/XMLSchema#", ["string", "boolean", "integer", "float", "double"]),
-    "sh": ("http://www.w3.org/ns/shacl#", ["property", "path", "datatype", "class", "minCount", "maxCount", "NodeShape"]),
-    "dash": ("http://datashapes.org/dash#", ["closedByType"]),
-    "kgm": ("http://www.geisel-software.com/kgm/kgm#", ["Graph", "path"])
-}
-
 class RDFTermFactory:
     def __init__(self):            
         self.prefixes = {} # prefix:str -> prefix_uri:URI
@@ -96,6 +113,7 @@ class RDFTermFactory:
         for prefix, prefix_info in well_known_prefixes.items():
             prefix_uri_s, prefix_members = prefix_info
             self.prefixes[prefix] = URI(self, prefix_uri_s)
+
             
     def add_prefixes(self, rq_res):
         for prefix, prefix_uri_s in zip(rq_res['prefix'], rq_res['prefix_uri']):
@@ -108,7 +126,7 @@ class RDFTermFactory:
                 return URI(self, curie.replace(prefix + ":", prefix_uri.uri_s))
         raise Exception("can't restore prefix in curie", curie)
 
-    def collapse_prefix(self, uri:URI) -> URI:
+    def collapse_prefix(self, uri:URI) -> str:
         assert(isinstance(uri, URI))
         for p, p_uri in self.prefixes.items():
             #print(uri, p_uri)
@@ -168,4 +186,3 @@ class RDFTermFactory:
             return self.make_Literal(f"{v}", xsd_integer)
 
         raise Exception(f"from_python_to_Literal: unsupported type {typeof(v)}")
-    

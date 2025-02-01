@@ -2,6 +2,7 @@ import ipdb
 import uuid
 import pandas as pd
 from kgm.rdf_terms import URI, Literal, BNode, RDFTermFactory
+from kgm.rdf_terms import rdf, rdfs, xsd, sh, dash, kgm
 from kgm.rdf_utils import RDFTriple, get_py_m_name
 from kgm.database import Database
 from kgm.user_object import UserClass, UserObject
@@ -55,41 +56,31 @@ class KGMGraph:
         self.just_created_uo.add(ret)
         return ret
 
-    def get_dels_inss__(self):
-        rdf_type = self.rdftf.restore_prefix("rdf:type")
-        rdfs_Class = self.rdftf.restore_prefix("rdfs:Class")
-        sh_NodeShape = self.rdftf.restore_prefix("sh:NodeShape")
-        sh_property = self.rdftf.restore_prefix("sh:property")
-        sh_path = self.rdftf.restore_prefix("sh:path")
-        sh_datatype = self.rdftf.restore_prefix("sh:datatype")
-        sh_class = self.rdftf.restore_prefix("sh:class")
-        sh_minCount = self.rdftf.restore_prefix("sh:minCount")
-        sh_maxCount = self.rdftf.restore_prefix("sh:maxCount")
-        dash_closedByType = self.rdftf.restore_prefix("dash:closedByType")
+    def get_dels_inss__(self):            
         dels = []; inss = []
 
         #ipdb.set_trace()
         for uc in self.just_created_uc:
-            inss.append(RDFTriple(uc.uc_uri, rdf_type, rdfs_Class))
-            inss.append(RDFTriple(uc.uc_uri, rdf_type, sh_NodeShape))
-            inss.append(RDFTriple(uc.uc_uri, dash_closedByType, rdftf.from_python_to_Literal(True)))
+            inss.append(RDFTriple(uc.uc_uri, rdf.type, rdfs.Class))
+            inss.append(RDFTriple(uc.uc_uri, rdf.type, sh.NodeShape))
+            inss.append(RDFTriple(uc.uc_uri, dash.closedByType, rdftf.from_python_to_Literal(True)))
             
         for uc_m in self.just_created_uc_members:
             prop = BNode(str(uuid.uuid4()))
-            inss.append(RDFTriple(uc_m.user_class.uc_uri, sh_property, prop))
-            inss.append(RDFTriple(prop, sh_path, uc_m.m_path_uri))
+            inss.append(RDFTriple(uc_m.user_class.uc_uri, sh.property, prop))
+            inss.append(RDFTriple(prop, sh.path, uc_m.m_path_uri))
             #if uc_m.m_type_uri.get_prefix() == xsd.prefix__:
             if uc_m.m_type_uri.uri_s.find(self.rdftf.prefixes.get("xsd").uri_s) == 0:
-                inss.append(RDFTriple(prop, sh_datatype, uc_m.m_type_uri))
+                inss.append(RDFTriple(prop, sh.datatype, uc_m.m_type_uri))
             else:
-                inss.append(RDFTriple(prop, sh_class, uc_m.m_type_uri))
-            inss.append(RDFTriple(prop, sh_minCount, rdftf.from_python_to_Literal(uc_m.min_c)))
+                inss.append(RDFTriple(prop, sh.class_, uc_m.m_type_uri))
+            inss.append(RDFTriple(prop, sh.minCount, rdftf.from_python_to_Literal(uc_m.min_c)))
             if uc_m.max_c != -1:
-                inss.append(RDFTriple(prop, sh_maxCount, rdftf.from_python_to_Literal(uc_m.max_c)))
+                inss.append(RDFTriple(prop, sh.maxCount, rdftf.from_python_to_Literal(uc_m.max_c)))
 
         #ipdb.set_trace()
         for uo in self.just_created_uo:
-            inss.append(RDFTriple(uo.get_impl().uo_uri, rdf_type, uo.get_impl().uc.uc_uri))
+            inss.append(RDFTriple(uo.get_impl().uo_uri, rdf.type, uo.get_impl().uc.uc_uri))
             
         for uo_m in self.changed_uo_members:
             m_dels_inss = uo_m.get_dels_inss__()
@@ -194,23 +185,21 @@ class KGMGraph:
         print(res_df)
 
         #ipdb.set_trace()
-        rdf_type = self.rdftf.restore_prefix("rdf:type")
         for ii, r in res_df.iterrows():
             uo_uri = r['uo']; uo_m_uri = r['uo_member']
             uo_m_value = r['uo_member_value']
-            if uo_m_uri == rdf_type:
+            if uo_m_uri == rdf.type:
                 uc = self.all_user_classes.get(uo_m_value)
                 uo = uc.load_create_user_object(uo_uri)
                 self.all_user_objects[uo_uri] = uo
 
         #ipdb.set_trace()
-        rdf_type = self.rdftf.restore_prefix("rdf:type")        
         for ii, r in res_df.iterrows():
             uo_uri = r['uo']
             uo_m_uri = r['uo_member']
             uo_m_value = r['uo_member_value']
             uo = self.all_user_objects.get(uo_uri)
-            if uo_m_uri != rdf_type:
+            if uo_m_uri != rdf.type:
                 if isinstance(uo_m_value, URI):
                     m_uo_uri = uo_m_value
                     if m_uo_uri in self.all_user_objects:
