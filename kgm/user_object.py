@@ -1,4 +1,6 @@
-from kgm.rdf_terms import URI, Literal, RDFObject, RDFTriple
+import ipdb
+from kgm.rdf_terms import URI, Literal
+from kgm.rdf_utils import RDFObject, RDFTriple, get_py_m_name
 
 class UserClassMember:
     def __init__(self, uc, m_path_uri, m_type_uri, min_c, max_c):
@@ -15,15 +17,16 @@ class UserClass:
         self.members = {} # m_path_uri => member attrs
 
     def add_member(self, m_path_uri, m_type_uri, min_c:int, max_c:int, just_created:bool = True):
+        assert(type(min_c) == int)
         if isinstance(m_path_uri, str):
-            m_path_uri = self.g.prefix_man.restore_prefix(":" + m_path_uri)
+            m_path_uri = self.g.rdftf.restore_prefix(":" + m_path_uri)
         if isinstance(m_type_uri, str):
-            m_type_uri = self.g.prefix_man.restore_prefix(m_type_uri)
+            m_type_uri = self.g.rdftf.restore_prefix(m_type_uri)
         assert(isinstance(m_path_uri, URI))
         assert(isinstance(m_type_uri, URI))
         
         if m_path_uri in self.members:
-            raise Exception(f"this member already added: {to_turtle(m_path_uri)}")
+            raise Exception(f"this member already added: {m_path_uri.to_turtle()}")
         #ipdb.set_trace()
         new_uc_m = UserClassMember(self, m_path_uri, m_type_uri, min_c, max_c)
         self.members[m_path_uri] = new_uc_m
@@ -31,7 +34,7 @@ class UserClass:
             self.g.just_created_uc_members.add(new_uc_m)
 
     def load_create_user_object(self, uo_uri:URI) -> "UserObject":
-        ret = UserObject(self.db, uo_uri, self)
+        ret = UserObject(self.g, uo_uri, self)
         for k, v in self.members.items():
             ret.load_add_member(v.m_path_uri, v.m_type_uri, v.min_c, v.max_c)
         return ret
@@ -55,7 +58,7 @@ class UserObjectMemberEditor:
     
     def set_scalar(self, v:object):
         assert(self.is_scalar())
-        self.uo.get_impl().db.changed_uo_members.add(self)
+        self.uo.get_impl().g.changed_uo_members.add(self)
         self.s.clear()
         if isinstance(v, Literal):
             v = v.as_python()
@@ -75,7 +78,7 @@ class UserObjectMemberEditor:
 
     def add(self, v):
         assert(not self.is_scalar())
-        self.uo.get_impl().db.changed_uo_members.add(self)
+        self.uo.get_impl().g.changed_uo_members.add(self)
         if isinstance(v, Literal):
             v = v.as_python()
         self.s.add(v)
@@ -92,7 +95,7 @@ class UserObjectMemberEditor:
         
     def remove(self, v):
         assert(not self.is_scalar())
-        self.uo.get_impl().db.changed_uo_members.add(self)
+        self.uo.get_impl().g.changed_uo_members.add(self)
         try:
             self.s.remove(v)
             ret = true
@@ -102,7 +105,7 @@ class UserObjectMemberEditor:
 
     def clear(self):
         assert(not self.is_scalar())
-        self.uo.get_impl().db.changed_uo_members.add(self)
+        self.uo.get_impl().g.changed_uo_members.add(self)
         self.s.clear()
 
     def has_value(self, v):
@@ -113,12 +116,12 @@ class UserObjectMemberEditor:
         assert(not self.is_scalar())
         return iter(self.s)
 
-    @staticmethod
-    def create_RDFObject__(v:object) -> RDFObject:
+    def create_RDFObject__(self, v:object) -> RDFObject:
         if isinstance(v, UserObject):
             ret = RDFObject(v.get_impl().uo_uri)
         else:
-            ret = RDFObject(Literal.from_python(v))
+            rdftf = self.uo.get_impl().uc.g.rdftf
+            ret = RDFObject(rdftf.from_python_to_Literal(v))
         return ret
 
     def get_dels_inss__(self): # returns (set<RDFTriple>, set<RDFTriple>)
@@ -129,30 +132,28 @@ class UserObjectMemberEditor:
         return (dels, inss)
     
 class UOImpl:
-    def __init__(self, db, uo_uri, uc):
-        self.db = db
+    def __init__(self, g, uo_uri, uc):
+        self.g = g
         self.uo_uri = uo_uri
         self.uc = uc
     
-class UserObject:
-    def __init__(self, db, uo_uri, uc):
+class UserObject:    
+    def __init__(self, g:"KGMGraph", uo_uri, uc):
         assert(isinstance(uc, UserClass))
-        self._uo_impl = UOImpl(db, uo_uri, uc)
+        self._uo_impl = UOImpl(g, uo_uri, uc)
         self._storage = {}  # py member name -> UserObjectmemberEditor
         for k, v in uc.members.items():
             #ipdb.set_trace()
-            m_path_uri = v.m_path_uri; m_type_uri = v.m_type_uri
-            min_c = v.min_c; max_c = v.max_c
-            py_m_name = m_path_uri.get_suffix()
+            py_m_name = get_py_m_name(v.m_path_uri)
             if py_m_name in self._storage:
-                raise Exception(f"dup member name {py_m_name} on member path URI {to_turtle(m_path_uri)}")
-            self._storage[py_m_name] = UserObjectMemberEditor(self, m_path_uri, m_type_uri, min_c, max_c)
+                raise Exception(f"dup member name {py_m_name} on member path URI {m_path_uri.to_turtle()}")
+            self._storage[py_m_name] = UserObjectMemberEditor(self, v.m_path_uri, v.m_type_uri, v.min_c, v.max_c)
 
     def get_uri(self):
         return self.get_impl().uo_uri
 
-    def get_db(self):
-        return self.get_impl().db
+    def get_g(self):
+        return self.get_impl().g
     
     def get_impl(self):
         return getattr(self, "_uo_impl")
@@ -195,8 +196,9 @@ class UserObject:
         self._storage[m_name] = UserObjectMemberEditor(self, m_path_uri, m_type_uri, min_c, max_c)
 
     def load_add_member(self, m_path_uri, m_type_uri, min_c, max_c):
+        #ipdb.set_trace()
         assert(isinstance(m_path_uri, URI))
-        m_name = m_path_uri.get_suffix()
+        m_name = get_py_m_name(m_path_uri)
         self._storage[m_name] = UserObjectMemberEditor(self, m_path_uri, m_type_uri, min_c, max_c)
         
     def get_member(self, m_name):

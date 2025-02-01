@@ -25,7 +25,7 @@ def do_init(ctx, reset):
     
     ipdb.set_trace()
     rq = "select ?s { ?s rdf:type kgm:DefaultServerGraph }"
-    rq_res = db.rq_select(rq)
+    rq_res = db.rq_select(rq, rdftf = db.rdftf)
 
     if len(rq_res["s"]) > 0:
         if not reset:
@@ -34,7 +34,7 @@ def do_init(ctx, reset):
             print("removing default graph")
             #ipdb.set_trace()
             rq = "delete { ?s ?p ?o } where { ?s ?p ?o }"
-            db.rq_update(rq)
+            db.rq_update(rq, rdftf = db.rdftf)
         
     print("making kgm default graph")
 
@@ -76,15 +76,6 @@ def do_init(ctx, reset):
 
     raw_rq.append('kgm:dsg rdf:type kgm:DefaultServerGraph; kgm:fuseki_dataset_name "kgm-default-dataset" .')
 
-    for prefix, prefix_uri in db.well_known_prefixes.items():
-        raw_rq.append(f"""\
-        kgm:dsg kgm:well_known_prefixes [ 
-          rdf:type kgm:RDFPrefix; 
-          kgm:prefix "{prefix}"; 
-          kgm:prefix_uri "{prefix_uri}"
-        ].
-        """)        
-
     raw_rq = "\n".join(raw_rq)
     update_rq = f"""\
     insert data {{
@@ -92,5 +83,5 @@ def do_init(ctx, reset):
     }}
     """
 
-    #ipdb.set_trace()
-    db.rq_update(update_rq)    
+    ipdb.set_trace()
+    db.rq_update(update_rq, rdftf = db.rdftf)

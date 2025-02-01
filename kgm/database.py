@@ -1,44 +1,55 @@
 import ipdb
 import uuid
-from kgm.prefix_manager import PrefixManager
-from kgm.rdf_terms import URI, Literal, BNode, RDFObject, RDFTriple
-from kgm.rdf_utils import to_turtle
-from kgm.known_prefixes import rdf, xsd, rdfs, sh, dash, kgm, well_known_prefixes
+from kgm.rdf_terms import RDFTermFactory, URI, Literal, BNode
+from kgm.rdf_utils import RDFObject, RDFTriple
+#from kgm.known_prefixes import rdf, xsd, rdfs, sh, dash, kgm
 import kgm.sparql_utils as sparql_utils
 
 class Database:
     def __init__(self, fuseki_url, clickhouse_client = None):
         self.fuseki_url = fuseki_url
         self.clickhouse_client = clickhouse_client
-        self.well_known_prefixes = {}
-        self.init_well_known_prefixes__()
+        self.rdftf = RDFTermFactory()
+        self.load_dsg_prefixes__()
 
-    def init_well_known_prefixes__(self):
-        for prefix, prefix_uri in well_known_prefixes.items():
-            self.well_known_prefixes[prefix] = prefix_uri
-        
-    def rq_select(self, query:str):
-        return sparql_utils.rq_select__(self.well_known_prefixes, query, config = {'backend-url': self.fuseki_url})
+    def load_dsg_prefixes__(self):
+        # :prefix_list_uri kgm:RDFPrefix[0..n]
+        # at this point kgm: and std rdf prefixes are loaded so query below will be well-formed sparql        
+        rq = f"""
+        select ?prefix ?prefix_uri {{
+          kgm:dsg rdf:type kgm:Graph; kgm:prefixes ?prefixes .
+          ?prefixes rdf:type kgm:RDFPrefix; kgm:prefix ?prefix; kgm:prefix_uri ?prefix_uri
+        }}
+        """
+        rq_res = self.rq_select(rq, rdftf = self.rdftf)
+        self.rdftf.add_prefixes(rq_res)
+    
+    def rq_select(self, query:str, rdftf:RDFTermFactory):
+        rq = rdftf.make_rq(query)
+        raw_rq_res = sparql_utils.rq_select__(rq, config = {'backend-url': self.fuseki_url})
+        return rdftf.handle_rq_select_result(raw_rq_res)
 
-    def rq_update(self, query:str):
-        return sparql_utils.rq_update__(self.well_known_prefixes, query, config = {'backend-url': self.fuseki_url})
+    def rq_update(self, query:str, rdftf:RDFTermFactory):
+        rq = rdftf.make_rq(query)
+        return sparql_utils.rq_update__(rq, config = {'backend-url': self.fuseki_url})
 
     def rq_construct(self, query:str):
-        return sparql_utils.rq_construct__(self.well_known_prefixes, query, config = {'backend-url': self.fuseki_url})
+        rq = rdftf.make_rq(query)
+        return sparql_utils.rq_construct__(rq, config = {'backend-url': self.fuseki_url})
     
     def rq_insert_triples(self, graph_uri:URI, triples):
         # Serialize the graph to a string in N-Triples format
         ntriples_data = []
         ipdb.set_trace()
         for t in triples:        
-            ntriples_data.append(f"{to_turtle(t[0])} {to_turtle(t[1])} {to_turtle(t[2])} .")
+            ntriples_data.append(" ".join(t + ["."]))
 
         ntriples_data_s = "\n".join(ntriples_data)
         if graph_uri:
             assert(type(graph_uri) == URI)
             update_query = f"""
             INSERT DATA {{
-            GRAPH {to_turtle(graph_uri)} {{
+            GRAPH {graph_uri.to_turtle()} {{
             {ntriples_data_s}
             }}
             }}
@@ -50,21 +61,25 @@ class Database:
             }}
             """
 
-        self.rq_update(update_query)
+        ipdb.set_trace()
+        self.rq_update(update_query, rdftf = self.rdftf)
 
-    def rq_delete_insert(self, graph_uri:URI, dels_inss):
+    def rq_delete_insert(self, graph_uri:URI, dels_inss, rdftf):
         if len(dels_inss[0]) == 0 and len(dels_inss[1]) == 0:
             return None
 
-        delete_triples = [f"{to_turtle(t.subject)} {to_turtle(t.pred)} {to_turtle(t.object_)} ." for t in dels_inss[0]]
-        insert_triples = [f"{to_turtle(t.subject)} {to_turtle(t.pred)} {to_turtle(t.object_)} ." for t in dels_inss[1]]
+        delete_triples = []; insert_triples = []
+        for t in dels_inss[0]:
+            delete_triples.append(t.to_turtle())
+        for t in dels_inss[1]:
+            insert_triples.append(t.to_turtle())
 
         rq = ""
         if len(delete_triples) > 0:
             delete_triples_s = '\n'.join(delete_triples)
             rq += f"""\
             delete {{
-             graph {to_turtle(graph_uri)}
+             graph {graph_uri.to_turtle()}
              {{
               {delete_triples_s}
              }}
@@ -74,38 +89,44 @@ class Database:
             insert_triples_s = '\n'.join(insert_triples)
             rq += f"""\
             insert {{
-             graph {to_turtle(graph_uri)}
+             graph {graph_uri.to_turtle()}
              {{
               {insert_triples_s}
              }}
             }}
             """
         rq += "where {}"
-        
+
+        ipdb.set_trace()
         print(rq)
 
-        self.rq_update(rq)
+        self.rq_update(rq, rdftf = rdftf)
 
-    def create_kgm_graph(self, kgm_path):
+    def create_kgm_graph(self, kgm_path_s:str) -> URI:
+        rdf_type = self.rdftf.restore_prefix("rdf:type")
+        kgm_path = self.rdftf.restore_prefix("kgm:path")
+        xsd_string = self.rdftf.restore_prefix("xsd:string")
+        kgm_Graph = self.rdftf.restore_prefix("kgm:Graph")
+
         descr_g = []
-        new_graph_uri = URI(kgm.Graph.uri + "--" + str(uuid.uuid4()))
-        descr_g.append((new_graph_uri, rdf.type, RDFObject(kgm.Graph)))
-        descr_g.append((new_graph_uri, kgm.path, RDFObject(Literal(kgm_path, xsd.string))))
+        new_graph_uri = self.rdftf.make_URI_from_parts(kgm_Graph, "--" + str(uuid.uuid4()) + "--")
+        descr_g.append((new_graph_uri, rdf_type, RDFObject(kgm_Graph)))
+        descr_g.append((new_graph_uri, kgm_path, RDFObject(self.rdftf.make_Literal(kgm_path_s, xsd_string))))
 
-        #ipdb.set_trace()
+        ipdb.set_trace()
+        descr_g = [[x.to_turtle() for x in y] for y in descr_g]
         self.rq_insert_triples(None, descr_g)
         return new_graph_uri
-
-    def get_kgm_graph(db, path) -> URI:
+    
+    def get_kgm_graph(self, path) -> URI:
         #ipdb.set_trace()
         rq = f'select ?s where {{ ?s kgm:path "{path}"; rdf:type kgm:Graph }}'
         #print(rq)
 
-        rq_res = db.rq_select(rq)
+        rq_res = self.rq_select(rq, rdftf = self.rdftf)
         graph_uris = rq_res['s']
         #print(rq_res)
         if len(graph_uris) > 1:
             raise Exception(f"path leads to multiple kgm graphs: {rq_res}")
 
         return None if len(graph_uris) == 0 else graph_uris[0]
-    

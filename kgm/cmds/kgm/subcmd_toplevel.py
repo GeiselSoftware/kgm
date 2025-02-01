@@ -26,4 +26,4 @@ def show_uri(ctx, uri):
 
     #ipdb.set_trace()
     rq_res = db.rq_select(rq)
-    print(pd.DataFrame(rq_res).map(lambda x: to_turtle(x)))
+    print(pd.DataFrame(rq_res).map(lambda x: x.to_turtle()))

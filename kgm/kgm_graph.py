@@ -1,10 +1,8 @@
 import ipdb
 import uuid
 import pandas as pd
-from kgm.rdf_terms import URI, Literal, BNode, RDFTriple
-from kgm.rdf_utils import to_turtle
-from kgm.known_prefixes import rdf, rdfs, xsd, sh, dash
-from kgm.prefix_manager import PrefixManager
+from kgm.rdf_terms import URI, Literal, BNode, RDFTermFactory
+from kgm.rdf_utils import RDFTriple, get_py_m_name
 from kgm.database import Database
 from kgm.user_object import UserClass, UserObject
 
@@ -14,7 +12,9 @@ class KGMGraph:
         self.db = db
         self.g = kgm_g
         self.dep_gs = additional_kgm_pathes
-        self.prefix_man = PrefixManager()
+        self.rdftf = RDFTermFactory()
+        if not "" in self.rdftf.prefixes:
+            self.rdftf.prefixes[""] = self.g
         
         self.all_user_classes = {} # URI -> UserClass
         self.all_user_objects = {} # URI -> UserObject
@@ -23,15 +23,14 @@ class KGMGraph:
         self.just_created_uc_members = set()
         self.changed_uo_members = set()
 
-        ipdb.set_trace()
-        self.prefix_man.init(self.db, self.g)
+        #ipdb.set_trace()
         self.load_user_classes__()
             
     def create_user_class(self, uc_curie:str) -> UserClass:
         assert(isinstance(uc_curie, str))
-        uc_uri = self.prefix_man.restore_prefix(uc_curie)
+        uc_uri = self.rdftf.restore_prefix(uc_curie)
         if uc_uri in self.all_user_classes:
-            raise Exception(f"such user class already defined: {to_turtle(uc_uri)}")
+            raise Exception(f"such user class already defined: {uc_uri.to_turtle()}")
         new_uc = UserClass(self, uc_uri)
         self.all_user_classes[uc_uri] = new_uc
         self.just_created_uc.add(new_uc)
@@ -39,45 +38,58 @@ class KGMGraph:
 
     def has_user_class(self, uc_curie:str) -> bool:
         assert(isinstance(uc_curie, str))
-        uc_uri = self.prefix_man.restore_prefix(uc_curie)
+        uc_uri = self.rdftf.restore_prefix(uc_curie)
         return uc_uri in self.all_user_classes
     
     def get_user_class(self, uc_curie:str) -> UserClass:
         assert(isinstance(uc_curie, str))
-        uc_uri = self.prefix_man.restore_prefix(uc_curie)
+        uc_uri = self.rdftf.restore_prefix(uc_curie)
         if not uc_uri in self.all_user_classes:
-            raise Exception(f"no such user class defined: {to_turtle(uc_uri)}")
+            raise Exception(f"no such user class defined: {uc_uri.to_turtle()}")
         return self.all_user_classes.get(uc_uri)
         
     def create_user_object(self, uc_curie:str) -> UserObject:
         uc = self.get_user_class(uc_curie)
-        new_uri = URI(uc.uc_uri.uri + "--" + str(uuid.uuid4()))
+        new_uri = self.rdftf.make_URI_from_parts(uc.uc_uri, "--" + str(uuid.uuid4()))
         ret = UserObject(self, new_uri, uc)
         self.just_created_uo.add(ret)
         return ret
 
     def get_dels_inss__(self):
+        rdf_type = self.rdftf.restore_prefix("rdf:type")
+        rdfs_Class = self.rdftf.restore_prefix("rdfs:Class")
+        sh_NodeShape = self.rdftf.restore_prefix("sh:NodeShape")
+        sh_property = self.rdftf.restore_prefix("sh:property")
+        sh_path = self.rdftf.restore_prefix("sh:path")
+        sh_datatype = self.rdftf.restore_prefix("sh:datatype")
+        sh_class = self.rdftf.restore_prefix("sh:class")
+        sh_minCount = self.rdftf.restore_prefix("sh:minCount")
+        sh_maxCount = self.rdftf.restore_prefix("sh:maxCount")
+        dash_closedByType = self.rdftf.restore_prefix("dash:closedByType")
         dels = []; inss = []
 
+        #ipdb.set_trace()
         for uc in self.just_created_uc:
-            inss.append(RDFTriple(uc.uc_uri, rdf.type, rdfs.Class))
-            inss.append(RDFTriple(uc.uc_uri, rdf.type, sh.NodeShape))
-            inss.append(RDFTriple(uc.uc_uri, dash.closedByType, Literal.from_python(True)))
+            inss.append(RDFTriple(uc.uc_uri, rdf_type, rdfs_Class))
+            inss.append(RDFTriple(uc.uc_uri, rdf_type, sh_NodeShape))
+            inss.append(RDFTriple(uc.uc_uri, dash_closedByType, rdftf.from_python_to_Literal(True)))
             
         for uc_m in self.just_created_uc_members:
             prop = BNode(str(uuid.uuid4()))
-            inss.append(RDFTriple(uc_m.user_class.uc_uri, sh.property, prop))
-            inss.append(RDFTriple(prop, sh.path, uc_m.m_path_uri))
-            if uc_m.m_type_uri.get_prefix() == xsd.prefix__:
-                inss.append(RDFTriple(prop, sh.datatype, uc_m.m_type_uri))
+            inss.append(RDFTriple(uc_m.user_class.uc_uri, sh_property, prop))
+            inss.append(RDFTriple(prop, sh_path, uc_m.m_path_uri))
+            #if uc_m.m_type_uri.get_prefix() == xsd.prefix__:
+            if uc_m.m_type_uri.uri_s.find(self.rdftf.prefixes.get("xsd").uri_s) == 0:
+                inss.append(RDFTriple(prop, sh_datatype, uc_m.m_type_uri))
             else:
-                inss.append(RDFTriple(prop, sh.class_, uc_m.m_type_uri))
-            inss.append(RDFTriple(prop, sh.min_c, Literal.from_python(uc_m.min_c)))
+                inss.append(RDFTriple(prop, sh_class, uc_m.m_type_uri))
+            inss.append(RDFTriple(prop, sh_minCount, rdftf.from_python_to_Literal(uc_m.min_c)))
             if uc_m.max_c != -1:
-                inss.append(RDFTriple(prop, sh.max_c, Literal.from_python(uc_m.max_c)))
-        
+                inss.append(RDFTriple(prop, sh_maxCount, rdftf.from_python_to_Literal(uc_m.max_c)))
+
+        #ipdb.set_trace()
         for uo in self.just_created_uo:
-            inss.append(RDFTriple(uo.get_impl().uo_uri, rdf.type, uo.get_impl().uc.uc_uri))
+            inss.append(RDFTriple(uo.get_impl().uo_uri, rdf_type, uo.get_impl().uc.uc_uri))
             
         for uo_m in self.changed_uo_members:
             m_dels_inss = uo_m.get_dels_inss__()
@@ -89,15 +101,15 @@ class KGMGraph:
         return (dels, inss)
         
     def save(self):
-        #ipdb.set_trace()
+        ipdb.set_trace()
         dels_inss = self.get_dels_inss__()
         if 1:
             for t in dels_inss[0]:
-                print("del: ", to_turtle(t.subject), to_turtle(t.pred), to_turtle(t.object_))
+                print("del: ", t.to_turtle())
             for t in dels_inss[1]:
-                print("ins: ", to_turtle(t.subject), to_turtle(t.pred), to_turtle(t.object_))
+                print("ins: ", t.to_turtle())
 
-        self.db.rq_delete_insert(self.g, dels_inss)
+        self.db.rq_delete_insert(self.g, dels_inss, self.rdftf)
 
         self.just_created_uo.clear()
         self.just_created_uc.clear()
@@ -117,10 +129,11 @@ class KGMGraph:
         return None
 
     def get_from_clause__(self, include_dep_graphs = True):
-        from_parts = [to_turtle(self.g)]
+        #ipdb.set_trace()
+        from_parts = [self.g.to_turtle()]
         if self.dep_gs is not None and include_dep_graphs == True:
             for g in self.dep_gs:
-                from_parts.append(to_turtle(g))
+                from_parts.append(g.to_turtle())
         return "\n".join(["from " + g_uri for g_uri in from_parts])
     
     def load_user_classes__(self):
@@ -138,9 +151,9 @@ class KGMGraph:
         }}
         """
 
-        rq_res = pd.DataFrame.from_dict(self.db.rq_select(rq))
+        rq_res = pd.DataFrame.from_dict(self.db.rq_select(rq, rdftf = self.rdftf))
         #print(rq_res)
-        #ipdb.set_trace()
+        ipdb.set_trace()
         
         for ii, r in rq_res.iterrows():            
             uc_uri = r['uc']
@@ -168,7 +181,7 @@ class KGMGraph:
         select ?uo ?uo_member ?uo_member_value
         {self.get_from_clause__()}
         where {{
-          bind({to_turtle(req_uo_uri)} as ?s_uo)
+          bind({req_uo_uri.to_turtle()} as ?s_uo)
           ?uo ?uo_member ?uo_member_value
           filter(!(?uo_member in (sh:property, sh:path, sh:datatype, sh:class, sh:minCount, sh:maxCount, dash:closedByType)))
           filter(!(?uo_member_value in (sh:NodeShape, rdfs:Class)))
@@ -176,39 +189,41 @@ class KGMGraph:
         }}
         """
         #print(rq)
-        res = self.db.rq_select(rq)
+        res = self.db.rq_select(rq, rdftf = self.rdftf)
         res_df = pd.DataFrame.from_dict(res)
         print(res_df)
 
         #ipdb.set_trace()
+        rdf_type = self.rdftf.restore_prefix("rdf:type")
         for ii, r in res_df.iterrows():
             uo_uri = r['uo']; uo_m_uri = r['uo_member']
             uo_m_value = r['uo_member_value']
-            if uo_m_uri == rdf.type:
+            if uo_m_uri == rdf_type:
                 uc = self.all_user_classes.get(uo_m_value)
                 uo = uc.load_create_user_object(uo_uri)
                 self.all_user_objects[uo_uri] = uo
 
         #ipdb.set_trace()
+        rdf_type = self.rdftf.restore_prefix("rdf:type")        
         for ii, r in res_df.iterrows():
             uo_uri = r['uo']
             uo_m_uri = r['uo_member']
             uo_m_value = r['uo_member_value']
             uo = self.all_user_objects.get(uo_uri)
-            if uo_m_uri != rdf.type:
+            if uo_m_uri != rdf_type:
                 if isinstance(uo_m_value, URI):
                     m_uo_uri = uo_m_value
                     if m_uo_uri in self.all_user_objects:
                         m_v = self.all_user_objects.get(m_uo_uri)
                     else:
-                        raise Exception(f"unable to find user object with URI {to_turtle(m_uo_uri)}")
+                        raise Exception(f"unable to find user object with URI {m_uo_uri.to_turtle()}")
                 elif isinstance(uo_m_value, Literal):
                     m_v = uo_m_value
                 else:
-                    raise Exception(f"unexpected type on {to_turtle(uo_m_uri)}, user object {to_turtle(uo_uri)}")
+                    raise Exception(f"unexpected type on {uo_m_uri.to_turtle()}, user object {uo_uri.to_turtle()}")
 
                 #ipdb.set_trace()
-                uo_m_name = uo_m_uri.get_suffix()
+                uo_m_name = get_py_m_name(uo_m_uri) # uo_m_uri.get_suffix()
                 uo_m = uo.get_member(uo_m_name)
                 if uo_m.is_scalar():
                     uo_m.load_set_scalar(m_v)
@@ -226,5 +241,5 @@ class KGMGraph:
         }}
         """
 
-        rq_res = self.db.rq_select(rq)
+        rq_res = self.db.rq_select(rq, rdftf = self.rdftf)
         return pd.DataFrame.from_dict(rq_res)
