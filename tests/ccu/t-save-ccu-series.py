@@ -13,38 +13,33 @@
 # pip install clickhouse-connect
 #
 
-# kgm graph add /kgm/ccu ccu.ksd
-# kgm graph add /tests/test-ccu test-ccu.ksd
-
 import ipdb
 import uuid
 import kgm
 import numpy as np
 import clickhouse_connect
 
-class CCUSeries:
-    def __init__(self, g, cc_db):
-        self.m = g.create_user_object(":Series")
-        self.m.tablename = str(uuid.uuid4()).replace("-", "_")
-        self.clickhouse_db = cc_db
+def add_point(series_uo, v):
+    clickhouse_db = series_uo.db.get_cc()
+    q = f"insert into {series_uo.tablename}(serno, value) values({self.serno}, {v})"
+    
+
+class SeriesA:
+    def __init__(self, series_uo):
+        self.series_uo = series_uo
+        self.series_uo.tablename = str(uuid.uuid4()).replace("-", "_")
+        #ipdb.set_trace()
+        self.clickhouse_db = self.series_uo.get_g().db.clickhouse_client
         self.serno = 0
-        q = f"create table {self.m.tablename} ( serno Int64, value Float64 ) engine = MergeTree() order by (serno)"
+        q = f"create table {self.series_uo.tablename} ( serno Int64, value Float64 ) engine = MergeTree() order by (serno)"
         #print(q)
         self.clickhouse_db.command(q)
         
-    def add(self, v:float):
-        q = f"insert into {self.m.tablename}(serno, value) values({self.serno}, {v})"
+    def add_point(self, v:float):
+        q = f"insert into {self.series_uo.tablename}(serno, value) values({self.serno}, {v})"
         #print(q)
         self.clickhouse_db.command(q)
         self.serno += 1
-
-class Test:
-    def __init__(self, g:kgm.KGMGraph, cc_db):
-        self.m = g.create_user_object(":Test")
-        self.m.tdata = g.create_user_object(":TestData")
-        self.m.tdata.testdata = 1.0
-        self.series = CCUSeries(g, cc_db)
-        self.m.vs = self.series.m
         
 if __name__ == "__main__":
     ipdb.set_trace()
@@ -52,19 +47,24 @@ if __name__ == "__main__":
     fuseki_url = "http://localhost:3030/kgm-default-dataset"
     db = kgm.Database(fuseki_url, ccc)
     kgm_path = "/test-ccu"
-    #g = db.open_graph("/tests/test-ccu", additional_graphs = ["/sys/ccu"])
     g_uri = db.get_kgm_graph(kgm_path)
     if g_uri is None:
         raise Exception(f"can't find kgm path {kgm_path}")
 
     g = kgm.KGMGraph(db, g_uri)
-        
-    test_pyo = Test(g, ccc)
+
+    ipdb.set_trace()
+    #test_uo = g.create_uo(":Test", tdata = g.create_uo(":TestData"), vs = g.create_uo(":Series"))
+    test_uo = g.create_user_object(":Test")
+    test_uo.tdata = g.create_user_object(":TestData")
+    test_uo.vs = g.create_user_object(":Series")
+    test_uo.tdata.testdata = 111.0
+    series_a = SeriesA(test_uo.vs)
     
     ipdb.set_trace()
     g.save()
-    print("test.vs:", test_pyo.m.vs.get_uri())
+    print("test.vs:", test_uo.vs.get_uri())
 
-    if 1:
-        for i in range(100):
-            test_pyo.series.add(np.random.rand())
+    for i in range(100):
+        series_a.add_point(np.random.rand())
+

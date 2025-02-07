@@ -1,0 +1,12 @@
+class :Human
+ :address xsd:string
+ :phone xsd:string
+ :cars xsd:string[0..n]
+ :age xsd:integer
+ :pet :Pet
+ :pets :Pet[0..n]
+end
+
+class :Pet
+ :name xsd:string
+end

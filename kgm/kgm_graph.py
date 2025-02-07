@@ -175,7 +175,7 @@ class KGMGraph:
         where {{
           bind({req_uo_uri.to_turtle(self.rdftf)} as ?s_uo)
           ?uo ?uo_member ?uo_member_value
-          filter(!(?uo_member in (sh:property, sh:path, sh:datatype, sh:class, sh:minCount, sh:maxCount, dash:closedByType)))
+          filter(!(?uo_member in (sh:property, sh:path, sh:datatype, sh:class, sh:minCount, sh:maxCount, sh:closed, dash:closedByType)))
           filter(!(?uo_member_value in (sh:NodeShape, rdfs:Class)))
           ?s_uo (<>|!<>)* ?uo
         }}
