@@ -1,8 +1,7 @@
 #import ipdb
 from lark import Lark, Visitor
 import pandas as pd
-from kgm.rdf_utils import known_prefixes
-from kgm.kgm_utils import get_kgm_graph
+from kgm.rdf_terms import well_known_prefixes
 
 ksd_grammar = \
     """
@@ -89,13 +88,11 @@ class MyClassVisitor(Visitor):
     
 class MyVisitor(Visitor):
     def __init__(self):
-        self.local_prefixes = {}
         self.known_rdfs_classes = {}
         
     def prefix(self, m):
         prefix = "".join([x.value for x in m.children[0].children])
         uri = m.children[1].children[0].value
-        self.local_prefixes[prefix] = uri
 
     def rdfs_class_def(self, m):
         class_uri = "".join([x.value for x in m.children[0].children[0].children])
@@ -146,7 +143,7 @@ class KSDParser:
         #print(superclasses_dets)
 
         #ipdb.set_trace()
-        print(f'prefix : <{known_prefixes[""]}>')
+        print(f'prefix : <{well_known_prefixes[""]}>')
         print()
         
         for class_uri in classes_dets.uc.unique():
@@ -183,13 +180,11 @@ class KSDParser:
         v = MyVisitor()
         v.visit_topdown(tree)
 
-        wellknown_prefixes = ["rdf", "rdfs", "sh", "xsd"]
-        for prefix in wellknown_prefixes:
-            uri = known_prefixes[prefix]
-            print(f"@prefix {prefix}: <{uri}> .")
+        for prefix in ["rdf", "rdfs", "sh", "xsd"]:
+            uri = well_known_prefixes[prefix]
+            print(f"@prefix {prefix}: <{uri[0]}> .")
             
-        for prefix, prefix_uri in v.local_prefixes.items():
-            print(f"@prefix {prefix} <{prefix_uri}> .")
+        print(f"@prefix : <urn:kgm::> .") # empty prefix for empty kgm namespace
 
         print()
 

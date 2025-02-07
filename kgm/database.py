@@ -49,7 +49,7 @@ class Database:
             assert(type(graph_uri) == URI)
             update_query = f"""
             INSERT DATA {{
-            GRAPH {graph_uri.to_turtle()} {{
+            GRAPH <{graph_uri}> {{
             {ntriples_data_s}
             }}
             }}
@@ -104,7 +104,7 @@ class Database:
 
     def create_kgm_graph(self, kgm_path_s:str) -> URI:
         descr_g = []
-        new_graph_uri = URI("urn:kgm:" + str(uuid.uuid4())) #self.rdftf.make_URI_from_parts(kgm_Graph, "--" + str(uuid.uuid4()) + "--")
+        new_graph_uri = URI("urn:kgm::" + str(uuid.uuid4())) # created in empty kgm namespace
         descr_g.append((new_graph_uri, rdf.type, RDFObject(kgm.Graph)))
         descr_g.append((new_graph_uri, kgm.path, RDFObject(self.rdftf.make_Literal(kgm_path_s, xsd.string))))
 

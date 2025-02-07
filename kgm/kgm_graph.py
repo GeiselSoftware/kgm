@@ -15,7 +15,7 @@ class KGMGraph:
         self.dep_gs = additional_kgm_pathes
         self.rdftf = RDFTermFactory()
         if not "" in self.rdftf.prefixes:
-            self.rdftf.prefixes[""] = URI(self.g.uri_s + "::")
+            self.rdftf.prefixes[""] = URI("urn:kgm::") # this is prefix with empty kgm namespace
         
         self.all_user_classes = {} # URI -> UserClass
         self.all_user_objects = {} # URI -> UserObject
@@ -46,12 +46,12 @@ class KGMGraph:
         assert(isinstance(uc_curie, str))
         uc_uri = self.rdftf.restore_prefix(uc_curie)
         if not uc_uri in self.all_user_classes:
-            raise Exception(f"no such user class defined: {uc_uri.to_turtle()}")
+            raise Exception(f"no such user class defined: {uc_uri}")
         return self.all_user_classes.get(uc_uri)
         
     def create_user_object(self, uc_curie:str) -> UserObject:
         uc = self.get_user_class(uc_curie)
-        new_uri = self.rdftf.make_URI_from_parts(uc.uc_uri, ":" + str(uuid.uuid4()))
+        new_uri = self.rdftf.make_URI_from_parts(uc.uc_uri, "--" + str(uuid.uuid4())) # object id made of class and uuid
         ret = UserObject(self, new_uri, uc)
         self.just_created_uo.add(ret)
         return ret

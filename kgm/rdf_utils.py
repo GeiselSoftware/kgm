@@ -19,4 +19,5 @@ class RDFTriple:
         return " ".join([x.to_turtle(rdftf) for x in [self.subject, self.pred, self.object_]]) + " ."
 
 def get_py_m_name(m_path_uri:URI) -> str:
+    #ipdb.set_trace()
     return m_path_uri.uri_s.split(":")[-1] # v.m_path_uri.get_suffix()

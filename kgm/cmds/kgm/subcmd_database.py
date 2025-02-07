@@ -40,15 +40,8 @@ def do_init(ctx, reset):
 
     """
     # this docsstring is for references only
-    class kgm:RDFPrefix
-      kgm:prefix xsd:string
-      kgm:prefix_uri xsd:string
-    end
-
     class kgm:DefaultServerGraph
       kgm:fuseki_dataset_name xsd:string
-      kgm:well_known_prefixes kgm:RDFPrefix[6..6]
-      kgm:locally_known_prefixes kgm:RDFPrefix[0..n]
     end
 
     class kgm:Graph
@@ -61,13 +54,8 @@ def do_init(ctx, reset):
     raw_rq = []
     
     raw_rq.append("""\
-    kgm:RDFPrefix rdf:type rdfs:Class; rdf:type sh:NodeShape; sh:closed true;
-    sh:property [ sh:path kgm:prefix; sh:datatype xsd:string; sh:minCount 1; sh:maxCount 1];
-    sh:property [ sh:path kgm:prefix_uri; sh:datatype xsd:string; sh:minCount 1; sh:maxCount 1];
-    .
     kgm:DefaultServerGraph rdf:type rdfs:Class; rdf:type sh:NodeShape; sh:closed true;
     sh:property [ sh:path kgm:fuseki_dataset_name; sh:datatype xsd:string; sh:minCount 1; sh:maxCount 1 ];
-    sh:property [ sh:path kgm:well_known_prefixes; sh:class kgm:RDFPrefix; sh:minCount 0 ];
     .
     kgm:Graph rdf:type rdfs:Class; rdf:type sh:NodeShape; sh:closed true;
     sh:property [ sh:path kgm:path; sh:datatype xsd:string; sh:minCount 1; sh:maxCount 1];

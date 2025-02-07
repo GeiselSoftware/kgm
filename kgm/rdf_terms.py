@@ -113,7 +113,7 @@ class RDFTermFactory:
         assert(type(curie) == str)
         for prefix, prefix_uri in self.prefixes.items():
             if curie.find(prefix + ":") == 0:
-                return URI(curie.replace(prefix + ":", prefix_uri.uri_s + ":"))
+                return URI(curie.replace(prefix + ":", prefix_uri.uri_s))
         raise Exception("can't restore prefix in curie", curie)
 
     def collapse_prefix(self, uri:URI) -> str:
@@ -172,5 +172,7 @@ class RDFTermFactory:
             return RDFTermFactory.make_Literal("true" if v else "false", xsd.boolean)
         elif type(v) == int:
             return RDFTermFactory.make_Literal(f"{v}", xsd.integer)
+        elif type(v) == float:
+            return RDFTermFactory.make_Literal(f"{v}", xsd.float)
 
-        raise Exception(f"from_python_to_Literal: unsupported type {typeof(v)}")
+        raise Exception(f"from_python_to_Literal: unsupported type {type(v)}")

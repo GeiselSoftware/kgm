@@ -4,6 +4,7 @@ import pandas as pd
 import rdflib
 from kgm.database import Database
 from kgm.kgm_graph import KGMGraph
+from kgm.rdf_terms import URI, BNode, Literal
 from . import kgm_validate
 
 @click.group()
@@ -202,7 +203,8 @@ def do_cat(db, path):
             res_g.add((s, p, o))
         print(res_g.serialize(format="ttl"))
 
-def parse_ttl(prefix_man, source):
+def parse_ttl(source, rdftf):
+    ipdb.set_trace()
     g = rdflib.Graph()
     g.parse(source, format = "turtle")
     triples = []
@@ -211,11 +213,11 @@ def parse_ttl(prefix_man, source):
         for r in [s, p, o]:
             #print(r)
             if type(r) == rdflib.URIRef:
-                new_spo.append(URI(prefix_man.collapse_prefix(r.toPython())))
+                new_spo.append(URI(r.toPython()).to_turtle(rdftf))
             elif type(r) == rdflib.BNode:
-                new_spo.append(BNode(r.toPython()))
+                new_spo.append(BNode(r.toPython()).to_turtle(rdftf))
             elif type(r) == rdflib.Literal:
-                new_spo.append(Literal(r.toPython(), URI(prefix_man.collapse_prefix(r.datatype.toPython()))))
+                new_spo.append(Literal(r.toPython(), URI(r.datatype.toPython())).to_turtle(rdftf))
             else:
                 raise Exception("parse_ttl conversion failed")
         triples.append(new_spo)
@@ -234,7 +236,7 @@ def graph_import(ctx, path, ttl_file):
     print("do_import:", path, ttl_file)
     #ipdb.set_trace()
     
-    graph_uri = get_kgm_graph(db, path)
+    graph_uri = db.get_kgm_graph(path)
     if graph_uri is not None:
         print(f"graph at path {path} already exists:", graph_uri)
         return
@@ -244,12 +246,12 @@ def graph_import(ctx, path, ttl_file):
     if ttl_file.startswith("http"):
         ttl_file_url = ttl_file
         with urllib.request.urlopen(ttl_file_url) as fd:
-            source_triples = parse_ttl(db.prefix_man, fd)
+            source_triples = parse_ttl(fd, db.rdftf)
     else:
-        source_triples = parse_ttl(db.prefix_man, ttl_file)
+        source_triples = parse_ttl(ttl_file, db.rdftf)
     
-    #ipdb.set_trace()
-    graph_uri = create_kgm_graph(db, path)
+    ipdb.set_trace()
+    graph_uri = db.create_kgm_graph(path)
     db.rq_insert_triples(graph_uri, source_triples)
 
     print(path, graph_uri)

@@ -1,4 +1,6 @@
-# prefix ccu: <http://www.geisel-software.com/kgm/ClickHouseUtils#>
+class :Series
+ :tablename xsd:string
+end
 
 class :TestData
  :testdata xsd:float
@@ -6,5 +8,5 @@ end
 
 class :Test
  :tdata :TestData
- :vs ccu:Series
+ :vs :Series
 end
