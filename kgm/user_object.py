@@ -16,7 +16,7 @@ class UserClass:
         self.uc_uri = uc_uri
         self.members = {} # m_path_uri => member attrs
 
-    def add_member(self, m_path_uri, m_type_uri, min_c:int, max_c:int, just_created:bool = True):
+    def add_member__(self, m_path_uri, m_type_uri, min_c:int, max_c:int, just_created:bool = True):
         assert(type(min_c) == int)
         if isinstance(m_path_uri, str):
             m_path_uri = self.g.rdftf.restore_prefix(":" + m_path_uri)
@@ -33,10 +33,10 @@ class UserClass:
         if just_created:
             self.g.just_created_uc_members.add(new_uc_m)
 
-    def load_create_user_object(self, uo_uri:URI) -> "UserObject":
+    def load_create_user_object__(self, uo_uri:URI) -> "UserObject":
         ret = UserObject(self.g, uo_uri, self)
         for k, v in self.members.items():
-            ret.load_add_member(v.m_path_uri, v.m_type_uri, v.min_c, v.max_c)
+            ret.load_add_member__(v.m_path_uri, v.m_type_uri, v.min_c, v.max_c)
         return ret
 
     def show(self):
@@ -187,20 +187,12 @@ class UserObject:
         # Raise AttributeError if attribute not found or restricted
         raise AttributeError(f"member '{name}' is not accessible.")
     
-    def add_member(self, m_name:str, m_type_uri:URI, min_c, max_c):
-        """Add new attributes to the accessible list."""
-        assert(isinstance(m_name, str))
-        m_path_uri = URI(self.prefix_manager.restore_prefix(":" + m_name))
-        uc = self.get_impl().uc
-        uc.add_member(m_path_uri, m_type_uri, min_c, max_c)
-        self._storage[m_name] = UserObjectMemberEditor(self, m_path_uri, m_type_uri, min_c, max_c)
-
-    def load_add_member(self, m_path_uri, m_type_uri, min_c, max_c):
+    def load_add_member__(self, m_path_uri, m_type_uri, min_c, max_c):
         #ipdb.set_trace()
         assert(isinstance(m_path_uri, URI))
         m_name = get_py_m_name(m_path_uri)
         self._storage[m_name] = UserObjectMemberEditor(self, m_path_uri, m_type_uri, min_c, max_c)
         
-    def get_member(self, m_name):
+    def get_member__(self, m_name):
         assert(isinstance(m_name, str))
         return self._storage.get(m_name)

@@ -162,7 +162,7 @@ class KGMGraph:
             uc_m_type = r['uc_m_class'] if r['uc_m_class'] is not None else r['uc_m_datatype']
             uc_m_class = r['uc_m_class']
             max_c = r['uc_m_maxc'].as_python() if r['uc_m_maxc'] is not None else -1
-            uc.add_member(r['uc_m_name'], uc_m_type, r['uc_m_minc'].as_python(), max_c, just_created = False)
+            uc.add_member__(r['uc_m_name'], uc_m_type, r['uc_m_minc'].as_python(), max_c, just_created = False)
     
     def load_user_object(self, req_uo_uri: URI) -> UserObject:
         #ipdb.set_trace()
@@ -191,7 +191,7 @@ class KGMGraph:
             uo_m_value = r['uo_member_value']
             if uo_m_uri == rdf.type:
                 uc = self.all_user_classes.get(uo_m_value)
-                uo = uc.load_create_user_object(uo_uri)
+                uo = uc.load_create_user_object__(uo_uri)
                 self.all_user_objects[uo_uri] = uo
 
         #ipdb.set_trace()
@@ -214,7 +214,7 @@ class KGMGraph:
 
                 #ipdb.set_trace()
                 uo_m_name = get_py_m_name(uo_m_uri) # uo_m_uri.get_suffix()
-                uo_m = uo.get_member(uo_m_name)
+                uo_m = uo.get_member__(uo_m_name)
                 if uo_m.is_scalar():
                     uo_m.load_set_scalar(m_v)
                 else:
