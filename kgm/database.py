@@ -70,16 +70,16 @@ class Database:
 
         delete_triples = []; insert_triples = []
         for t in dels_inss[0]:
-            delete_triples.append(t.to_turtle())
+            delete_triples.append(t.to_turtle(rdftf))
         for t in dels_inss[1]:
-            insert_triples.append(t.to_turtle())
+            insert_triples.append(t.to_turtle(rdftf))
 
         rq = ""
         if len(delete_triples) > 0:
             delete_triples_s = '\n'.join(delete_triples)
             rq += f"""\
             delete {{
-             graph {graph_uri.to_turtle()}
+             graph {graph_uri.to_turtle(rdftf)}
              {{
               {delete_triples_s}
              }}
@@ -89,7 +89,7 @@ class Database:
             insert_triples_s = '\n'.join(insert_triples)
             rq += f"""\
             insert {{
-             graph {graph_uri.to_turtle()}
+             graph {graph_uri.to_turtle(rdftf)}
              {{
               {insert_triples_s}
              }}
@@ -104,12 +104,12 @@ class Database:
 
     def create_kgm_graph(self, kgm_path_s:str) -> URI:
         descr_g = []
-        new_graph_uri = self.rdftf.make_URI_from_parts(kgm_Graph, "--" + str(uuid.uuid4()) + "--")
+        new_graph_uri = URI("urn:kgm:" + str(uuid.uuid4())) #self.rdftf.make_URI_from_parts(kgm_Graph, "--" + str(uuid.uuid4()) + "--")
         descr_g.append((new_graph_uri, rdf.type, RDFObject(kgm.Graph)))
         descr_g.append((new_graph_uri, kgm.path, RDFObject(self.rdftf.make_Literal(kgm_path_s, xsd.string))))
 
         ipdb.set_trace()
-        descr_g = [[x.to_turtle() for x in y] for y in descr_g]
+        descr_g = [[x.to_turtle(None) for x in y] for y in descr_g]
         self.rq_insert_triples(None, descr_g)
         return new_graph_uri
     

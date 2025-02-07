@@ -23,7 +23,7 @@ def graph_ls(ctx, path):
     query = "select ?kgm_path ?g { ?g rdf:type kgm:Graph; kgm:path ?kgm_path }"
     rdftf = db.rdftf
     res = db.rq_select(query, rdftf = rdftf)
-    print(pd.DataFrame(res).map(lambda x: x.to_turtle()))
+    print(pd.DataFrame(res).map(lambda x: x.to_turtle(rdftf)))
 
 
 @graph.command("new", help = "creates new empty graph at given path")
@@ -54,9 +54,10 @@ def graph_remove(ctx, path):
     if graph_uri is None:
         print(f"can't find graph at path {path}")
         return
-    
-    rq_queries = [f"drop graph {graph_uri.to_turtle()}",
-                  f'delete {{ ?s ?p ?o }} where {{ bind({graph_uri.to_turtle()} as ?s) {{ ?s ?p ?o }} }}']
+
+    rdftf = db.rdftf
+    rq_queries = [f"drop graph {graph_uri.to_turtle(rdftf)}",
+                  f'delete {{ ?s ?p ?o }} where {{ bind({graph_uri.to_turtle(rdftf)} as ?s) {{ ?s ?p ?o }} }}']
 
     #ipdb.set_trace()
     for rq in rq_queries:
@@ -70,7 +71,8 @@ def graph_remove(ctx, path):
 def graph_copy(ctx, source_path, dest_path):
     _, w_config = ctx.obj["config"]
     fuseki_url = w_config['backend-url']
-    db = Database(fuseki_url)    
+    db = Database(fuseki_url)
+    rdftf = db.rdftf
     print("do_copy:", source_path, dest_path)
 
     source_graph_uri = db.get_kgm_graph(source_path)
@@ -87,24 +89,24 @@ def graph_copy(ctx, source_path, dest_path):
     dest_graph_uri = db.create_kgm_graph(dest_path)    
     rq_queries = [f'''
                   insert {{
-                    {dest_graph_uri.to_turtle()} kgm:path "{dest_path}"; ?p ?o
+                    {dest_graph_uri.to_turtle(rdftf)} kgm:path "{dest_path}"; ?p ?o
                   }}
                   where {{
-                    {source_graph_uri.to_turtle()} ?p ?o filter(?p != kgm:path)
+                    {source_graph_uri.to_turtle(rdftf)} ?p ?o filter(?p != kgm:path)
                   }}
                   ''',
                   f'''
                   insert {{
-                    graph {dest_graph_uri.to_turtle()} {{ ?s ?p ?o }}
+                    graph {dest_graph_uri.to_turtle(rdftf)} {{ ?s ?p ?o }}
                   }} where {{
-                    graph {source_graph_uri.to_turtle()} {{ ?s ?p ?o }}
+                    graph {source_graph_uri.to_turtle(rdftf)} {{ ?s ?p ?o }}
                   }}
                   '''
                   ]
     #ipdb.set_trace()
     for rq in rq_queries:
         print(rq)
-        db.rq_update(rq, rdftf = db.rdftf)
+        db.rq_update(rq, rdftf = rdftf)
     
 @graph.command("rename", help = "changes the path of the graph leaving graph content intact")
 @click.argument("path", required = True)
@@ -113,7 +115,8 @@ def graph_copy(ctx, source_path, dest_path):
 def graph_rename(ctx, path, new_path):
     _, w_config = ctx.obj["config"]
     fuseki_url = w_config['backend-url']
-    db = Database(fuseki_url)    
+    db = Database(fuseki_url)
+    rdftf = db.rdftf
     print("do_rename:", path, new_path)
 
     graph_uri = db.get_kgm_graph(path)
@@ -127,8 +130,8 @@ def graph_rename(ctx, path, new_path):
         return
     del new_graph_uri
     
-    rq_queries = [f'delete data {{ {graph_uri.to_turtle()} kgm:path "{path}" }}',
-                  f'insert data {{ {graph_uri.to_turtle()} kgm:path "{new_path}" }}']
+    rq_queries = [f'delete data {{ {graph_uri.to_turtle(rdftf)} kgm:path "{path}" }}',
+                  f'insert data {{ {graph_uri.to_turtle(rdftf)} kgm:path "{new_path}" }}']
     for rq in rq_queries:
         print(rq)
         db.rq_update(rq, rdftf = db.rdftf)

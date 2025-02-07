@@ -4,6 +4,7 @@
 # --- from https://hub.docker.com/r/clickhouse/clickhouse-server/
 # run clickhouse in docker: 
 # docker run -d -p 18123:8123 -p19000:9000 --name local-clickhouse-server --ulimit nofile=262144:262144 clickhouse/clickhouse-server
+# docker start local-clickhouse-server
 # docker exec -it local-clickhouse-server clickhouse-client
 # > create table a (a String) engine = Log
 # > select * from a

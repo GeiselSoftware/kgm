@@ -2,7 +2,7 @@ import ipdb
 import uuid
 import pandas as pd
 from kgm.rdf_terms import URI, Literal, BNode, RDFTermFactory
-from kgm.rdf_terms import rdf, rdfs, xsd, sh, dash, kgm
+from kgm.rdf_terms import rdf, rdfs, xsd, sh, dash, kgm, well_known_prefixes
 from kgm.rdf_utils import RDFTriple, get_py_m_name
 from kgm.database import Database
 from kgm.user_object import UserClass, UserObject
@@ -15,7 +15,7 @@ class KGMGraph:
         self.dep_gs = additional_kgm_pathes
         self.rdftf = RDFTermFactory()
         if not "" in self.rdftf.prefixes:
-            self.rdftf.prefixes[""] = self.g
+            self.rdftf.prefixes[""] = URI(self.g.uri_s + "::")
         
         self.all_user_classes = {} # URI -> UserClass
         self.all_user_objects = {} # URI -> UserObject
@@ -51,7 +51,7 @@ class KGMGraph:
         
     def create_user_object(self, uc_curie:str) -> UserObject:
         uc = self.get_user_class(uc_curie)
-        new_uri = self.rdftf.make_URI_from_parts(uc.uc_uri, "--" + str(uuid.uuid4()))
+        new_uri = self.rdftf.make_URI_from_parts(uc.uc_uri, ":" + str(uuid.uuid4()))
         ret = UserObject(self, new_uri, uc)
         self.just_created_uo.add(ret)
         return ret
@@ -63,20 +63,21 @@ class KGMGraph:
         for uc in self.just_created_uc:
             inss.append(RDFTriple(uc.uc_uri, rdf.type, rdfs.Class))
             inss.append(RDFTriple(uc.uc_uri, rdf.type, sh.NodeShape))
-            inss.append(RDFTriple(uc.uc_uri, dash.closedByType, rdftf.from_python_to_Literal(True)))
+            inss.append(RDFTriple(uc.uc_uri, dash.closedByType, RDFTermFactory.from_python_to_Literal(True)))
             
+        ipdb.set_trace()
         for uc_m in self.just_created_uc_members:
             prop = BNode(str(uuid.uuid4()))
             inss.append(RDFTriple(uc_m.user_class.uc_uri, sh.property, prop))
             inss.append(RDFTriple(prop, sh.path, uc_m.m_path_uri))
             #if uc_m.m_type_uri.get_prefix() == xsd.prefix__:
-            if uc_m.m_type_uri.uri_s.find(self.rdftf.prefixes.get("xsd").uri_s) == 0:
+            if uc_m.m_type_uri.uri_s.find(well_known_prefixes.get("xsd")[0]) == 0:
                 inss.append(RDFTriple(prop, sh.datatype, uc_m.m_type_uri))
             else:
                 inss.append(RDFTriple(prop, sh.class_, uc_m.m_type_uri))
-            inss.append(RDFTriple(prop, sh.minCount, rdftf.from_python_to_Literal(uc_m.min_c)))
+            inss.append(RDFTriple(prop, sh.minCount, RDFTermFactory.from_python_to_Literal(uc_m.min_c)))
             if uc_m.max_c != -1:
-                inss.append(RDFTriple(prop, sh.maxCount, rdftf.from_python_to_Literal(uc_m.max_c)))
+                inss.append(RDFTriple(prop, sh.maxCount, RDFTermFactory.from_python_to_Literal(uc_m.max_c)))
 
         #ipdb.set_trace()
         for uo in self.just_created_uo:
@@ -96,9 +97,9 @@ class KGMGraph:
         dels_inss = self.get_dels_inss__()
         if 1:
             for t in dels_inss[0]:
-                print("del: ", t.to_turtle())
+                print("del: ", t.to_turtle(None))
             for t in dels_inss[1]:
-                print("ins: ", t.to_turtle())
+                print("ins: ", t.to_turtle(None))
 
         self.db.rq_delete_insert(self.g, dels_inss, self.rdftf)
 
@@ -121,11 +122,11 @@ class KGMGraph:
 
     def get_from_clause__(self, include_dep_graphs = True):
         #ipdb.set_trace()
-        from_parts = [self.g.to_turtle()]
+        from_parts = [self.g]
         if self.dep_gs is not None and include_dep_graphs == True:
             for g in self.dep_gs:
                 from_parts.append(g.to_turtle())
-        return "\n".join(["from " + g_uri for g_uri in from_parts])
+        return "\n".join([f"from <{g_uri.uri_s}>" for g_uri in from_parts])
     
     def load_user_classes__(self):
         rq = f"""\
@@ -172,7 +173,7 @@ class KGMGraph:
         select ?uo ?uo_member ?uo_member_value
         {self.get_from_clause__()}
         where {{
-          bind({req_uo_uri.to_turtle()} as ?s_uo)
+          bind({req_uo_uri.to_turtle(self.rdftf)} as ?s_uo)
           ?uo ?uo_member ?uo_member_value
           filter(!(?uo_member in (sh:property, sh:path, sh:datatype, sh:class, sh:minCount, sh:maxCount, dash:closedByType)))
           filter(!(?uo_member_value in (sh:NodeShape, rdfs:Class)))
