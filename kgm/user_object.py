@@ -14,6 +14,7 @@ class UserClass:
     def __init__(self, g:"KGMGraph", uc_uri:URI):
         self.g = g
         self.uc_uri = uc_uri
+        self.super_uc_uris = set()
         self.members = {} # m_path_uri => member attrs
 
     def add_member__(self, m_path_uri, m_type_uri, min_c:int, max_c:int, just_created:bool = True):
@@ -26,7 +27,8 @@ class UserClass:
         assert(isinstance(m_type_uri, URI))
         
         if m_path_uri in self.members:
-            raise Exception(f"this member already added: {m_path_uri.to_turtle()}")
+            ipdb.set_trace()
+            raise Exception(f"this member already added: {m_path_uri.to_turtle(self.g.rdftf)}")
         #ipdb.set_trace()
         new_uc_m = UserClassMember(self, m_path_uri, m_type_uri, min_c, max_c)
         self.members[m_path_uri] = new_uc_m
@@ -47,6 +49,7 @@ class UserClass:
 class UserObjectMemberEditor:
     def __init__(self, uo, m_path_uri, m_type_uri, min_c, max_c):
         self.uo = uo
+        #self.m_uc = m_uc # it points to actual rdfs class where member was introduced in rdfs class hierarchy
         self.m_path_uri = m_path_uri
         self.m_type_uri = m_type_uri
         self.min_c = min_c; self.max_c = max_c
@@ -137,7 +140,7 @@ class UOImpl:
         self.uo_uri = uo_uri
         self.uc = uc
     
-class UserObject:    
+class UserObject:
     def __init__(self, g:"KGMGraph", uo_uri, uc):
         assert(isinstance(uc, UserClass))
         self._uo_impl = UOImpl(g, uo_uri, uc)
@@ -157,7 +160,7 @@ class UserObject:
     
     def get_impl(self):
         return getattr(self, "_uo_impl")
-        
+            
     def __setattr__(self, name, value):
         # Handle attributes allowed in the restricted list
         if name in {"_storage", "_uo_impl"}:
@@ -196,3 +199,7 @@ class UserObject:
     def get_member__(self, m_name):
         assert(isinstance(m_name, str))
         return self._storage.get(m_name)
+
+    def __dir__(self):
+        return self._storage.keys()
+    

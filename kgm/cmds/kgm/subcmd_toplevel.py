@@ -16,14 +16,15 @@ def show_uri(ctx, uri):
     select ?uo ?uo_member ?uo_member_value {{ 
       graph ?g
       {{ 
-        bind({uri} as ?s_uo)
+        bind(<{uri}> as ?s_uo)
         ?uo ?uo_member ?uo_member_value .
-        ?s_uo (<>|!<>)* ?uo .
+        filter(!(?uo_member in (rdfs:subClassOf, sh:property, sh:path, sh:datatype, sh:class, sh:minCount, sh:maxCount, sh:closed, dash:closedByType)))
+        filter(!(?uo_member_value in (sh:NodeShape, rdfs:Class)))
+        ?s_uo (<>|!<>)* ?uo .        
       }}
     }}
     """
     #print(rq)
 
-    #ipdb.set_trace()
-    rq_res = db.rq_select(rq)
-    print(pd.DataFrame(rq_res).map(lambda x: x.to_turtle()))
+    rq_res = db.rq_select(rq, db.rdftf)
+    print(pd.DataFrame(rq_res).map(lambda x: x.to_turtle(db.rdftf)))

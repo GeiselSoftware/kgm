@@ -1,0 +1,34 @@
+class :PhysState
+end
+
+class :Liquid subclass of :PhysState
+end
+
+class :Solid subclass of :PhysState
+end
+
+class :Powder subclass of :PhysState
+end
+
+class :Flammable
+end
+
+class :LabPackChemical
+ :name xsd:string # Chemical
+ :State :PhysState
+ :Additional_Comments xsd:string
+ #:CAS_No xsd:string[0..1]
+ #:CCI_CODE xsd:string[0..1]
+end
+
+class :LocalCode
+ :labpackChemical :LabPackChemical[1..n]
+end
+
+class :LocalUNCode subclass of :LocalCode
+ :uncode xsd:string
+end
+
+class :LocalEPACode subclass of :LocalCode
+ :epacode xsd:string
+end

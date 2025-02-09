@@ -1,0 +1,14 @@
+class :Waste
+end
+
+class :Hazardous subClassOf :Waste
+end
+
+class :NonHazardous subClassOf :Waste
+end
+
+class :Recycled subClassOf :Waste
+end
+
+class :Universal subClassOf :Waste
+end

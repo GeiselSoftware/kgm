@@ -56,7 +56,7 @@ class KGMGraph:
         self.just_created_uo.add(ret)
         return ret
 
-    def get_dels_inss__(self):            
+    def get_dels_inss__(self):
         dels = []; inss = []
 
         #ipdb.set_trace()
@@ -129,6 +129,30 @@ class KGMGraph:
         return "\n".join([f"from <{g_uri.uri_s}>" for g_uri in from_parts])
     
     def load_user_classes__(self):
+        if 1: # create all user classes including empty ones. next query will not retreive empty rdfs classes
+            rq = f"""
+            select ?uc ?super_uc
+            {self.get_from_clause__()}
+            {{
+             ?uc rdf:type rdfs:Class.
+             optional {{ ?uc rdfs:subClassOf ?super_uc }}
+            }}
+            """
+            ipdb.set_trace()
+            rq_res = pd.DataFrame.from_dict(self.db.rq_select(rq, rdftf = self.rdftf))
+            for ii, r in rq_res.iterrows():
+                uc_uri = r['uc']
+                if not uc_uri in self.all_user_classes:
+                    self.all_user_classes[uc_uri] = UserClass(self, uc_uri)
+                uc = self.all_user_classes[uc_uri]
+                
+                super_uc_uri = r['super_uc']
+                if super_uc_uri is not None:
+                    if super_uc_uri in uc.super_uc_uris:
+                        raise Exception(f"such class is already superclass of {uc_uri}: {super_uc_uri}")
+                    uc.super_uc_uris.add(super_uc_uri)
+        
+        # load user class members if any
         rq = f"""\
         select ?uc ?uc_m_name ?uc_m_class ?uc_m_datatype ?uc_m_minc ?uc_m_maxc
         {self.get_from_clause__()}
@@ -142,15 +166,16 @@ class KGMGraph:
            optional {{ ?uc_p sh:class ?uc_m_class }}
         }}
         """
-
+        ipdb.set_trace()
         rq_res = pd.DataFrame.from_dict(self.db.rq_select(rq, rdftf = self.rdftf))
         #print(rq_res)
-        ipdb.set_trace()
+        #ipdb.set_trace()
         
         for ii, r in rq_res.iterrows():            
             uc_uri = r['uc']
             if not uc_uri in self.all_user_classes:
-                self.all_user_classes[uc_uri] = UserClass(self, uc_uri)
+                raise Exception("logic error: all classes should have been defined at this point")
+                #self.all_user_classes[uc_uri] = UserClass(self, uc_uri)
             uc = self.all_user_classes.get(uc_uri)
 
             # we assume that query will return either datatype or class
@@ -163,9 +188,22 @@ class KGMGraph:
             uc_m_class = r['uc_m_class']
             max_c = r['uc_m_maxc'].as_python() if r['uc_m_maxc'] is not None else -1
             uc.add_member__(r['uc_m_name'], uc_m_type, r['uc_m_minc'].as_python(), max_c, just_created = False)
-    
+
+        if 1: # inserts superclass members
+            ipdb.set_trace()
+            # NB: it would be better to implement deep search to compose subclass members out of child superclasses
+            for uc in self.all_user_classes.values():
+                for super_uc_uri in uc.super_uc_uris:
+                    if not super_uc_uri in self.all_user_classes:
+                        raise Exception(f"super_uc_uri not found in loaded classes: {super_uc_uri}")
+                    super_uc = self.all_user_classes.get(super_uc_uri)
+                    print(uc.uc_uri, super_uc.uc_uri)
+                    for super_uc_m in super_uc.members.values():
+                        if not super_uc_m.m_path_uri in uc.members:
+                            uc.add_member__(super_uc_m.m_path_uri, super_uc_m.m_type_uri, super_uc_m.min_c, super_uc_m.max_c)
+                    
     def load_user_object(self, req_uo_uri: URI) -> UserObject:
-        #ipdb.set_trace()
+        ipdb.set_trace()
         if isinstance(req_uo_uri, str):
             req_uo_uri = URI(req_uo_uri)
         
@@ -175,7 +213,7 @@ class KGMGraph:
         where {{
           bind({req_uo_uri.to_turtle(self.rdftf)} as ?s_uo)
           ?uo ?uo_member ?uo_member_value
-          filter(!(?uo_member in (sh:property, sh:path, sh:datatype, sh:class, sh:minCount, sh:maxCount, sh:closed, dash:closedByType)))
+          filter(!(?uo_member in (rdfs:subClassOf, sh:property, sh:path, sh:datatype, sh:class, sh:minCount, sh:maxCount, sh:closed, dash:closedByType)))
           filter(!(?uo_member_value in (sh:NodeShape, rdfs:Class)))
           ?s_uo (<>|!<>)* ?uo
         }}
