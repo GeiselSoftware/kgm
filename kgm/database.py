@@ -33,7 +33,7 @@ class Database:
         rq = rdftf.make_rq(query)
         return sparql_utils.rq_update__(rq, config = {'backend-url': self.fuseki_url})
 
-    def rq_construct(self, query:str):
+    def rq_construct(self, query:str, rdftf:RDFTermFactory):
         rq = rdftf.make_rq(query)
         return sparql_utils.rq_construct__(rq, config = {'backend-url': self.fuseki_url})
     

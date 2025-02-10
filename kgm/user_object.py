@@ -15,6 +15,7 @@ class UserClass:
         self.g = g
         self.uc_uri = uc_uri
         self.super_uc_uris = set()
+        self.sub_uc_uris = set()
         self.members = {} # m_path_uri => member attrs
 
     def add_member__(self, m_path_uri, m_type_uri, min_c:int, max_c:int, just_created:bool = True):
@@ -68,9 +69,16 @@ class UserObjectMemberEditor:
         self.s.add(v)
 
     def load_set_scalar(self, v:object):
-        assert(self.is_scalar() and len(self.s) == 0)
+        assert(self.is_scalar() and len(self.s) <= 1)
         if isinstance(v, Literal):
             v = v.as_python()
+
+        if len(self.s) > 0:
+            existing_v = [x for x in self.s][0]
+            if existing_v == v:
+                return
+            raise Exception("inconsistent data found during load_set_scalar, prev and new value are not the same")
+            
         self.s.add(v)
         self.sync__()
         

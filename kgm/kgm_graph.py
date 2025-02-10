@@ -27,21 +27,6 @@ class KGMGraph:
         #ipdb.set_trace()
         self.load_user_classes__()
             
-    def create_user_class(self, uc_curie:str) -> UserClass:
-        assert(isinstance(uc_curie, str))
-        uc_uri = self.rdftf.restore_prefix(uc_curie)
-        if uc_uri in self.all_user_classes:
-            raise Exception(f"such user class already defined: {uc_uri.to_turtle()}")
-        new_uc = UserClass(self, uc_uri)
-        self.all_user_classes[uc_uri] = new_uc
-        self.just_created_uc.add(new_uc)
-        return new_uc
-
-    def has_user_class(self, uc_curie:str) -> bool:
-        assert(isinstance(uc_curie, str))
-        uc_uri = self.rdftf.restore_prefix(uc_curie)
-        return uc_uri in self.all_user_classes
-    
     def get_user_class(self, uc_curie:str) -> UserClass:
         assert(isinstance(uc_curie, str))
         uc_uri = self.rdftf.restore_prefix(uc_curie)
@@ -110,16 +95,6 @@ class KGMGraph:
             m.sync__()
         self.changed_uo_members.clear()
 
-    def add_user_object__(self, uo: UserObject, is_just_created: bool):
-        self.all_user_objects[uo.get_uri()] = uo
-        if is_just_created:
-            self.just_created_uo.add(uo)
-
-    def get_user_object__(self, uri:URI) -> UserObject:
-        if uri in self.all_user_objects:
-            return self.all_user_objects.get(uri)
-        return None
-
     def get_from_clause__(self, include_dep_graphs = True):
         #ipdb.set_trace()
         from_parts = [self.g]
@@ -141,18 +116,22 @@ class KGMGraph:
             ipdb.set_trace()
             rq_res = pd.DataFrame.from_dict(self.db.rq_select(rq, rdftf = self.rdftf))
             for ii, r in rq_res.iterrows():
-                uc_uri = r['uc']
+                uc_uri = r['uc']; super_uc_uri = r['super_uc']
                 if not uc_uri in self.all_user_classes:
                     self.all_user_classes[uc_uri] = UserClass(self, uc_uri)
-                uc = self.all_user_classes[uc_uri]
-                
-                super_uc_uri = r['super_uc']
+                uc = self.all_user_classes.get(uc_uri); 
+
+                super_uc = None
                 if super_uc_uri is not None:
-                    if super_uc_uri in uc.super_uc_uris:
-                        raise Exception(f"such class is already superclass of {uc_uri}: {super_uc_uri}")
+                    if not super_uc_uri in self.all_user_classes:
+                        self.all_user_classes[super_uc_uri] = UserClass(self, super_uc_uri)
+                    super_uc = self.all_user_classes.get(super_uc_uri)
+
+                if super_uc is not None:
                     uc.super_uc_uris.add(super_uc_uri)
+                    super_uc.sub_uc_uris.add(uc_uri)
         
-        # load user class members if any
+        # load user class members
         rq = f"""\
         select ?uc ?uc_m_name ?uc_m_class ?uc_m_datatype ?uc_m_minc ?uc_m_maxc
         {self.get_from_clause__()}
@@ -189,18 +168,32 @@ class KGMGraph:
             max_c = r['uc_m_maxc'].as_python() if r['uc_m_maxc'] is not None else -1
             uc.add_member__(r['uc_m_name'], uc_m_type, r['uc_m_minc'].as_python(), max_c, just_created = False)
 
-        if 1: # inserts superclass members
-            ipdb.set_trace()
-            # NB: it would be better to implement deep search to compose subclass members out of child superclasses
-            for uc in self.all_user_classes.values():
-                for super_uc_uri in uc.super_uc_uris:
-                    if not super_uc_uri in self.all_user_classes:
-                        raise Exception(f"super_uc_uri not found in loaded classes: {super_uc_uri}")
-                    super_uc = self.all_user_classes.get(super_uc_uri)
-                    print(uc.uc_uri, super_uc.uc_uri)
-                    for super_uc_m in super_uc.members.values():
-                        if not super_uc_m.m_path_uri in uc.members:
-                            uc.add_member__(super_uc_m.m_path_uri, super_uc_m.m_type_uri, super_uc_m.min_c, super_uc_m.max_c)
+        ipdb.set_trace()
+        if 1:
+            # NB:
+            # walk class hierarchy and inserts parent members to child subclasses
+            # it could be done on server side by enabled reasoner. then warning suppose to show up
+            # indicating that certain class members dict already have entries from superclasses
+            all_top_classes = [uc for uc in self.all_user_classes.values() if len(uc.super_uc_uris) == 0]
+            for top_class in all_top_classes:
+                #ipdb.set_trace()
+                stack = [(top_class, [top_class])]
+                visited_uc_uris = set()
+                while len(stack) > 0:
+                    curr_uc, path = stack.pop()
+                    if curr_uc.uc_uri not in visited_uc_uris:
+                        #print("curr_uc:", curr_uc.uc_uri, ", path:", [x.uc_uri for x in path])
+                        for cfa in path[:-1]:
+                            #print("update from ", cfa.uc_uri, " to ", curr_uc.uc_uri)
+                            #ipdb.set_trace()
+                            if len(set(curr_uc.members.keys()) & set(cfa.members.keys())) > 0:
+                                print("WARNING: reasoning on server might be enabled")
+                            curr_uc.members.update(cfa.members)
+                        visited_uc_uris.add(curr_uc.uc_uri)
+                        for sub_uc_uri in curr_uc.sub_uc_uris:
+                            if sub_uc_uri not in visited_uc_uris:
+                                sub_uc = self.all_user_classes.get(sub_uc_uri)
+                                stack.append((sub_uc, path + [sub_uc]))
                     
     def load_user_object(self, req_uo_uri: URI) -> UserObject:
         ipdb.set_trace()
@@ -227,12 +220,12 @@ class KGMGraph:
         for ii, r in res_df.iterrows():
             uo_uri = r['uo']; uo_m_uri = r['uo_member']
             uo_m_value = r['uo_member_value']
-            if uo_m_uri == rdf.type:
+            if uo_uri not in self.all_user_objects and uo_m_uri == rdf.type:
                 uc = self.all_user_classes.get(uo_m_value)
                 uo = uc.load_create_user_object__(uo_uri)
                 self.all_user_objects[uo_uri] = uo
 
-        #ipdb.set_trace()
+        ipdb.set_trace()
         for ii, r in res_df.iterrows():
             uo_uri = r['uo']
             uo_m_uri = r['uo_member']
@@ -254,8 +247,13 @@ class KGMGraph:
                 uo_m_name = get_py_m_name(uo_m_uri) # uo_m_uri.get_suffix()
                 uo_m = uo.get_member__(uo_m_name)
                 if uo_m.is_scalar():
+                    print(uo_uri, uo_m_uri)
                     uo_m.load_set_scalar(m_v)
                 else:
+                    # NB: this is not exactly what should be done
+                    # we suppose to make sure that either uo_m is empty or
+                    # it has content exactly matching m_v. It is impossible to make using single call of load_add
+                    # since m_v corresponds to simgle result row - it should corresponds to set of rows with the same predicate
                     uo_m.load_add(m_v)
                     
         return self.all_user_objects[req_uo_uri]

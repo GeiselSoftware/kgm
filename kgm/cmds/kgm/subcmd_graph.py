@@ -173,13 +173,11 @@ def do_cat(db, path):
         print(f"can't find graph at path {path}", file = sys.stderr)
         return
 
-    kgm_g = KGMGraph(db, graph_uri, None)
-    
     rq = f"""
     construct {{ 
       ?s ?p ?o 
     }}
-    {kgm_g.get_from_clause__()}
+    from <{graph_uri}>
     where {{
       ?s ?p ?o
     }} order by ?s ?p ?o
