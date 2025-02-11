@@ -67,20 +67,6 @@ class UserObjectMemberEditor:
         if isinstance(v, Literal):
             v = v.as_python()
         self.s.add(v)
-
-    def load_set_scalar(self, v:object):
-        assert(self.is_scalar() and len(self.s) <= 1)
-        if isinstance(v, Literal):
-            v = v.as_python()
-
-        if len(self.s) > 0:
-            existing_v = [x for x in self.s][0]
-            if existing_v == v:
-                return
-            raise Exception("inconsistent data found during load_set_scalar, prev and new value are not the same")
-            
-        self.s.add(v)
-        self.sync__()
         
     def get_scalar(self):
         assert(self.is_scalar())
@@ -94,12 +80,26 @@ class UserObjectMemberEditor:
             v = v.as_python()
         self.s.add(v)
 
-    def load_add(self, v):
-        assert(not self.is_scalar() and len(self.s) == 0)
-        if isinstance(v, Literal):
-            v = v.as_python()
-        self.s.add(v)
-        self.sync__()
+    def load_setup_initial_value__(self, all_user_objects, v:object):
+        #ipdb.set_trace()
+        c_vs = [x.as_python() if isinstance(x, Literal) else all_user_objects.get(x) for x in v.to_list()]
+        if self.is_scalar():
+            assert(v.shape[0] == 1)
+            s_v = c_vs[0]
+            if len(self.s) != 0:
+                existing_v = [x for x in self.s][0]
+                if existing_v != s_v:
+                    raise Exception("inconsistent scalar data found during load_setup_initial_value, prev and new value are not the same")
+            else:
+                self.s.add(s_v)
+                self.sync__()
+        else:
+            if len(self.s) == 0:
+                self.s.update(c_vs)
+                self.sync__()
+            else:
+                if self.s != v:
+                    raise Exception("inconsistent set data found during load_setup_initial_value, prev and new value are not the same")
 
     def sync__(self):
         self.loaded_s = set(self.s)

@@ -26,7 +26,7 @@ class KGMGraph:
 
         #ipdb.set_trace()
         self.load_user_classes__()
-            
+
     def get_user_class(self, uc_curie:str) -> UserClass:
         assert(isinstance(uc_curie, str))
         uc_uri = self.rdftf.restore_prefix(uc_curie)
@@ -145,7 +145,6 @@ class KGMGraph:
            optional {{ ?uc_p sh:class ?uc_m_class }}
         }}
         """
-        ipdb.set_trace()
         rq_res = pd.DataFrame.from_dict(self.db.rq_select(rq, rdftf = self.rdftf))
         #print(rq_res)
         #ipdb.set_trace()
@@ -216,45 +215,29 @@ class KGMGraph:
         res_df = pd.DataFrame.from_dict(res)
         print(res_df)
 
+        F = res_df['uo_member'] == rdf.type
+        types_df = res_df[F]
+        members_gdf = res_df[~F].groupby(['uo', 'uo_member'], sort = False)
+        
         #ipdb.set_trace()
-        for ii, r in res_df.iterrows():
+        for ii, r in types_df.iterrows():
             uo_uri = r['uo']; uo_m_uri = r['uo_member']
-            uo_m_value = r['uo_member_value']
-            if uo_uri not in self.all_user_objects and uo_m_uri == rdf.type:
-                uc = self.all_user_classes.get(uo_m_value)
+            uo_uc_uri = r['uo_member_value']
+            if uo_uri not in self.all_user_objects:
+                uc = self.all_user_classes.get(uo_uc_uri)
                 uo = uc.load_create_user_object__(uo_uri)
                 self.all_user_objects[uo_uri] = uo
 
         ipdb.set_trace()
-        for ii, r in res_df.iterrows():
-            uo_uri = r['uo']
-            uo_m_uri = r['uo_member']
-            uo_m_value = r['uo_member_value']
+        for gid, gdf in members_gdf:
+            uo_uri, uo_m_uri = gid
+            uo_m_value = gdf['uo_member_value']
+            
+            #ipdb.set_trace()
             uo = self.all_user_objects.get(uo_uri)
-            if uo_m_uri != rdf.type:
-                if isinstance(uo_m_value, URI):
-                    m_uo_uri = uo_m_value
-                    if m_uo_uri in self.all_user_objects:
-                        m_v = self.all_user_objects.get(m_uo_uri)
-                    else:
-                        raise Exception(f"unable to find user object with URI {m_uo_uri.to_turtle()}")
-                elif isinstance(uo_m_value, Literal):
-                    m_v = uo_m_value
-                else:
-                    raise Exception(f"unexpected type on {uo_m_uri.to_turtle()}, user object {uo_uri.to_turtle()}")
-
-                #ipdb.set_trace()
-                uo_m_name = get_py_m_name(uo_m_uri) # uo_m_uri.get_suffix()
-                uo_m = uo.get_member__(uo_m_name)
-                if uo_m.is_scalar():
-                    print(uo_uri, uo_m_uri)
-                    uo_m.load_set_scalar(m_v)
-                else:
-                    # NB: this is not exactly what should be done
-                    # we suppose to make sure that either uo_m is empty or
-                    # it has content exactly matching m_v. It is impossible to make using single call of load_add
-                    # since m_v corresponds to simgle result row - it should corresponds to set of rows with the same predicate
-                    uo_m.load_add(m_v)
+            uo_m_name = get_py_m_name(uo_m_uri)
+            uo_m = uo.get_member__(uo_m_name)
+            uo_m.load_setup_initial_value__(self.all_user_objects, uo_m_value)
                     
         return self.all_user_objects[req_uo_uri]
 
