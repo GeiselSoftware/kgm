@@ -14,7 +14,6 @@
 #
 
 import ipdb
-import uuid
 import kgm
 import numpy as np
 import clickhouse_connect
@@ -27,7 +26,7 @@ def add_point(series_uo, v):
 class SeriesA:
     def __init__(self, series_uo):
         self.series_uo = series_uo
-        self.series_uo.tablename = str(uuid.uuid4()).replace("-", "_")
+        self.series_uo.tablename = kgm.gen_nanoid()
         #ipdb.set_trace()
         self.clickhouse_db = self.series_uo.get_g().db.clickhouse_client
         self.serno = 0

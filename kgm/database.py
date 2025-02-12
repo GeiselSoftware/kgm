@@ -1,5 +1,5 @@
 import ipdb
-import uuid
+from . import gen_nanoid
 from kgm.rdf_terms import RDFTermFactory, URI, Literal, BNode
 from kgm.rdf_terms import rdf, xsd, kgm
 from kgm.rdf_utils import RDFObject, RDFTriple
@@ -104,7 +104,7 @@ class Database:
 
     def create_kgm_graph(self, kgm_path_s:str) -> URI:
         descr_g = []
-        new_graph_uri = URI("urn:kgm::" + str(uuid.uuid4())) # created in empty kgm namespace
+        new_graph_uri = URI("urn:kgm::" + gen_nanoid()) # created in empty kgm namespace
         descr_g.append((new_graph_uri, rdf.type, RDFObject(kgm.Graph)))
         descr_g.append((new_graph_uri, kgm.path, RDFObject(self.rdftf.make_Literal(kgm_path_s, xsd.string))))
 

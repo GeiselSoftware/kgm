@@ -1,6 +1,6 @@
 import ipdb
-import uuid
 import pandas as pd
+from . import gen_nanoid
 from kgm.rdf_terms import URI, Literal, BNode, RDFTermFactory
 from kgm.rdf_terms import rdf, rdfs, xsd, sh, dash, kgm, well_known_prefixes
 from kgm.rdf_utils import RDFTriple, get_py_m_name
@@ -36,7 +36,7 @@ class KGMGraph:
         
     def create_user_object(self, uc_curie:str) -> UserObject:
         uc = self.get_user_class(uc_curie)
-        new_uri = self.rdftf.make_URI_from_parts(uc.uc_uri, "--" + str(uuid.uuid4())) # object id made of class and uuid
+        new_uri = self.rdftf.make_URI_from_parts(uc.uc_uri, "--" + gen_nanoid()) # object id made of class and nanoid
         ret = UserObject(self, new_uri, uc)
         self.just_created_uo.add(ret)
         return ret
@@ -50,9 +50,8 @@ class KGMGraph:
             inss.append(RDFTriple(uc.uc_uri, rdf.type, sh.NodeShape))
             inss.append(RDFTriple(uc.uc_uri, dash.closedByType, RDFTermFactory.from_python_to_Literal(True)))
             
-        ipdb.set_trace()
         for uc_m in self.just_created_uc_members:
-            prop = BNode(str(uuid.uuid4()))
+            prop = BNode(kgm.gen_nanoid())
             inss.append(RDFTriple(uc_m.user_class.uc_uri, sh.property, prop))
             inss.append(RDFTriple(prop, sh.path, uc_m.m_path_uri))
             #if uc_m.m_type_uri.get_prefix() == xsd.prefix__:

@@ -183,7 +183,7 @@ class UserObject:
             if uoe.is_scalar():
                 uoe.set_scalar(value)
             else:
-                uoe.Add(value)
+                raise Exception("can't assign to set")
     
     def __getattr__(self, name):
         # Provide access to restricted attributes

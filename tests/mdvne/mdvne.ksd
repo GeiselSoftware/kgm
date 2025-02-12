@@ -1,0 +1,41 @@
+# from figure 2 at page 5 of
+# "Graph-Based Specification and Automated Construction of ILP Problems" by Ehmes, Kratz and Schurr
+
+class :Link
+ :bw xsd:integer
+ :in_ :Node[0..n]
+end
+
+class :Node
+ :out_ :Link
+end
+
+class :Switch subclass of :Node
+end
+
+class :VLink subclass of :Link
+ :host :SLink
+end
+
+class :SLink subclass of :Link
+ :resBw xsd:integer
+end
+
+class :Server subclass of :Node
+ :cpu xsd:integer
+end
+
+class :VServer subclass of :Server
+ :host :SServer
+end
+
+class :SServer subclass of :Server
+ :resCpu xsd:integer
+end
+
+class :SSwitch subclass of :Switch
+end
+
+class :VSwitch subclass of :Switch
+ :host :SSwitch
+end
