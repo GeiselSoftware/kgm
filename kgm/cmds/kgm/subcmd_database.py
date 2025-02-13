@@ -25,7 +25,7 @@ def do_init(ctx, reset):
     
     ipdb.set_trace()
     rq = "select ?s { ?s rdf:type kgm:DefaultServerGraph }"
-    rq_res = db.rq_select(rq, rdftf = db.rdftf)
+    rq_res = db.rq_select(rq)
 
     if len(rq_res["s"]) > 0:
         if not reset:
@@ -34,7 +34,7 @@ def do_init(ctx, reset):
             print("removing default graph")
             #ipdb.set_trace()
             rq = "delete { ?s ?p ?o } where { ?s ?p ?o }"
-            db.rq_update(rq, rdftf = db.rdftf)
+            db.rq_update(rq)
         
     print("making kgm default graph")
 
@@ -72,4 +72,4 @@ def do_init(ctx, reset):
     """
 
     ipdb.set_trace()
-    db.rq_update(update_rq, rdftf = db.rdftf)
+    db.rq_update(update_rq)

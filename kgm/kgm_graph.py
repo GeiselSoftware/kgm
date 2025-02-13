@@ -1,9 +1,9 @@
 import ipdb
 import pandas as pd
 from . import gen_nanoid
-from kgm.rdf_terms import URI, Literal, BNode, RDFTermFactory
-from kgm.rdf_terms import rdf, rdfs, xsd, sh, dash, kgm, well_known_prefixes
-from kgm.rdf_utils import RDFTriple, get_py_m_name
+from kgm.rdf_terms import URI, Literal, BNode, RDFTriple
+from kgm.prefixes import rdf, rdfs, xsd, sh, dash, kgm
+from kgm.rdf_utils import get_py_m_name, make_URI_from_parts, to_turtle, restore_prefix
 from kgm.database import Database
 from kgm.user_object import UserClass, UserObject
 
@@ -13,9 +13,6 @@ class KGMGraph:
         self.db = db
         self.g = kgm_g
         self.dep_gs = additional_kgm_pathes
-        self.rdftf = RDFTermFactory()
-        if not "" in self.rdftf.prefixes:
-            self.rdftf.prefixes[""] = URI("urn:kgm::") # this is prefix with empty kgm namespace
         
         self.all_user_classes = {} # URI -> UserClass
         self.all_user_objects = {} # URI -> UserObject
@@ -26,17 +23,17 @@ class KGMGraph:
 
         #ipdb.set_trace()
         self.load_user_classes__()
-
+            
     def get_user_class(self, uc_curie:str) -> UserClass:
         assert(isinstance(uc_curie, str))
-        uc_uri = self.rdftf.restore_prefix(uc_curie)
+        uc_uri = restore_prefix(uc_curie, self.db.w_prefixes)
         if not uc_uri in self.all_user_classes:
             raise Exception(f"no such user class defined: {uc_uri}")
         return self.all_user_classes.get(uc_uri)
         
     def create_user_object(self, uc_curie:str) -> UserObject:
         uc = self.get_user_class(uc_curie)
-        new_uri = self.rdftf.make_URI_from_parts(uc.uc_uri, "--" + gen_nanoid()) # object id made of class and nanoid
+        new_uri = make_URI_from_parts(uc.uc_uri, "--" + gen_nanoid()) # object id made of class and nanoid
         ret = UserObject(self, new_uri, uc)
         self.just_created_uo.add(ret)
         return ret
@@ -81,11 +78,11 @@ class KGMGraph:
         dels_inss = self.get_dels_inss__()
         if 1:
             for t in dels_inss[0]:
-                print("del: ", t.to_turtle(None))
+                print("del: ", to_turtle(t, self.db.w_prefixes))
             for t in dels_inss[1]:
-                print("ins: ", t.to_turtle(None))
+                print("ins: ", to_turtle(t, self.db.w_prefixes))
 
-        self.db.rq_delete_insert(self.g, dels_inss, self.rdftf)
+        self.db.rq_delete_insert(self.g, dels_inss)
 
         self.just_created_uo.clear()
         self.just_created_uc.clear()
@@ -99,7 +96,7 @@ class KGMGraph:
         from_parts = [self.g]
         if self.dep_gs is not None and include_dep_graphs == True:
             for g in self.dep_gs:
-                from_parts.append(g.to_turtle())
+                from_parts.append(to_turtle(g, self.db.w_prefixes))
         return "\n".join([f"from <{g_uri.uri_s}>" for g_uri in from_parts])
     
     def load_user_classes__(self):
@@ -113,7 +110,7 @@ class KGMGraph:
             }}
             """
             ipdb.set_trace()
-            rq_res = pd.DataFrame.from_dict(self.db.rq_select(rq, rdftf = self.rdftf))
+            rq_res = pd.DataFrame.from_dict(self.db.rq_select(rq))
             for ii, r in rq_res.iterrows():
                 uc_uri = r['uc']; super_uc_uri = r['super_uc']
                 if not uc_uri in self.all_user_classes:
@@ -144,7 +141,7 @@ class KGMGraph:
            optional {{ ?uc_p sh:class ?uc_m_class }}
         }}
         """
-        rq_res = pd.DataFrame.from_dict(self.db.rq_select(rq, rdftf = self.rdftf))
+        rq_res = pd.DataFrame.from_dict(self.db.rq_select(rq))
         #print(rq_res)
         #ipdb.set_trace()
         
@@ -202,7 +199,7 @@ class KGMGraph:
         select ?uo ?uo_member ?uo_member_value
         {self.get_from_clause__()}
         where {{
-          bind({req_uo_uri.to_turtle(self.rdftf)} as ?s_uo)
+          bind({to_turtle(req_uo_uri, self.db.w_prefixes)} as ?s_uo)
           ?uo ?uo_member ?uo_member_value
           filter(!(?uo_member in (rdfs:subClassOf, sh:property, sh:path, sh:datatype, sh:class, sh:minCount, sh:maxCount, sh:closed, dash:closedByType)))
           filter(!(?uo_member_value in (sh:NodeShape, rdfs:Class)))
@@ -210,7 +207,7 @@ class KGMGraph:
         }}
         """
         #print(rq)
-        res = self.db.rq_select(rq, rdftf = self.rdftf)
+        res = self.db.rq_select(rq)
         res_df = pd.DataFrame.from_dict(res)
         print(res_df)
 
@@ -249,5 +246,5 @@ class KGMGraph:
         }}
         """
 
-        rq_res = self.db.rq_select(rq, rdftf = self.rdftf)
+        rq_res = self.db.rq_select(rq)
         return pd.DataFrame.from_dict(rq_res)

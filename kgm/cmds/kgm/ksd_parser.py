@@ -1,7 +1,7 @@
 #import ipdb
 from lark import Lark, Visitor
 import pandas as pd
-from kgm.rdf_terms import well_known_prefixes
+from kgm.prefixes import well_known_prefixes
 
 ksd_grammar = \
     """
@@ -112,7 +112,7 @@ class MyVisitor(Visitor):
         
 class KSDParser:
     @staticmethod
-    def dump_ksd(w_config, kgm_path):        
+    def dump_ksd(db, kgm_path):
         rq = f"""\
         select ?uc ?uc_m_name ?uc_m_is_class ?uc_m_type ?uc_m_minc ?uc_m_maxc {{
          ?g kgm:path "{kgm_path}"
@@ -128,7 +128,7 @@ class KSDParser:
         }}
         """
         #print(make_rq(rq))
-        classes_dets = pd.DataFrame(rq_select(make_rq(rq), config = w_config))
+        classes_dets = pd.DataFrame(db.rq_select(rq))
         #print(classes_dets)
 
         rq = f"""\
@@ -139,11 +139,11 @@ class KSDParser:
          }}
         }}
         """
-        superclasses_dets = pd.DataFrame(rq_select(make_rq(rq), config = w_config))
+        superclasses_dets = pd.DataFrame(db.rq_select(rq))
         #print(superclasses_dets)
 
         #ipdb.set_trace()
-        print(f'prefix : <{well_known_prefixes[""]}>')
+        print(f'prefix : <urn:kgm::>')
         print()
         
         for class_uri in classes_dets.uc.unique():
@@ -180,9 +180,9 @@ class KSDParser:
         v = MyVisitor()
         v.visit_topdown(tree)
 
-        for prefix in ["rdf", "rdfs", "sh", "xsd"]:
+        for prefix in ["rdf:", "rdfs:", "sh:", "xsd:"]:
             uri = well_known_prefixes[prefix]
-            print(f"@prefix {prefix}: <{uri[0]}> .")
+            print(f"@prefix {prefix} <{uri[0]}> .")
             
         print(f"@prefix : <urn:kgm::> .") # empty prefix for empty kgm namespace
 

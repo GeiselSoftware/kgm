@@ -1,6 +1,6 @@
 import ipdb
-from kgm.rdf_terms import URI, Literal
-from kgm.rdf_utils import RDFObject, RDFTriple, get_py_m_name
+from kgm.rdf_terms import URI, Literal, RDFObject, RDFTriple
+from kgm.rdf_utils import get_py_m_name, from_python_to_Literal
 
 class UserClassMember:
     def __init__(self, uc, m_path_uri, m_type_uri, min_c, max_c):
@@ -21,15 +21,15 @@ class UserClass:
     def add_member__(self, m_path_uri, m_type_uri, min_c:int, max_c:int, just_created:bool = True):
         assert(type(min_c) == int)
         if isinstance(m_path_uri, str):
-            m_path_uri = self.g.rdftf.restore_prefix(":" + m_path_uri)
+            m_path_uri = self.g.restore_prefix(":" + m_path_uri)
         if isinstance(m_type_uri, str):
-            m_type_uri = self.g.rdftf.restore_prefix(m_type_uri)
+            m_type_uri = self.g.restore_prefix(m_type_uri)
         assert(isinstance(m_path_uri, URI))
         assert(isinstance(m_type_uri, URI))
         
         if m_path_uri in self.members:
             ipdb.set_trace()
-            raise Exception(f"this member already added: {m_path_uri.to_turtle(self.g.rdftf)}")
+            raise Exception(f"this member already added: {to_turtle(m_path_uri)}")
         #ipdb.set_trace()
         new_uc_m = UserClassMember(self, m_path_uri, m_type_uri, min_c, max_c)
         self.members[m_path_uri] = new_uc_m
@@ -131,8 +131,7 @@ class UserObjectMemberEditor:
         if isinstance(v, UserObject):
             ret = RDFObject(v.get_impl().uo_uri)
         else:
-            rdftf = self.uo.get_impl().uc.g.rdftf
-            ret = RDFObject(rdftf.from_python_to_Literal(v))
+            ret = RDFObject(from_python_to_Literal(v))
         return ret
 
     def get_dels_inss__(self): # returns (set<RDFTriple>, set<RDFTriple>)

@@ -4,7 +4,11 @@ import pandas as pd
 import rdflib
 from kgm.database import Database
 from kgm.kgm_graph import KGMGraph
-from kgm.rdf_terms import URI, BNode, Literal
+from kgm.rdf_terms import URI, BNode, Literal, RDFTriple
+from kgm.rdf_utils import to_turtle
+from kgm.prefixes import xsd
+
+from . import ksd_parser as mod_ksd_parser
 from . import kgm_validate
 
 @click.group()
@@ -22,9 +26,8 @@ def graph_ls(ctx, path):
     #print("do_ls:", path)
     #ipdb.set_trace()
     query = "select ?kgm_path ?g { ?g rdf:type kgm:Graph; kgm:path ?kgm_path }"
-    rdftf = db.rdftf
-    res = db.rq_select(query, rdftf = rdftf)
-    print(pd.DataFrame(res).map(lambda x: x.to_turtle(rdftf)))
+    res = db.rq_select(query)
+    print(pd.DataFrame(res).map(lambda x: to_turtle(x, db.w_prefixes)))
 
 
 @graph.command("new", help = "creates new empty graph at given path")
@@ -56,14 +59,13 @@ def graph_remove(ctx, path):
         print(f"can't find graph at path {path}")
         return
 
-    rdftf = db.rdftf
-    rq_queries = [f"drop graph {graph_uri.to_turtle(rdftf)}",
-                  f'delete {{ ?s ?p ?o }} where {{ bind({graph_uri.to_turtle(rdftf)} as ?s) {{ ?s ?p ?o }} }}']
+    rq_queries = [f"drop graph {to_turtle(graph_uri, db.w_prefixes)}",
+                  f'delete {{ ?s ?p ?o }} where {{ bind({to_turtle(graph_uri, db.w_prefixes)} as ?s) {{ ?s ?p ?o }} }}']
 
     #ipdb.set_trace()
     for rq in rq_queries:
         print(rq)
-        db.rq_update(rq, rdftf = db.rdftf)
+        db.rq_update(rq)
     
 @graph.command("copy", help = "copy graph to new path")
 @click.argument("source-path", required = True)
@@ -73,7 +75,6 @@ def graph_copy(ctx, source_path, dest_path):
     _, w_config = ctx.obj["config"]
     fuseki_url = w_config['backend-url']
     db = Database(fuseki_url)
-    rdftf = db.rdftf
     print("do_copy:", source_path, dest_path)
 
     source_graph_uri = db.get_kgm_graph(source_path)
@@ -90,24 +91,24 @@ def graph_copy(ctx, source_path, dest_path):
     dest_graph_uri = db.create_kgm_graph(dest_path)    
     rq_queries = [f'''
                   insert {{
-                    {dest_graph_uri.to_turtle(rdftf)} kgm:path "{dest_path}"; ?p ?o
+                    {to_turtle(dest_graph_uri, db.w_prefixes)} kgm:path "{dest_path}"; ?p ?o
                   }}
                   where {{
-                    {source_graph_uri.to_turtle(rdftf)} ?p ?o filter(?p != kgm:path)
+                    {to_turtle(source_graph_uri, db.w_prefixes)} ?p ?o filter(?p != kgm:path)
                   }}
                   ''',
                   f'''
                   insert {{
-                    graph {dest_graph_uri.to_turtle(rdftf)} {{ ?s ?p ?o }}
+                    graph {to_turtle(dest_graph_uri, db.w_prefixes)} {{ ?s ?p ?o }}
                   }} where {{
-                    graph {source_graph_uri.to_turtle(rdftf)} {{ ?s ?p ?o }}
+                    graph {to_turtle(source_graph_uri, db.w_prefixes)} {{ ?s ?p ?o }}
                   }}
                   '''
                   ]
     #ipdb.set_trace()
     for rq in rq_queries:
         print(rq)
-        db.rq_update(rq, rdftf = rdftf)
+        db.rq_update(rq)
     
 @graph.command("rename", help = "changes the path of the graph leaving graph content intact")
 @click.argument("path", required = True)
@@ -117,7 +118,6 @@ def graph_rename(ctx, path, new_path):
     _, w_config = ctx.obj["config"]
     fuseki_url = w_config['backend-url']
     db = Database(fuseki_url)
-    rdftf = db.rdftf
     print("do_rename:", path, new_path)
 
     graph_uri = db.get_kgm_graph(path)
@@ -131,11 +131,11 @@ def graph_rename(ctx, path, new_path):
         return
     del new_graph_uri
     
-    rq_queries = [f'delete data {{ {graph_uri.to_turtle(rdftf)} kgm:path "{path}" }}',
-                  f'insert data {{ {graph_uri.to_turtle(rdftf)} kgm:path "{new_path}" }}']
+    rq_queries = [f'delete data {{ {to_turtle(graph_uri, db.w_prefixes)} kgm:path "{path}" }}',
+                  f'insert data {{ {to_turtle(graph_uri, db.w_prefixes)} kgm:path "{new_path}" }}']
     for rq in rq_queries:
         print(rq)
-        db.rq_update(rq, rdftf = db.rdftf)
+        db.rq_update(rq)
     
     
 @graph.command("select")
@@ -182,8 +182,8 @@ def do_cat(db, path):
       ?s ?p ?o
     }} order by ?s ?p ?o
     """
-    print(rq)
-    g = db.rq_construct(rq, rdftf = db.rdftf)
+    #print(rq)
+    g = db.rq_construct(rq)
     #print(len(g))
     #print(type(g))
 
@@ -201,7 +201,7 @@ def do_cat(db, path):
             res_g.add((s, p, o))
         print(res_g.serialize(format="ttl"))
 
-def parse_ttl(source, rdftf):
+def parse_ttl(source):
     ipdb.set_trace()
     g = rdflib.Graph()
     g.parse(source, format = "turtle")
@@ -211,14 +211,18 @@ def parse_ttl(source, rdftf):
         for r in [s, p, o]:
             #print(r)
             if type(r) == rdflib.URIRef:
-                new_spo.append(URI(r.toPython()).to_turtle(rdftf))
+                new_spo.append(URI(r.toPython()))
             elif type(r) == rdflib.BNode:
-                new_spo.append(BNode(r.toPython()).to_turtle(rdftf))
+                new_spo.append(BNode(r.toPython()))
             elif type(r) == rdflib.Literal:
-                new_spo.append(Literal(r.toPython(), URI(r.datatype.toPython())).to_turtle(rdftf))
+                #ipdb.set_trace()
+                value, datatype = r.n3().split("^^")
+                new_spo.append(Literal(value[1:-1], URI(datatype[1:-1])))
             else:
                 raise Exception("parse_ttl conversion failed")
-        triples.append(new_spo)
+            
+        t = RDFTriple(*new_spo)
+        triples.append(t)
     
     return triples
         
@@ -244,13 +248,13 @@ def graph_import(ctx, path, ttl_file):
     if ttl_file.startswith("http"):
         ttl_file_url = ttl_file
         with urllib.request.urlopen(ttl_file_url) as fd:
-            source_triples = parse_ttl(fd, db.rdftf)
+            source_triples = parse_ttl(fd)
     else:
-        source_triples = parse_ttl(ttl_file, db.rdftf)
+        source_triples = parse_ttl(ttl_file)
     
     ipdb.set_trace()
     graph_uri = db.create_kgm_graph(path)
-    db.rq_insert_triples(graph_uri, source_triples)
+    db.rq_delete_insert(graph_uri, [[],source_triples])
 
     print(path, graph_uri)
 
