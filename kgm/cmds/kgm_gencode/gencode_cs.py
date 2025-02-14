@@ -37,8 +37,8 @@ def get_cs_type(uc_m_type_uri):
 member_cardinalty_t = Enum('member_cardinalty_t', [('ZERO_ONE', 0), ('ONE_ONE', 1), ('MANY', 2)])
 def classify_minc_maxc(min_c, max_c) -> member_cardinalty_t:
     ret = None
-    min_c = min_c.as_python()
-    max_c = max_c.as_python() if max_c is not None else max_c
+    min_c = from_Literal_to_python(min_c)
+    max_c = from_Literal_to_python(max_c) if max_c is not None else max_c
     if min_c == 0:
         if max_c == 1:
             ret = member_cardinalty_t.ZERO_ONE
@@ -164,7 +164,7 @@ def gencode_cs_class(db, kgm_path, uc_uri_s, cs_namespace):
             uc_member_info_class = "uc_member_info"
         uc_member_info_initializer.append(f"URI.create(\"{uc_m}\")")
         uc_member_info_initializer.append(f"{r['uc_m_minc']}")
-        m_maxc = r['uc_m_maxc'].as_python() if r['uc_m_maxc'] is not None else -1
+        m_maxc = from_Literal_to_python(r['uc_m_maxc']) if r['uc_m_maxc'] is not None else -1
         uc_member_info_initializer.append(f"{m_maxc}")
         uc_member_info_initializer.append("sh.class_" if r['uc_m_is_class'] == Literal.from_python(True) else "sh.datatype")
         uc_member_info_initializer.append(f"URI.create(\"{uc_m_type}\")")

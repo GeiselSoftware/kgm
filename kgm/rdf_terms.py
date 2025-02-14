@@ -31,22 +31,7 @@ class Literal:
         return self.value_o == o.value_o
     
     def __hash__(self):
-        return self.value_o.__hash__()    
-
-    def as_python(self):
-        from .prefixes import xsd
-        ret = None
-        if self.datatype_uri == xsd.string:
-            ret = f"{self.value_o}"
-        elif self.datatype_uri == xsd.integer:
-            ret = int(self.value_o)
-        elif self.datatype_uri == xsd.boolean:
-            ret = self.value_o.lower() == "true"
-        else:
-            #ipdb.set_trace()
-            raise Exception(f"unsupported xsd type: {self.datatype_uri}")
-
-        return ret
+        return self.value_o.__hash__()
     
 class BNode:
     def __init__(self, s):

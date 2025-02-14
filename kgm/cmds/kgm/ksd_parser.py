@@ -157,8 +157,8 @@ class KSDParser:
             F = classes_dets.uc == class_uri
             #ipdb.set_trace()
             for m in classes_dets.loc[F, :].itertuples():
-                minc = m.uc_m_minc.as_python()
-                maxc = m.uc_m_maxc.as_python() if m.uc_m_maxc is not None else -1
+                minc = from_Literal_to_python(m.uc_m_minc)
+                maxc = from_Literal_to_python(m.uc_m_maxc) if m.uc_m_maxc is not None else -1
                 card = ""
                 if not (minc == 1 and maxc == 1):
                     maxc = f"{maxc}" if maxc != -1 else "inf"

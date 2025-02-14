@@ -22,8 +22,8 @@ if __name__ == "__main__":
         ssrv1.cpu = 32; ssrv1.resCpu = 25
 
         ssw1.out_ = sl1
-        sl1.in_.add(ssrv1)
-        sl2.in_.add(ssw1)
+        sl1.in_.multi_value_add(ssrv1)
+        sl2.in_.multi_value_add(ssw1)
         ssrv1.out_ = sl2
         
     g.save()

@@ -5,7 +5,7 @@ if __name__ == "__main__":
     ipdb.set_trace()
     fuseki_url = "http://localhost:3030/kgm-default-dataset"
     db = Database(fuseki_url)
-    kgm_path = "/human-pet-test"
+    kgm_path = "/human-pet"
     g_uri = db.get_kgm_graph(kgm_path)
     if g_uri is None:
         raise Exception(f"can't find kgm path {kgm_path}")
@@ -17,13 +17,13 @@ if __name__ == "__main__":
     obj.address = "123 Main St"
     obj.phone = "555-1234"
     obj.age = 1
-    obj.cars.add("hi")
+    obj.cars.multi_value_add("hi")
     
     print(obj.address)  # Output: 123 Main St
     print(obj.phone)    # Output: 555-1234
     for c in obj.cars:
         print(c)
-    print("has hi:", obj.cars.has_value("bi"))
+    print("has hi:", obj.cars.multi_value_has("bi"))
         
     # Trying to access an attribute not in the accessible list
     try:
@@ -35,7 +35,7 @@ if __name__ == "__main__":
     bim.name = "Bim"
     print(bim.name)
     obj.pet = bim
-    obj.pets.add(bim)
+    obj.pets.multi_value_add(bim)
 
     ipdb.set_trace()
     g.save() # ??? db.save

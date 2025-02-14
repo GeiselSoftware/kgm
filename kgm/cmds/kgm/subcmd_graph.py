@@ -146,7 +146,7 @@ def do_graph_select(ctx, path, query):
     _, w_config = ctx.obj["config"]
     fuseki_url = w_config['backend-url']
     db = Database(fuseki_url)    
-    kgm_g_uri = get_kgm_graph(db, path)
+    kgm_g_uri = db.get_kgm_graph(path)
     if kgm_g_uri is None:
         raise Exception(f"can't find kgm path {path}")
     kgm_g = KGMGraph(db, kgm_g_uri, None)

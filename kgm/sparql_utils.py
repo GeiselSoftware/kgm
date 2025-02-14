@@ -41,8 +41,8 @@ def rq_construct(rq, *, config, w_prefixes):
 
 def rq_update(rq, *, config, w_prefixes):
     rq = make_rq(rq, w_prefixes)
-    fuseki_query_url = config["backend-url"] + "/update"
-    sparql = SPARQLWrapper(fuseki_query_url)
+    fuseki_update_url = config["backend-url"] + "/update"
+    sparql = SPARQLWrapper(fuseki_update_url)
 
     # Set the query and the return format
     sparql.setQuery(rq)
@@ -78,12 +78,6 @@ def rq_handle_select_result(rq_select_res, w_prefixes):
 def rq_delete_insert(graph_uri:URI, dels_inss, *, config, w_prefixes):
     if len(dels_inss[0]) == 0 and len(dels_inss[1]) == 0:
         return None
-
-    delete_triples = []; insert_triples = []
-    for t in dels_inss[0]:
-        delete_triples.append(to_turtle(t, w_prefixes))
-    for t in dels_inss[1]:
-        insert_triples.append(to_turtle(t, w_prefixes))
 
     rq = io.StringIO()
     print(make_rq("", w_prefixes), file = rq)    

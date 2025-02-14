@@ -3,7 +3,7 @@ import pandas as pd
 from . import gen_nanoid
 from kgm.rdf_terms import URI, Literal, BNode, RDFTriple
 from kgm.prefixes import rdf, rdfs, xsd, sh, dash, kgm
-from kgm.rdf_utils import get_py_m_name, make_URI_from_parts, to_turtle, restore_prefix
+from kgm.rdf_utils import get_py_m_name, make_URI_from_parts, to_turtle, restore_prefix, from_Literal_to_python
 from kgm.database import Database
 from kgm.user_object import UserClass, UserObject
 
@@ -17,8 +17,6 @@ class KGMGraph:
         self.all_user_classes = {} # URI -> UserClass
         self.all_user_objects = {} # URI -> UserObject
         self.just_created_uo = set()
-        self.just_created_uc = set()
-        self.just_created_uc_members = set()
         self.changed_uo_members = set()
 
         #ipdb.set_trace()
@@ -40,25 +38,6 @@ class KGMGraph:
 
     def get_dels_inss__(self):
         dels = []; inss = []
-
-        #ipdb.set_trace()
-        for uc in self.just_created_uc:
-            inss.append(RDFTriple(uc.uc_uri, rdf.type, rdfs.Class))
-            inss.append(RDFTriple(uc.uc_uri, rdf.type, sh.NodeShape))
-            inss.append(RDFTriple(uc.uc_uri, dash.closedByType, RDFTermFactory.from_python_to_Literal(True)))
-            
-        for uc_m in self.just_created_uc_members:
-            prop = BNode(kgm.gen_nanoid())
-            inss.append(RDFTriple(uc_m.user_class.uc_uri, sh.property, prop))
-            inss.append(RDFTriple(prop, sh.path, uc_m.m_path_uri))
-            #if uc_m.m_type_uri.get_prefix() == xsd.prefix__:
-            if uc_m.m_type_uri.uri_s.find(well_known_prefixes.get("xsd")[0]) == 0:
-                inss.append(RDFTriple(prop, sh.datatype, uc_m.m_type_uri))
-            else:
-                inss.append(RDFTriple(prop, sh.class_, uc_m.m_type_uri))
-            inss.append(RDFTriple(prop, sh.minCount, RDFTermFactory.from_python_to_Literal(uc_m.min_c)))
-            if uc_m.max_c != -1:
-                inss.append(RDFTriple(prop, sh.maxCount, RDFTermFactory.from_python_to_Literal(uc_m.max_c)))
 
         #ipdb.set_trace()
         for uo in self.just_created_uo:
@@ -85,8 +64,6 @@ class KGMGraph:
         self.db.rq_delete_insert(self.g, dels_inss)
 
         self.just_created_uo.clear()
-        self.just_created_uc.clear()
-        self.just_created_uc_members.clear()
         for m in self.changed_uo_members:
             m.sync__()
         self.changed_uo_members.clear()
@@ -159,9 +136,10 @@ class KGMGraph:
                 raise Exception(f"for member {r['uc_m_name']} both class and datatype are both not None")
             
             uc_m_type = r['uc_m_class'] if r['uc_m_class'] is not None else r['uc_m_datatype']
-            uc_m_class = r['uc_m_class']
-            max_c = r['uc_m_maxc'].as_python() if r['uc_m_maxc'] is not None else -1
-            uc.add_member__(r['uc_m_name'], uc_m_type, r['uc_m_minc'].as_python(), max_c, just_created = False)
+            #uc_m_class = r['uc_m_class']
+            max_c = from_Literal_to_python(r['uc_m_maxc']) if r['uc_m_maxc'] is not None else -1
+            min_c = from_Literal_to_python(r['uc_m_minc'])
+            uc.add_member__(r['uc_m_name'], uc_m_type, min_c, max_c)
 
         ipdb.set_trace()
         if 1:
@@ -227,13 +205,23 @@ class KGMGraph:
         ipdb.set_trace()
         for gid, gdf in members_gdf:
             uo_uri, uo_m_uri = gid
-            uo_m_value = gdf['uo_member_value']
+            uo_m_values = gdf['uo_member_value']
+            uo_m_py_values = []
+            for uo_m_value in uo_m_values.to_list():
+                if isinstance(uo_m_value, URI):
+                    if not uo_m_value in self.all_user_objects:
+                        raise Exception("logic error: can't find user object")
+                    uo_m_py_values.append(self.all_user_objects.get(uo_m_value))
+                elif isinstance(uo_m_value, Literal):
+                    uo_m_py_values.append(from_Literal_to_python(uo_m_value))
+                else:
+                    raise Exception(f"can't convert to python: {uo_m_value}")
             
             #ipdb.set_trace()
             uo = self.all_user_objects.get(uo_uri)
             uo_m_name = get_py_m_name(uo_m_uri)
-            uo_m = uo.get_member__(uo_m_name)
-            uo_m.load_setup_initial_value__(self.all_user_objects, uo_m_value)
+            uo_me = uo.get_member_editor(uo_m_name)
+            uo_me.load_setup_values__(uo_m_py_values)
                     
         return self.all_user_objects[req_uo_uri]
 

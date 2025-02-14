@@ -54,7 +54,10 @@ def make_URI_from_parts(prefix_part:URI, suffix_part:str) -> URI:
 def make_Literal(value_o, datatype_uri):
     return Literal(value_o, datatype_uri)
 
-def from_python_to_Literal(v):
+def get_supported_Literal_python_types():
+    return [str, bool, int, float]
+
+def from_python_to_Literal(v:object) -> Literal:
     if type(v) == str:
         return make_Literal(f'{v}', xsd.string)
     elif type(v) == bool:
@@ -65,3 +68,19 @@ def from_python_to_Literal(v):
         return make_Literal(f"{v}", xsd.float)
 
     raise Exception(f"from_python_to_Literal: unsupported type {type(v)}")
+
+def from_Literal_to_python(l:Literal) -> object:
+    ret = None
+    if l.datatype_uri == xsd.string:
+        ret = f"{l.value_o}"
+    elif l.datatype_uri == xsd.boolean:
+        ret = l.value_o.lower() == "true"
+    elif l.datatype_uri == xsd.integer:
+        ret = int(l.value_o)
+    elif l.datatype_uri == xsd.float:
+        ret = float(l.value_o)
+    else:
+        #ipdb.set_trace()
+        raise Exception(f"unsupported xsd type: {l.datatype_uri}")
+
+    return ret

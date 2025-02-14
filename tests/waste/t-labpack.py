@@ -5,7 +5,7 @@ if __name__ == "__main__":
     ipdb.set_trace()
     fuseki_url = "http://localhost:3030/kgm-default-dataset"
     db = Database(fuseki_url)
-    kgm_path = "/labpack-test"
+    kgm_path = "/labpack"
     g_uri = db.get_kgm_graph(kgm_path)
     if g_uri is None:
         raise Exception(f"can't find kgm path {kgm_path}")
@@ -28,7 +28,7 @@ if __name__ == "__main__":
         un_code_uris = g.select_in_current_graph(rq)
         if len(un_code_uris) == 0:
             un_code = g.create_user_object(":LocalUNCode")
-            un_code.labpackChemical.add(lp)
+            un_code.labpackChemical.multi_value_add(lp)
             un_code.uncode = "TEST123"
         else:
             un_code = g.load_user_object(un_code_uris.uo[0])
