@@ -60,11 +60,12 @@ class UserObjectMemberEditor:
     
     def single_value_set(self, v:object, supress_marking_as_changed = False):
         assert(self.is_single_value())
-        # None value is allowed
-        assert(type(v) in [None, UserObject] + get_supported_Literal_python_types())
+        assert(type(v) in [UserObject] + get_supported_Literal_python_types())
+        if v in self.values:
+            return
+        
         self.values.clear()
-        if v is not None:
-            self.values.add(v)
+        self.values.add(v)
         if supress_marking_as_changed == False:
             self.uo.get_impl().g.changed_uo_members.add(self)
         
@@ -72,44 +73,50 @@ class UserObjectMemberEditor:
         assert(self.is_single_value())
         for el in self.values:
             return el
+        raise Exception("single_value_get: no value found")
 
     def multi_value_has(self, v:object) -> bool:
         assert(self.is_multi_value())
-        # note that v can not be None
         assert(type(v) in [UserObject] + get_supported_Literal_python_types())
         return v in self.values
 
     def multi_value_add(self, v:object, supress_marking_as_changed = False):
         assert(self.is_multi_value())
-        # note that v can not be None
         assert(type(v) in [UserObject] + get_supported_Literal_python_types())
+        if v in self.values:
+            return        
         self.values.add(v)
         if supress_marking_as_changed == False:
             self.uo.get_impl().g.changed_uo_members.add(self)
 
     def multi_value_update(self, vs:list[object], supress_marking_as_changed = False):
         assert(self.is_multi_value())
-        # note that v can not be None
+        any_changes = False
         for v in vs:
             assert(type(v) in [UserObject] + get_supported_Literal_python_types())
+            if v in self.values:
+                continue
             self.values.add(v)
-        if supress_marking_as_changed == False:
+            any_changes = True
+        if supress_marking_as_changed == False and any_changes == True:
             self.uo.get_impl().g.changed_uo_members.add(self)
         
-    def multi_value_remove(self, v:object, supress_marking_as_changed = False):
+    def multi_value_remove(self, v:object, supress_marking_as_changed = False) -> bool:
         assert(self.is_multi_value())
-        assert(v is not None)
+        assert(type(v) in [UserObject] + get_supported_Literal_python_types())
         try:
             self.values.remove(v)
             ret = true
+            if supress_marking_as_changed == False:
+                self.uo.get_impl().g.changed_uo_members.add(self)
         except KeyError:
             ret = false
-        if supress_marking_as_changed == False:
-            self.uo.get_impl().g.changed_uo_members.add(self)
+
         return ret
 
-    def multi_value_clear(self, supress_marking_as_changed = False):
-        assert(self.is_multi_value())
+    def clear(self, supress_marking_as_changed = False):
+        if len(self.values) == 0:
+            return
         self.values.clear()
         if supress_marking_as_changed == False:
             self.uo.get_impl().g.changed_uo_members.add(self)
