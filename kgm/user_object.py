@@ -1,47 +1,8 @@
 import ipdb
 from kgm.rdf_terms import URI, Literal, RDFObject, RDFTriple
-from kgm.rdf_utils import get_py_m_name, from_python_to_Literal, get_supported_Literal_python_types
+from kgm.rdf_utils import get_py_m_name, get_supported_Literal_python_types, from_python_to_Literal
+from kgm.user_class import UserClass
 
-class UserClassMember:
-    def __init__(self, uc, m_path_uri, m_type_uri, min_c, max_c):
-        self.user_class = uc
-        self.m_path_uri = m_path_uri
-        self.m_type_uri = m_type_uri
-        self.min_c = min_c
-        self.max_c = max_c
-
-class UserClass:
-    def __init__(self, g:"KGMGraph", uc_uri:URI):
-        self.g = g
-        self.uc_uri = uc_uri
-        self.super_uc_uris = set()
-        self.sub_uc_uris = set()
-        self.members = {} # m_path_uri => member attrs
-
-    def add_member__(self, m_path_uri, m_type_uri, min_c:int, max_c:int):
-        assert(type(min_c) == int)
-        assert(isinstance(m_path_uri, URI))
-        assert(isinstance(m_type_uri, URI))
-        
-        if m_path_uri in self.members:
-            #ipdb.set_trace()
-            raise Exception(f"this member already added: {to_turtle(m_path_uri)}")
-
-        #ipdb.set_trace()
-        new_uc_m = UserClassMember(self, m_path_uri, m_type_uri, min_c, max_c)
-        self.members[m_path_uri] = new_uc_m
-
-    def load_create_user_object__(self, uo_uri:URI) -> "UserObject":
-        ret = UserObject(self.g, uo_uri, self)
-        for k, v in self.members.items():
-            ret.add_member_editor__(v.m_path_uri, v.m_type_uri, v.min_c, v.max_c)
-        return ret
-
-    def show(self):
-        print("uc_uri:", self.uc_uri)
-        for k, v in self.members.items():
-            print(k, "   ", v)
-    
 class UserObjectMemberEditor:
     def __init__(self, uo, m_path_uri, m_type_uri, min_c, max_c):
         self.uo = uo
@@ -51,105 +12,12 @@ class UserObjectMemberEditor:
         self.min_c = min_c; self.max_c = max_c
         self.loaded_values = set()
         self.values = set()
-
-    def is_single_value(self):
-        return self.min_c == 1 and self.max_c == 1
-
-    def is_multi_value(self):
-        return not (self.min_c == 1 and self.max_c == 1)
-    
-    def single_value_set(self, v:object, supress_marking_as_changed = False):
-        assert(self.is_single_value())
-        assert(type(v) in [UserObject] + get_supported_Literal_python_types())
-        if v in self.values:
-            return
         
-        self.values.clear()
-        self.values.add(v)
-        if supress_marking_as_changed == False:
-            self.uo.get_impl().g.changed_uo_members.add(self)
-        
-    def single_value_get(self) -> object:
-        assert(self.is_single_value())
-        for el in self.values:
-            return el
-        raise Exception("single_value_get: no value found")
-
-    def multi_value_has(self, v:object) -> bool:
-        assert(self.is_multi_value())
-        assert(type(v) in [UserObject] + get_supported_Literal_python_types())
-        return v in self.values
-
-    def multi_value_add(self, v:object, supress_marking_as_changed = False):
-        assert(self.is_multi_value())
-        assert(type(v) in [UserObject] + get_supported_Literal_python_types())
-        if v in self.values:
-            return        
-        self.values.add(v)
-        if supress_marking_as_changed == False:
-            self.uo.get_impl().g.changed_uo_members.add(self)
-
-    def multi_value_update(self, vs:list[object], supress_marking_as_changed = False):
-        assert(self.is_multi_value())
-        any_changes = False
-        for v in vs:
-            assert(type(v) in [UserObject] + get_supported_Literal_python_types())
-            if v in self.values:
-                continue
-            self.values.add(v)
-            any_changes = True
-        if supress_marking_as_changed == False and any_changes == True:
-            self.uo.get_impl().g.changed_uo_members.add(self)
-        
-    def multi_value_remove(self, v:object, supress_marking_as_changed = False) -> bool:
-        assert(self.is_multi_value())
-        assert(type(v) in [UserObject] + get_supported_Literal_python_types())
-        try:
-            self.values.remove(v)
-            ret = true
-            if supress_marking_as_changed == False:
-                self.uo.get_impl().g.changed_uo_members.add(self)
-        except KeyError:
-            ret = false
-
-        return ret
-
-    def clear(self, supress_marking_as_changed = False):
-        if len(self.values) == 0:
-            return
-        self.values.clear()
-        if supress_marking_as_changed == False:
-            self.uo.get_impl().g.changed_uo_members.add(self)
-        
-    def __iter__(self):
-        assert(self.is_multi_value())
-        return iter(self.values)
-    
-    def load_setup_values__(self, new_values:list[object]):
-        #ipdb.set_trace()
-        if self.is_single_value():
-            assert(len(new_values) == 1)
-            s_v = new_values[0]
-            if len(self.values) != 0:
-                existing_v = [x for x in self.values][0]
-                if existing_v != s_v:
-                    raise Exception("inconsistent scalar data found during load_setup_initial_value, prev and new value are not the same")
-            else:
-                self.single_value_set(s_v, supress_marking_as_changed = True)
-                self.sync__()
-        else:
-            c_vs = new_values
-            if len(self.values) == 0:
-                self.multi_value_update(c_vs, supress_marking_as_changed = True)
-                self.sync__()
-            else:
-                if self.values != c_vs:
-                    raise Exception("inconsistent set data found during load_setup_initial_value, prev and new value are not the same")
-
     def sync__(self):
         self.loaded_values = set(self.values)
-        
-    def create_RDFObject__(self, v:object) -> RDFObject:
+
+    @staticmethod
+    def create_RDFObject__(v:object) -> RDFObject:
         if isinstance(v, UserObject):
             ret = RDFObject(v.get_impl().uo_uri)
         else:
@@ -163,6 +31,104 @@ class UserObjectMemberEditor:
         inss = {RDFTriple(self.uo.get_uri(), self.m_path_uri, self.create_RDFObject__(x)) for x in inss_T}
         return (dels, inss)
 
+    def load_setup_values__(self, new_values:list[object]):
+        #ipdb.set_trace()
+        if self.is_01() or self.is_11():
+            assert(len(new_values) == 1)
+            s_v = new_values[0]
+            if len(self.values) == 0:
+                self.values.add(s_v)
+                self.sync__()
+            elif len(self.values) == 1:
+                existing_v = [x for x in self.values][0]
+                if existing_v != s_v:
+                    raise Exception("inconsistent scalar data found during load_setup_initial_value, prev and new value are not the same")
+            else:
+                raise Exception("inconsistent scalar data found during load_setup_initial_value, prev and new value are not the same")
+        else:
+            c_vs = new_values
+            if len(self.values) == 0:
+                self.values.update(c_vs)
+                self.sync__()
+            else:
+                if self.values != c_vs:
+                    raise Exception("inconsistent set data found during load_setup_initial_value, prev and new value are not the same")
+
+    def is_01(self):
+        return self.min_c == 0 and self.max_c == 1
+
+    def is_11(self):
+        return self.min_c == 1 and self.max_c == 1
+
+    def svalue_set(self, value):
+        uo_me = self
+        len_values = len(uo_me.values)
+        g = self.uo.get_impl().g
+        if uo_me.is_01():
+            g.changed_uo_members.add(uo_me)
+            if value is None:
+                uo_me.values.clear()
+            elif type(value) in [UserObject] + get_supported_Literal_python_types():
+                uo_me.values.clear(); uo_me.values.add(value)
+            elif type(value) in (list, set):
+                raise Exception("expected scalar")
+            else:
+                raise Exception("unexpected type of value")
+        elif uo_me.is_11():
+            g.changed_uo_members.add(uo_me)
+            if value is None:
+                raise Exception("cardinality violation")
+            elif type(value) in [UserObject] + get_supported_Literal_python_types():
+                uo_me.values.clear(); uo_me.values.add(value)
+            elif type(value) in (list, set):
+                raise Exception("expected scalar")
+            else:
+                raise Exception("unexpected type of value")
+        else:
+            raise Exception("svalue_set is not allowed for non-scalar members")
+
+    def svalue_get(self):
+        uo_me = self
+        len_values = len(uo_me.values)
+        if uo_me.is_01():
+            if len_values == 0:
+                return None
+            elif len_values == 1:
+                return [x for x in uo_me.values][0]
+            else:
+                raise Exception("cardinality violation")
+        elif uo_me.is_11():
+            if len_values == 0:
+                raise Exception("cardinality violation")
+            elif len_values == 1:
+                return [x for x in uo_me.values][0]
+            else:
+                raise Exception("cardinality violation")
+        else:
+            raise Exception("svalue_get is not allowed for non-scalar members")
+
+    def __iter__(self):
+        if self.is_01() or self.is_11():
+            raise Exception("__iter__ is not supported for scalar members")
+        return iter(self.values)
+
+    def mvalue_get(self):
+        if self.is_01() or self.is_11():
+            raise Exception("mvalue_get is not supported for scalar members")
+        return self.values
+
+    def mvalue_has(self, v):
+        if self.is_01() or self.is_11():
+            raise Exception("mvalue_has is not supported for scalar members")
+        return v in self.values
+    
+    def mvalue_add(self, v):
+        if self.is_01() or self.is_11():
+            raise Exception("mvalue_add is not supported for scalar members")
+        g = self.uo.get_impl().g
+        g.changed_uo_members.add(self)
+        self.values.add(v)
+        
 class UOImpl:
     def __init__(self, g, uo_uri, uc):
         self.g = g
@@ -214,22 +180,22 @@ class UserObject:
             if not name in self._storage:
                 raise Exception(f"member {name} was never added")
 
+            #print("setting value:", value)
+
             uo_me = self._storage[name]
-            print("setting value:", value)
-            if uo_me.is_single_value():
-                uo_me.single_value_set(value)
-            else:
-                raise Exception("can't assign to set")
-    
+            uo_me.svalue_set(value)
+
     def __getattr__(self, name):
         # Provide access to restricted attributes
-        if name in self._storage:
-            #ipdb.set_trace()
-            uo_me = self._storage.get(name)
-            if uo_me.is_single_value():
-                return uo_me.single_value_get() # will return python object
-            else:
-                return uo_me # will return UOMemberEditor
+        if name not in self._storage:
+            # Raise AttributeError if attribute not found or restricted
+            raise AttributeError(f"member '{name}' is not accessible.")
+            
+        #ipdb.set_trace()
+        uo_me = self._storage.get(name)
+        if uo_me.is_01() or uo_me.is_11():
+            ret = uo_me.svalue_get()
+        else:
+            ret = uo_me
 
-        # Raise AttributeError if attribute not found or restricted
-        raise AttributeError(f"member '{name}' is not accessible.")
+        return ret

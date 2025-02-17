@@ -3,9 +3,10 @@ import pandas as pd
 from . import gen_nanoid
 from kgm.rdf_terms import URI, Literal, BNode, RDFTriple
 from kgm.prefixes import rdf, rdfs, xsd, sh, dash, kgm
-from kgm.rdf_utils import get_py_m_name, make_URI_from_parts, to_turtle, restore_prefix, from_Literal_to_python
+from kgm.rdf_utils import from_Literal_to_python, restore_prefix, make_URI_from_parts, to_turtle, get_py_m_name
 from kgm.database import Database
-from kgm.user_object import UserClass, UserObject
+from kgm.user_object import UserObject
+from kgm.user_class import UserClass
 
 class KGMGraph:
     def __init__(self, db:Database, kgm_g:URI, additional_kgm_pathes:list[str] = None):

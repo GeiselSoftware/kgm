@@ -19,6 +19,8 @@ if __name__ == "__main__":
     obj = g.load_user_object(obj_uri)
     print("address:", obj.address)
     obj.address = "2 Main St"
-
+    obj.pet.name = "Bam"
+    [x for x in obj.pets][0].name = "Bom"
+    
     ipdb.set_trace()
     g.save()
