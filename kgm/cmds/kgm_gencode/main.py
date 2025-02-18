@@ -33,9 +33,7 @@ def cli(ctx, config):
 def gencode_cs(ctx, kgm_path, cs_namespace, output_dir):
     #print("gencode_cs:", ctx.obj)
     _, w_config = ctx.obj["config"]
-    fuseki_url = w_config['backend-url']    
-    db = Database(fuseki_url)
-    mod_gencode_cs.gencode_for_namespace(db, kgm_path, cs_namespace, output_dir)
+    mod_gencode_cs.gencode_for_namespace(w_config, kgm_path, cs_namespace, output_dir)
 
 def main():
     cli(max_content_width = 120)

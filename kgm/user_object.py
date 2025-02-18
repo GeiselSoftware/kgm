@@ -128,6 +128,13 @@ class UserObjectMemberEditor:
         g = self.uo.get_impl().g
         g.changed_uo_members.add(self)
         self.values.add(v)
+
+    def mvalue_clear(self):
+        if self.is_01() or self.is_11():
+            raise Exception("mvalue_add is not supported for scalar members")
+        g = self.uo.get_impl().g
+        g.changed_uo_members.add(self)
+        self.values.clear()        
         
 class UOImpl:
     def __init__(self, g, uo_uri, uc):

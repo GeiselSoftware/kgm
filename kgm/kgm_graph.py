@@ -1,4 +1,4 @@
-import ipdb
+#import ipdb
 import pandas as pd
 from . import gen_nanoid
 from kgm.rdf_terms import URI, Literal, BNode, RDFTriple
@@ -54,7 +54,7 @@ class KGMGraph:
         return (dels, inss)
         
     def save(self):
-        ipdb.set_trace()
+        #ipdb.set_trace()
         dels_inss = self.get_dels_inss__()
         if 1:
             for t in dels_inss[0]:
@@ -87,7 +87,8 @@ class KGMGraph:
              optional {{ ?uc rdfs:subClassOf ?super_uc }}
             }}
             """
-            ipdb.set_trace()
+
+            #ipdb.set_trace()
             rq_res = pd.DataFrame.from_dict(self.db.rq_select(rq))
             for ii, r in rq_res.iterrows():
                 uc_uri = r['uc']; super_uc_uri = r['super_uc']
@@ -142,7 +143,7 @@ class KGMGraph:
             min_c = from_Literal_to_python(r['uc_m_minc'])
             uc.add_member__(r['uc_m_name'], uc_m_type, min_c, max_c)
 
-        ipdb.set_trace()
+        #ipdb.set_trace()
         if 1:
             # NB:
             # walk class hierarchy and inserts parent members to child subclasses
@@ -170,7 +171,7 @@ class KGMGraph:
                                 stack.append((sub_uc, path + [sub_uc]))
                     
     def load_user_object(self, req_uo_uri: URI) -> UserObject:
-        ipdb.set_trace()
+        #ipdb.set_trace()
         if isinstance(req_uo_uri, str):
             req_uo_uri = URI(req_uo_uri)
         
@@ -203,7 +204,7 @@ class KGMGraph:
                 uo = uc.load_create_user_object__(uo_uri)
                 self.all_user_objects[uo_uri] = uo
 
-        ipdb.set_trace()
+        #ipdb.set_trace()
         for gid, gdf in members_gdf:
             uo_uri, uo_m_uri = gid
             uo_m_values = gdf['uo_member_value']
