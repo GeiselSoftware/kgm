@@ -22,6 +22,7 @@ def gen_Factory_create_method(out, g:KGMGraph, uc:"UserClass"):
     print(f"  public {uc_name} create_{uc_name}({args}) {{", file = out)
     print(f'     UserObject uo = this.g.create_user_object("{uc_curie}");', file = out)
     print(f"     {uc_name} ret = new {uc_name}(uo);", file = out)
+    print(f"     {uc_name}.set_default_values(uo);", file = out)
     print(f"     return ret;", file = out)
     print(f"  }}", file = out)
     print("", file = out)
@@ -66,36 +67,63 @@ def gen_UserClass_adapter_code(out, g:KGMGraph, uc:"UserClass"):
     print(f"", file = out)
     
     print(f"   public static void set_default_values(UserObject uo) {{", file = out)
-    for uc_m in uc.members.values():
-        if uc_m.is_class == False:
-            dflt_value = '""'
+
+    for super_uc_uri in uc.super_uc_uris:
+        super_uc = g.all_user_classes.get(super_uc_uri)
+        super_uc_name = get_py_m_name(super_uc.uc_uri)
+        print(f'     {super_uc_name}.set_default_values(uo);', file = out)
+        
+    for uc_m in uc.members.values():        
+        is_scalar = uc_m.max_c == 1
+        if uc_m.is_class == False and is_scalar == True:
             uc_m_name = get_py_m_name(uc_m.m_path_uri)
-            print(f'     uo.get_member_editor("{uc_m_name}").svalue_set({dflt_value});', file = out)
+            uc_m_cs_type, uc_m_cs_dflt = datatype_cs_dets[uc_m.m_type_uri]
+            print(f'     uo.get_member_editor("{uc_m_name}").svalue_set({uc_m_cs_dflt});', file = out)
+
     print(f"   }}", file = out)
     print(f"", file = out)
     
     for uc_m in uc.members.values():
+        is_scalar = uc_m.max_c == 1
         uc_m_name = get_py_m_name(uc_m.m_path_uri)
         if uc_m.is_class == False:
             uc_m_cs_type, uc_m_cs_dflt = datatype_cs_dets[uc_m.m_type_uri]
-            print(f"   public {uc_m_cs_type} {uc_m_name} {{", file = out)
-            print(f'     get {{ return uo.get_member_editor("{uc_m_name}").svalue_get() as {uc_m_cs_type}; }}', file = out)
-            print(f'     set {{ uo.get_member_editor("{uc_m_name}").svalue_set(value); }}', file = out)
-            print(f"   }}", file = out)
+            if is_scalar:
+                print(f"   public {uc_m_cs_type} {uc_m_name} {{", file = out)
+                print(f'     get {{ return uo.get_member_editor("{uc_m_name}").svalue_get() as {uc_m_cs_type}; }}', file = out)
+                print(f'     set {{ uo.get_member_editor("{uc_m_name}").svalue_set(value); }}', file = out)
+                print(f"   }}", file = out)
+            else:
+                print(f'   public CSUserObjectListStruct<{uc_m_cs_type.replace("?", "")}> {uc_m_name} {{', file = out)
+                print(f'       get {{ return new CSUserObjectListStruct<{uc_m_cs_type.replace("?", "")}>(uo.get_member_editor("{uc_m_name}")); }}', file = out)
+                print(f"   }}", file = out)
         else:
             uc_m_cs_type = get_py_m_name(uc_m.m_type_uri)
-            print(f"   public {uc_m_cs_type} {uc_m_name} {{", file = out)
-            print(f'     get {{', file = out)
-            print(f'         UserObject member_uo = uo.get_member_editor("{uc_m_name}").svalue_get() as UserObject;', file = out)
-            print(f'         if (member_uo.cs_uo == null) {{', file = out)
-            print(f'            member_uo.cs_uo = new {uc_m_cs_type}(member_uo);', file = out)
-            print(f'         }}', file = out)
-            print(f'         return member_uo.cs_uo as {uc_m_cs_type};', file = out)
-            print(f'     }}', file = out)
-            print(f'     set {{', file = out)
-            print(f'         uo.get_member_editor("{uc_m_name}").svalue_set(value.uo);', file = out)
-            print(f'     }}', file = out)
-            print(f"   }}", file = out)
+            if is_scalar:
+                print(f"   public {uc_m_cs_type} {uc_m_name} {{", file = out)
+                print(f'     get {{', file = out)
+                print(f'         UserObject member_uo = uo.get_member_editor("{uc_m_name}").svalue_get() as UserObject;', file = out)
+                print(f'         if (member_uo.cs_uo == null) {{', file = out)
+                print(f'            member_uo.cs_uo = new {uc_m_cs_type}(member_uo);', file = out)
+                print(f'         }}', file = out)
+                print(f'         return member_uo.cs_uo as {uc_m_cs_type};', file = out)
+                print(f'     }}', file = out)
+                print(f'     set {{', file = out)
+                print(f'         uo.get_member_editor("{uc_m_name}").svalue_set(value.uo);', file = out)
+                print(f'     }}', file = out)
+                print(f"   }}", file = out)
+            else:
+                print(f"   public CSUserObjectListClass<{uc_m_cs_type}> {uc_m_name} {{", file = out)
+                print(f'       get {{', file = out)
+                print(f'            var me = uo.get_member_editor("{uc_m_name}");', file = out)
+                print(f'            foreach (UserObject member_uo in me.values) {{', file = out)
+                print(f'               if (member_uo.cs_uo == null) {{', file = out)
+                print(f'                  member_uo.cs_uo = new {uc_m_cs_type}(member_uo);', file = out)
+                print(f'               }}', file = out)
+                print(f'            }}', file = out)
+                print(f'            return new CSUserObjectListClass<{uc_m_cs_type}>(me);', file = out)
+                print(f'       }}', file = out)
+                print(f"   }}", file = out)
             
     print(f" }} // end of {uc_name}", file = out)
     
