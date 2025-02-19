@@ -136,12 +136,13 @@ class KGMGraph:
                 raise Exception(f"for member {r['uc_m_name']} both class and datatype are None")
             if r['uc_m_class'] is not None and r['uc_m_datatype'] is not None:
                 raise Exception(f"for member {r['uc_m_name']} both class and datatype are both not None")
-            
-            uc_m_type = r['uc_m_class'] if r['uc_m_class'] is not None else r['uc_m_datatype']
+
+            uc_m_is_class = r['uc_m_class'] is not None
+            uc_m_type = r['uc_m_class'] if uc_m_is_class else r['uc_m_datatype']
             #uc_m_class = r['uc_m_class']
             max_c = from_Literal_to_python(r['uc_m_maxc']) if r['uc_m_maxc'] is not None else -1
             min_c = from_Literal_to_python(r['uc_m_minc'])
-            uc.add_member__(r['uc_m_name'], uc_m_type, min_c, max_c)
+            uc.add_member__(r['uc_m_name'], uc_m_type, min_c, max_c, uc_m_is_class)
 
         #ipdb.set_trace()
         if 1:

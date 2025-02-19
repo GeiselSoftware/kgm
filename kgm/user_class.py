@@ -1,12 +1,13 @@
 from kgm.rdf_terms import URI
 
 class UserClassMember:
-    def __init__(self, uc, m_path_uri, m_type_uri, min_c, max_c):
+    def __init__(self, uc, m_path_uri, m_type_uri, min_c, max_c, is_class:bool):
         self.user_class = uc
         self.m_path_uri = m_path_uri
         self.m_type_uri = m_type_uri
         self.min_c = min_c
         self.max_c = max_c
+        self.is_class = is_class # member could be either sh:class or sh:datatype
 
 class UserClass:
     def __init__(self, g:"KGMGraph", uc_uri:URI):
@@ -16,7 +17,7 @@ class UserClass:
         self.sub_uc_uris = set()
         self.members = {} # m_path_uri => member attrs
 
-    def add_member__(self, m_path_uri, m_type_uri, min_c:int, max_c:int):
+    def add_member__(self, m_path_uri, m_type_uri, min_c:int, max_c:int, is_class):
         assert(type(min_c) == int)
         assert(isinstance(m_path_uri, URI))
         assert(isinstance(m_type_uri, URI))
@@ -26,7 +27,7 @@ class UserClass:
             raise Exception(f"this member already added: {to_turtle(m_path_uri)}")
 
         #ipdb.set_trace()
-        new_uc_m = UserClassMember(self, m_path_uri, m_type_uri, min_c, max_c)
+        new_uc_m = UserClassMember(self, m_path_uri, m_type_uri, min_c, max_c, is_class)
         self.members[m_path_uri] = new_uc_m
 
     def load_create_user_object__(self, uo_uri:URI) -> "UserObject":

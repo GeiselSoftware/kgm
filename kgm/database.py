@@ -12,9 +12,9 @@ class Database:
         self.clickhouse_client = clickhouse_client
 
         self.w_prefixes = {}
+        self.w_prefixes[":"] = well_known_prefixes["kgm:"] + ":" # must be first, : maps to urn:kgm: with empty namespace
         for k, v in well_known_prefixes.items():
-            self.w_prefixes[k] = v[0]
-        self.w_prefixes[":"] = self.w_prefixes["kgm:"] + ":" # : maps to urn:kgm: with empty namespace
+            self.w_prefixes[k] = v
 
     def rq_select(self, query:str):
         raw_rq_res = sparql_utils.rq_select(query, config = {'backend-url': self.fuseki_url}, w_prefixes = self.w_prefixes)

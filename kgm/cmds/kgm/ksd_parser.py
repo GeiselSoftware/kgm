@@ -182,7 +182,7 @@ class KSDParser:
 
         for prefix in ["rdf:", "rdfs:", "sh:", "xsd:"]:
             uri = well_known_prefixes[prefix]
-            print(f"@prefix {prefix} <{uri[0]}> .")
+            print(f"@prefix {prefix} <{uri}> .")
             
         print(f"@prefix : <urn:kgm::> .") # empty prefix for empty kgm namespace
 

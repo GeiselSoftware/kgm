@@ -2,11 +2,20 @@ import ipdb
 import sys, io
 from kgm.database import Database
 from kgm.kgm_graph import KGMGraph
-from kgm.rdf_utils import collapse_prefix
+from kgm.rdf_terms import URI
+from kgm.rdf_utils import collapse_prefix, get_py_m_name, restore_prefix
+from kgm.prefixes import well_known_prefixes, well_known_prefix_members
+
+datatype_cs_dets = {URI(well_known_prefixes['xsd:'] + xsd_typename):None for xsd_typename in well_known_prefix_members['xsd:']}
+datatype_cs_dets[restore_prefix('xsd:string', well_known_prefixes)] = ('string', '""')
+datatype_cs_dets[restore_prefix('xsd:boolean', well_known_prefixes)] = ('bool?', 'false')
+datatype_cs_dets[restore_prefix('xsd:integer', well_known_prefixes)] = ('int?', '0')
+datatype_cs_dets[restore_prefix('xsd:float', well_known_prefixes)] = ('float?', '0.0f')
+datatype_cs_dets[restore_prefix('xsd:double', well_known_prefixes)] = ('double?', '0.0')
 
 def gen_Factory_create_method(out, g:KGMGraph, uc:"UserClass"):
     #ipdb.set_trace()
-    uc_name = uc.uc_uri.uri_s
+    uc_name = get_py_m_name(uc.uc_uri)
     args = ""
     uc_curie = collapse_prefix(uc.uc_uri, g.db.w_prefixes)
 
@@ -28,34 +37,75 @@ def gen_Factory_create_method(out, g:KGMGraph, uc:"UserClass"):
     print(f"  }}", file = out)
     print(f"", file = out)
 
-    print(f"  }}", file = out)
-
 def gen_Factory_load_user_object(out, g:KGMGraph):
     print(f"  public async Task<CSUserObject> load_user_object(URI uri) {{", file = out)
     print(f"      UserObject uo = await this.g.load_user_object(uri);", file = out)
     print(f"      CSUserObject ret = null;", file = out)
-    
+    is_first_loop = True
+    for uc in g.all_user_classes.values():
+        uc_curie = collapse_prefix(uc.uc_uri, g.db.w_prefixes)
+        uc_name = get_py_m_name(uc.uc_uri)
+        print(f'      {"if" if is_first_loop else "else if"} (uo.is_class("{uc_curie}")) {{', file = out)
+        print(f'         ret = new {uc_name}(uo);', file = out)
+        print(f'      }}', file = out)
+        is_first_loop = False
+        #print(f"    {uc_curie} {uc_name}", file = out)
+    print(f"      else {{", file = out)
+    print(f'         throw new Exception("unknown type");', file = out)
+    print(f"      }}", file = out)
+    print(f"", file = out)
     print(f"      return ret;", file = out)
     print(f"  }}", file = out)    
 
 def gen_UserClass_adapter_code(out, g:KGMGraph, uc:"UserClass"):
-    uc_name = uc.uc_uri.uri_s
-    print(f" public class {uc_name} {{", file = out)
-    print(f"   public {uc_name} : CSUserObject {{", file = out)
+    uc_name = get_py_m_name(uc.uc_uri)
+    print(f" public class {uc_name} : CSUserObject {{", file = out)
+    print(f"   public {uc_name}(UserObject uo) {{", file = out)
     print(f"      this.uo = uo;", file = out)
     print(f"   }}", file = out)
     print(f"", file = out)
+    
     print(f"   public static void set_default_values(UserObject uo) {{", file = out)
+    for uc_m in uc.members.values():
+        if uc_m.is_class == False:
+            dflt_value = '""'
+            uc_m_name = get_py_m_name(uc_m.m_path_uri)
+            print(f'     uo.get_member_editor("{uc_m_name}").svalue_set({dflt_value});', file = out)
     print(f"   }}", file = out)
+    print(f"", file = out)
+    
+    for uc_m in uc.members.values():
+        uc_m_name = get_py_m_name(uc_m.m_path_uri)
+        if uc_m.is_class == False:
+            uc_m_cs_type, uc_m_cs_dflt = datatype_cs_dets[uc_m.m_type_uri]
+            print(f"   public {uc_m_cs_type} {uc_m_name} {{", file = out)
+            print(f'     get {{ return uo.get_member_editor("{uc_m_name}").svalue_get() as {uc_m_cs_type}; }}', file = out)
+            print(f'     set {{ uo.get_member_editor("{uc_m_name}").svalue_set(value); }}', file = out)
+            print(f"   }}", file = out)
+        else:
+            uc_m_cs_type = get_py_m_name(uc_m.m_type_uri)
+            print(f"   public {uc_m_cs_type} {uc_m_name} {{", file = out)
+            print(f'     get {{', file = out)
+            print(f'         UserObject member_uo = uo.get_member_editor("{uc_m_name}").svalue_get() as UserObject;', file = out)
+            print(f'         if (member_uo.cs_uo == null) {{', file = out)
+            print(f'            member_uo.cs_uo = new {uc_m_cs_type}(member_uo);', file = out)
+            print(f'         }}', file = out)
+            print(f'         return member_uo.cs_uo as {uc_m_cs_type};', file = out)
+            print(f'     }}', file = out)
+            print(f'     set {{', file = out)
+            print(f'         uo.get_member_editor("{uc_m_name}").svalue_set(value.uo);', file = out)
+            print(f'     }}', file = out)
+            print(f"   }}", file = out)
+            
     print(f" }} // end of {uc_name}", file = out)
     
-def gen_code(g:KGMGraph, target_namespace:str) -> str:
+def gen_code(g:KGMGraph, cs_namespace:str) -> str:
     out = io.StringIO()
 
     print("// generated code - do not edit", file = out)
     print("using kgm;", file = out)
     print("", file = out)
-    print(f"namespace {target_namespace} {{", file = out)
+    print(f"namespace {cs_namespace} {{", file = out)
 
     print(" public class Factory {", file = out)
     print("  private KGMGraph g;", file = out)
@@ -72,7 +122,7 @@ def gen_code(g:KGMGraph, target_namespace:str) -> str:
         gen_UserClass_adapter_code(out, g, uc)
         print("", file = out)
 
-    print(f"}} // end of namespace", file = out)
+    print(f"}} // end of namespace {cs_namespace}", file = out)
     
     return out.getvalue()
 
