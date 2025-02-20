@@ -39,8 +39,7 @@ def gen_Factory_create_method(out, g:KGMGraph, uc:"UserClass"):
     print(f"", file = out)
 
 def gen_Factory_load_user_object(out, g:KGMGraph):
-    print(f"  public async Task<CSUserObject> load_user_object(URI uri) {{", file = out)
-    print(f"      UserObject uo = await this.g.load_user_object(uri);", file = out)
+    print(f"  public override CSUserObject create_cs_user_object__(UserObject uo) {{", file = out)
     print(f"      CSUserObject ret = null;", file = out)
     is_first_loop = True
     for uc in g.all_user_classes.values():
@@ -103,9 +102,6 @@ def gen_UserClass_adapter_code(out, g:KGMGraph, uc:"UserClass"):
                 print(f"   public {uc_m_cs_type} {uc_m_name} {{", file = out)
                 print(f'     get {{', file = out)
                 print(f'         UserObject member_uo = uo.get_member_editor("{uc_m_name}").svalue_get() as UserObject;', file = out)
-                print(f'         if (member_uo.cs_uo == null) {{', file = out)
-                print(f'            member_uo.cs_uo = new {uc_m_cs_type}(member_uo);', file = out)
-                print(f'         }}', file = out)
                 print(f'         return member_uo.cs_uo as {uc_m_cs_type};', file = out)
                 print(f'     }}', file = out)
                 print(f'     set {{', file = out)
@@ -116,11 +112,6 @@ def gen_UserClass_adapter_code(out, g:KGMGraph, uc:"UserClass"):
                 print(f"   public CSUserObjectListClass<{uc_m_cs_type}> {uc_m_name} {{", file = out)
                 print(f'       get {{', file = out)
                 print(f'            var me = uo.get_member_editor("{uc_m_name}");', file = out)
-                print(f'            foreach (UserObject member_uo in me.values) {{', file = out)
-                print(f'               if (member_uo.cs_uo == null) {{', file = out)
-                print(f'                  member_uo.cs_uo = new {uc_m_cs_type}(member_uo);', file = out)
-                print(f'               }}', file = out)
-                print(f'            }}', file = out)
                 print(f'            return new CSUserObjectListClass<{uc_m_cs_type}>(me);', file = out)
                 print(f'       }}', file = out)
                 print(f"   }}", file = out)
@@ -135,9 +126,8 @@ def gen_code(g:KGMGraph, cs_namespace:str) -> str:
     print("", file = out)
     print(f"namespace {cs_namespace} {{", file = out)
 
-    print(" public class Factory {", file = out)
-    print("  private KGMGraph g;", file = out)
-    print("  public Factory(KGMGraph g) { this.g = g; }", file = out)
+    print(" public class Factory : kgm.CSUserObjectFactory {", file = out)
+    print("  public Factory() { this.g = null; }", file = out)
 
     for uc in g.all_user_classes.values():
         gen_Factory_create_method(out, g, uc)

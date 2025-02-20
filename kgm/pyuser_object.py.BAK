@@ -1,0 +1,78 @@
+#import ipdb
+from kgm.user_object import UserObject
+
+class PyUserObject:
+    def __init__(self, uo:"UserObject"):
+        self.uo_ = uo
+        
+    # special access to member editor objects
+    def __dir__(self):
+        return self.uo_._storage.keys()
+    
+    def __setattr__(self, name, value):
+        if name in {"uo_"}:
+            super().__setattr__(name, value)
+        else:
+            if not name in self.uo_._storage:
+                raise Exception(f"member {name} was never added")
+
+            print("setting value:", value)        
+            uo_me = self.uo_._storage[name]
+            if isinstance(value, PyUserObject):
+                uo_me.svalue_set(value.uo_)
+            else:
+                uo_me.svalue_set(value)
+
+    def __getattr__(self, name):
+        # Provide access to restricted attributes
+        if name not in self.uo_._storage:
+            # Raise AttributeError if attribute not found or restricted
+            raise AttributeError(f"member '{name}' is not accessible.")
+        
+        #ipdb.set_trace()
+        uo_me = self.uo_._storage.get(name)
+        if uo_me.is_01() or uo_me.is_11():
+            ret_uo = uo_me.svalue_get()
+            if isinstance(ret_uo, UserObject):
+                ret = PyUserObject(ret_uo)
+            else:
+                ret = ret_uo
+        else:
+            ret = PyUserObjectList(uo_me)
+
+        return ret
+
+class PyUserObjectList:
+    def __init__(self, uo_me):
+        self.uo_me = uo_me
+
+    def __iter__(self):
+        for el in self.uo_me.values:
+            if isinstance(el, UserObject):
+                yield PyUserObject(el)
+            else:
+                yield el
+
+    def __len__(self):
+        return len(self.uo_me.values)
+    
+    def __call__(self, index):
+        if index < 0 or index >= len(self.uo_me.values):
+            raise Exception("index out of bounds")
+        
+        for c, el in enumerate(self.uo_me.values):
+            if c == index:                
+                return PyUserObject(el) if isinstance(el, UserObject) else el
+
+        raise Exception("logic error: can't get element from values")
+                
+    def add(self, uo:object):
+        if isinstance(uo, PyUserObject):
+            self.uo_me.mvalue_add(uo.uo_)
+        else:
+            self.uo_me.mvalue_add(uo)
+
+    def clear(self):
+        self.uo_me.mvalue_clear()
+        
+    

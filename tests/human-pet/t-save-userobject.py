@@ -12,19 +12,20 @@ if __name__ == "__main__":
     g = KGMGraph(db, g_uri)
     ipdb.set_trace()
 
-    obj = g.create_user_object(":Human")
-    if 0:
-        print(obj.get_impl())
+    if 1:
+        obj = g.create_user_object(":Human")
+        print(obj)
         obj.address = "123 Main St"
         obj.phone = "555-1234"
         obj.age = 1
-        obj.cars.multi_value_add("hi")
+        obj.cars.add("hi")
         print(obj.address)  # Output: 123 Main St
         print(obj.phone)    # Output: 555-1234
         for c in obj.cars:
             print(c)
-        print("has hi:", obj.cars.multi_value_has("bi"))
+        #print("has hi:", obj.cars.multi_value_has("bi"))
     else:
+        obj = g.create_user_object(":Human")
         obj.get_member_editor("address").svalue_set("123 Main St")
         obj.get_member_editor("phone").svalue_set("555-1234")
         obj.get_member_editor("age").svalue_set(1)
@@ -45,7 +46,7 @@ if __name__ == "__main__":
     bim.name = "Bim"
     print(bim.name)
     obj.pet = bim
-    obj.get_member_editor("pets").mvalue_add(bim)
+    obj.pets.add(bim)
 
     ipdb.set_trace()
     g.save() # ??? db.save

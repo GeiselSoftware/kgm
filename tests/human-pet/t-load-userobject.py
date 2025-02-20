@@ -15,5 +15,5 @@ if __name__ == "__main__":
     obj_uris = g.select_in_current_graph("select ?uo { ?uo rdf:type :Human }").uo
     obj_uri = obj_uris[0]
     obj = g.load_user_object(obj_uri)    
-    print(obj.get_impl())
+    print(obj)
     ipdb.set_trace()

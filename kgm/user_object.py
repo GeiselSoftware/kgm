@@ -203,6 +203,34 @@ class UserObject:
         if uo_me.is_01() or uo_me.is_11():
             ret = uo_me.svalue_get()
         else:
-            ret = uo_me
+            ret = UserObjectList(uo_me)
 
         return ret
+
+
+class UserObjectList:
+    def __init__(self, uo_me):
+        self.uo_me = uo_me
+
+    def __iter__(self):
+        for el in self.uo_me.values:
+            yield el
+
+    def __len__(self):
+        return len(self.uo_me.values)
+    
+    def __call__(self, index):
+        if index < 0 or index >= len(self.uo_me.values):
+            raise Exception("index out of bounds")
+        
+        for c, el in enumerate(self.uo_me.values):
+            if c == index:                
+                return el
+
+        raise Exception("logic error: can't get element from values")
+                
+    def add(self, uo:object):
+        self.uo_me.mvalue_add(uo)
+
+    def clear(self):
+        self.uo_me.mvalue_clear()
