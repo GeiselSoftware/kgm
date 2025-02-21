@@ -9,6 +9,9 @@ class UserClassMember:
         self.max_c = max_c
         self.is_class = is_class # member could be either sh:class or sh:datatype
 
+    def is_scalar(self):
+        return self.max_c == 1
+        
 class UserClass:
     def __init__(self, g:"KGMGraph", uc_uri:URI):
         self.g = g

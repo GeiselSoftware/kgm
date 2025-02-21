@@ -1,4 +1,4 @@
-import ipdb
+#import ipdb
 import sys, io
 from kgm.database import Database
 from kgm.kgm_graph import KGMGraph
@@ -19,11 +19,28 @@ def gen_Factory_create_method(out, g:KGMGraph, uc:"UserClass"):
     args = ""
     uc_curie = collapse_prefix(uc.uc_uri, g.db.w_prefixes)
 
+    def wrap_in_container(x, is_scalar):
+        return x if is_scalar else f"List<{x}>"    
+    args = ", ".join([f"{wrap_in_container(get_py_m_name(v.m_type_uri), v.is_scalar())} {get_py_m_name(v.m_path_uri)}" for k, v in uc.members.items() if v.is_class == True])
     print(f"  public {uc_name} create_{uc_name}({args}) {{", file = out)
     print(f'     UserObject uo = this.g.create_user_object("{uc_curie}");', file = out)
     print(f"     {uc_name} ret = new {uc_name}(uo);", file = out)
     print(f"     {uc_name}.set_default_values(uo);", file = out)
+
+    for v in uc.members.values():
+        if v.is_class == True:
+            m_name = get_py_m_name(v.m_path_uri)
+            if v.is_scalar():
+                print(f"      ret.{m_name} = {m_name};", file = out)
+            else:
+                print(f"      if ({m_name} != null) {{", file = out)
+                print(f"        foreach (var el in {m_name}) {{", file = out)
+                print(f"           ret.{m_name}.add(el);", file = out)
+                print(f"        }}", file = out)
+                print(f"      }}", file = out)
+
     print(f"     return ret;", file = out)
+                
     print(f"  }}", file = out)
     print("", file = out)
     print(f"  public bool is_{uc_name}(CSUserObject cs_uo) {{", file = out)
@@ -148,12 +165,8 @@ def gencode_for_namespace(w_config, kgm_path, cs_namespace, output_dir):
     #ipdb.set_trace()
     fuseki_url = w_config['backend-url']
     db = Database(fuseki_url)
-
-    graph_uri = db.get_kgm_graph(kgm_path)
-    if graph_uri is None:
-        raise Exception(f"graph at path does not exists:", graph_uri)        
-
-    kgm_g = KGMGraph(db, graph_uri, None)
+    graph_uris = db.get_graph_uris([kgm_path])
+    kgm_g = KGMGraph(db, None, graph_uris)
     print(gen_code(kgm_g, cs_namespace))
     
     sys.exit(3)

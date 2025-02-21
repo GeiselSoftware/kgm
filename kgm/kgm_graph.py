@@ -9,11 +9,16 @@ from kgm.user_object import UserObject
 from kgm.user_class import UserClass
 
 class KGMGraph:
-    def __init__(self, db:Database, kgm_g:URI, additional_kgm_pathes:list[str] = None):
-        assert(isinstance(kgm_g, URI))
+    def __init__(self, db:Database, g_uri:URI, readonly_g_uris:list[URI]):
+        if g_uri is not None:
+            assert(isinstance(g_uri, URI))
+        assert(isinstance(readonly_g_uris, list))
+        for g in readonly_g_uris:
+            assert(isinstance(g, URI))
+            
         self.db = db
-        self.g = kgm_g
-        self.dep_gs = additional_kgm_pathes
+        self.g = g_uri
+        self.readonly_gs = readonly_g_uris
         
         self.all_user_classes = {} # URI -> UserClass
         self.all_user_objects = {} # URI -> UserObject
@@ -22,7 +27,7 @@ class KGMGraph:
 
         #ipdb.set_trace()
         self.load_user_classes__()
-            
+
     def get_user_class(self, uc_curie:str) -> UserClass:
         assert(isinstance(uc_curie, str))
         uc_uri = restore_prefix(uc_curie, self.db.w_prefixes)
@@ -69,13 +74,11 @@ class KGMGraph:
             m.sync__()
         self.changed_uo_members.clear()
 
-    def get_from_clause__(self, include_dep_graphs = True):
+    def get_from_clause__(self) -> str:
         #ipdb.set_trace()
-        from_parts = [self.g]
-        if self.dep_gs is not None and include_dep_graphs == True:
-            for g in self.dep_gs:
-                from_parts.append(to_turtle(g, self.db.w_prefixes))
-        return "\n".join([f"from <{g_uri.uri_s}>" for g_uri in from_parts])
+        g_uris = [] if self.g is None else [self.g]
+        g_uris.extend(self.readonly_gs)
+        return "\n".join([f"from <{g_uri.uri_s}>" for g_uri in g_uris])
     
     def load_user_classes__(self):
         if 1: # create all user classes including empty ones. next query will not retreive empty rdfs classes
@@ -228,10 +231,10 @@ class KGMGraph:
                     
         return self.all_user_objects[req_uo_uri]
 
-    def select_in_current_graph(self, rq_over_current_graph, include_dep_graphs = True):
+    def select_in_current_graph(self, rq_over_current_graph):
         rq = f"""\
         select *
-        {self.get_from_clause__(include_dep_graphs)}
+        {self.get_from_clause__()}
         {{
            {rq_over_current_graph}          
         }}

@@ -1,4 +1,4 @@
-import ipdb
+#import ipdb
 from . import gen_nanoid
 from kgm.prefixes import rdf, xsd, kgm, well_known_prefixes
 from kgm.rdf_terms import URI, Literal, BNode
@@ -15,7 +15,7 @@ class Database:
         self.w_prefixes[":"] = well_known_prefixes["kgm:"] + ":" # must be first, : maps to urn:kgm: with empty namespace
         for k, v in well_known_prefixes.items():
             self.w_prefixes[k] = v
-
+            
     def rq_select(self, query:str):
         raw_rq_res = sparql_utils.rq_select(query, config = {'backend-url': self.fuseki_url}, w_prefixes = self.w_prefixes)
         return sparql_utils.rq_handle_select_result(raw_rq_res, w_prefixes = self.w_prefixes)
@@ -51,3 +51,11 @@ class Database:
 
         return None if len(graph_uris) == 0 else graph_uris[0]
 
+    def get_graph_uris(self, kgm_pathes):
+        g_uris = []
+        for kgm_path in kgm_pathes:
+            g_uri = self.get_kgm_graph(kgm_path)
+            if g_uri is None:
+                raise Exception(f"can't find kgm path {kgm_path}")
+            g_uris.append(g_uri)
+        return g_uris

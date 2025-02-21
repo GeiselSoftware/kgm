@@ -1,5 +1,5 @@
-import ipdb
-import click
+#import ipdb
+import click, sys
 import pandas as pd
 import rdflib
 from kgm.database import Database
@@ -202,7 +202,7 @@ def do_cat(db, path):
         print(res_g.serialize(format="ttl"))
 
 def parse_ttl(source):
-    ipdb.set_trace()
+    #ipdb.set_trace()
     g = rdflib.Graph()
     g.parse(source, format = "turtle")
     triples = []
@@ -252,7 +252,7 @@ def graph_import(ctx, path, ttl_file):
     else:
         source_triples = parse_ttl(ttl_file)
     
-    ipdb.set_trace()
+    #ipdb.set_trace()
     graph_uri = db.create_kgm_graph(path)
     db.rq_delete_insert(graph_uri, [[],source_triples])
 

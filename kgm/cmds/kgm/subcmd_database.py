@@ -1,4 +1,4 @@
-import ipdb
+#import ipdb
 import click
 import pandas as pd
 from kgm.database import Database
@@ -23,7 +23,7 @@ def do_init(ctx, reset):
     fuseki_url = w_config['backend-url']
     db = Database(fuseki_url)
     
-    ipdb.set_trace()
+    #ipdb.set_trace()
     rq = "select ?s { ?s rdf:type kgm:DefaultServerGraph }"
     rq_res = db.rq_select(rq)
 
@@ -71,5 +71,5 @@ def do_init(ctx, reset):
     }}
     """
 
-    ipdb.set_trace()
+    #ipdb.set_trace()
     db.rq_update(update_rq)

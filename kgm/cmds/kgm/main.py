@@ -30,7 +30,14 @@ def cli(ctx, config, verbose):
     ctx.obj['config'] = (config_name, get_config(config_name))
 
 cli.add_command(subcmd_toplevel.show_uri)
-
+if 1: # adding graph commands to toplevel
+    cli.add_command(subcmd_graph.graph_ls)
+    cli.add_command(subcmd_graph.graph_new)
+    cli.add_command(subcmd_graph.graph_import)
+    cli.add_command(subcmd_graph.graph_remove)
+    cli.add_command(subcmd_graph.graph_copy)
+    cli.add_command(subcmd_graph.graph_rename)
+    
 cli.add_command(subcmd_database.database)
 cli.add_command(subcmd_graph.graph)
 cli.add_command(subcmd_ksd.ksd)

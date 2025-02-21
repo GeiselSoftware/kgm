@@ -1,4 +1,4 @@
-import ipdb
+#import ipdb
 import click
 import pandas as pd
 from kgm.database import Database

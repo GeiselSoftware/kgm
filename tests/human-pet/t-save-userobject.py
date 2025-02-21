@@ -5,11 +5,8 @@ if __name__ == "__main__":
     ipdb.set_trace()
     fuseki_url = "http://localhost:3030/kgm-default-dataset"
     db = Database(fuseki_url)
-    kgm_path = "/human-pet"
-    g_uri = db.get_kgm_graph(kgm_path)
-    if g_uri is None:
-        raise Exception(f"can't find kgm path {kgm_path}")
-    g = KGMGraph(db, g_uri)
+    g_uris = db.get_graph_uris(["/human-pet", "/human-pet.shacl"])    
+    g = KGMGraph(db, g_uris[0], g_uris[1:])
     ipdb.set_trace()
 
     if 1:
