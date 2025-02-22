@@ -7,11 +7,11 @@ from kgm.rdf_utils import collapse_prefix, get_py_m_name, restore_prefix
 from kgm.prefixes import well_known_prefixes, well_known_prefix_members
 
 datatype_cs_dets = {URI(well_known_prefixes['xsd:'] + xsd_typename):None for xsd_typename in well_known_prefix_members['xsd:']}
-datatype_cs_dets[restore_prefix('xsd:string', well_known_prefixes)] = ('string', '""')
-datatype_cs_dets[restore_prefix('xsd:boolean', well_known_prefixes)] = ('bool?', 'false')
-datatype_cs_dets[restore_prefix('xsd:integer', well_known_prefixes)] = ('int?', '0')
-datatype_cs_dets[restore_prefix('xsd:float', well_known_prefixes)] = ('float?', '0.0f')
-datatype_cs_dets[restore_prefix('xsd:double', well_known_prefixes)] = ('double?', '0.0')
+datatype_cs_dets[restore_prefix('xsd:string', well_known_prefixes)] = ('string', '""', 'string?')
+datatype_cs_dets[restore_prefix('xsd:boolean', well_known_prefixes)] = ('bool', 'false', 'bool?')
+datatype_cs_dets[restore_prefix('xsd:integer', well_known_prefixes)] = ('int', '0', 'int?')
+datatype_cs_dets[restore_prefix('xsd:float', well_known_prefixes)] = ('float', '0.0f', 'float?')
+datatype_cs_dets[restore_prefix('xsd:double', well_known_prefixes)] = ('double', '0.0', 'double?')
 
 def gen_Factory_create_method(out, g:KGMGraph, uc:"UserClass"):
     #ipdb.set_trace()
@@ -93,7 +93,7 @@ def gen_UserClass_adapter_code(out, g:KGMGraph, uc:"UserClass"):
         is_scalar = uc_m.max_c == 1
         if uc_m.is_class == False and is_scalar == True:
             uc_m_name = get_py_m_name(uc_m.m_path_uri)
-            uc_m_cs_type, uc_m_cs_dflt = datatype_cs_dets[uc_m.m_type_uri]
+            uc_m_cs_type, uc_m_cs_dflt, _ = datatype_cs_dets[uc_m.m_type_uri]
             print(f'     uo.get_member_editor("{uc_m_name}").svalue_set({uc_m_cs_dflt});', file = out)
 
     print(f"   }}", file = out)
@@ -103,15 +103,20 @@ def gen_UserClass_adapter_code(out, g:KGMGraph, uc:"UserClass"):
         is_scalar = uc_m.max_c == 1
         uc_m_name = get_py_m_name(uc_m.m_path_uri)
         if uc_m.is_class == False:
-            uc_m_cs_type, uc_m_cs_dflt = datatype_cs_dets[uc_m.m_type_uri]
-            if is_scalar:
-                print(f"   public {uc_m_cs_type} {uc_m_name} {{", file = out)
-                print(f'     get {{ return uo.get_member_editor("{uc_m_name}").svalue_get() as {uc_m_cs_type}; }}', file = out)
+            uc_m_cs_type, uc_m_cs_dflt, uc_m_cs_nullable_type = datatype_cs_dets[uc_m.m_type_uri]
+            if uc_m.min_c == 0 and uc_m.max_c == 1:
+                print(f"   public {uc_m_cs_nullable_type} {uc_m_name} {{", file = out)
+                print(f'     get {{ return uo.get_member_editor("{uc_m_name}").svalue_get() as {uc_m_cs_nullable_type}; }}', file = out)
                 print(f'     set {{ uo.get_member_editor("{uc_m_name}").svalue_set(value); }}', file = out)
                 print(f"   }}", file = out)
+            elif uc_m.min_c == 1 and uc_m.max_c == 1:
+                print(f"   public {uc_m_cs_type} {uc_m_name} {{", file = out)
+                print(f'     get {{ return ({uc_m_cs_type})uo.get_member_editor("{uc_m_name}").svalue_get(); }}', file = out)
+                print(f'     set {{ uo.get_member_editor("{uc_m_name}").svalue_set(value); }}', file = out)
+                print(f"   }}", file = out)                
             else:
-                print(f'   public CSUserObjectListStruct<{uc_m_cs_type.replace("?", "")}> {uc_m_name} {{', file = out)
-                print(f'       get {{ return new CSUserObjectListStruct<{uc_m_cs_type.replace("?", "")}>(uo.get_member_editor("{uc_m_name}")); }}', file = out)
+                print(f'   public CSUserObjectListStruct<{uc_m_cs_type}> {uc_m_name} {{', file = out)
+                print(f'       get {{ return new CSUserObjectListStruct<{uc_m_cs_type}>(uo.get_member_editor("{uc_m_name}")); }}', file = out)
                 print(f"   }}", file = out)
         else:
             uc_m_cs_type = get_py_m_name(uc_m.m_type_uri)
@@ -139,6 +144,7 @@ def gen_code(g:KGMGraph, cs_namespace:str) -> str:
     out = io.StringIO()
 
     print("// generated code - do not edit", file = out)
+    print("using System;", file = out)
     print("using kgm;", file = out)
     print("", file = out)
     print(f"namespace {cs_namespace} {{", file = out)

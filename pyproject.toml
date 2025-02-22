@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "kgm"
-version = "0.3.0"
+version = "0.3.1"
 description = "Knowledge Graph Management - command line utilities"
 readme = "README.md"
 requires-python = ">=3.10"
