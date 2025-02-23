@@ -13,6 +13,20 @@ datatype_cs_dets[restore_prefix('xsd:integer', well_known_prefixes)] = ('int', '
 datatype_cs_dets[restore_prefix('xsd:float', well_known_prefixes)] = ('float', '0.0f', 'float?')
 datatype_cs_dets[restore_prefix('xsd:double', well_known_prefixes)] = ('double', '0.0', 'double?')
 
+def gen_DynCast_for_class(out, g:KGMGraph, uc:"UserClass"):
+    uc_name = get_py_m_name(uc.uc_uri)
+    uc_curie = collapse_prefix(uc.uc_uri, g.db.w_prefixes)
+    print(f"  public static {uc_name} as_{uc_name}(CSUserObject cs_uo) {{", file = out)
+    print(f"      //Debug.Assert(cs_uo != null);", file = out)
+    print(f"      if (cs_uo == null) {{", file = out)
+    print(f'          throw new Exception("passing null as cs_uo");', file = out)
+    print(f"      }}", file = out)
+    print(f'      if (!cs_uo.is_class_or_superclass("{uc_curie}")) {{', file = out)
+    print(f'         return null;', file = out)
+    print(f"      }}", file = out)
+    print(f"      return {uc_name}.new_{uc_name}(cs_uo.get_user_object__());", file = out)
+    print(f"  }}", file = out)
+
 def gen_Factory_create_method(out, g:KGMGraph, uc:"UserClass"):
     #ipdb.set_trace()
     uc_name = get_py_m_name(uc.uc_uri)
@@ -24,7 +38,7 @@ def gen_Factory_create_method(out, g:KGMGraph, uc:"UserClass"):
     args = ", ".join([f"{wrap_in_container(get_py_m_name(v.m_type_uri), v.is_scalar())} {get_py_m_name(v.m_path_uri)}" for k, v in uc.members.items() if v.is_class == True])
     print(f"  public {uc_name} create_{uc_name}({args}) {{", file = out)
     print(f'     UserObject uo = this.g.create_user_object("{uc_curie}");', file = out)
-    print(f"     {uc_name} ret = new {uc_name}(uo);", file = out)
+    print(f"     {uc_name} ret = {uc_name}.new_{uc_name}(uo);", file = out)
     print(f"     {uc_name}.set_default_values(uo);", file = out)
 
     for v in uc.members.values():
@@ -43,16 +57,6 @@ def gen_Factory_create_method(out, g:KGMGraph, uc:"UserClass"):
                 
     print(f"  }}", file = out)
     print("", file = out)
-    print(f"  public bool is_{uc_name}(CSUserObject cs_uo) {{", file = out)
-    print(f'     return cs_uo.uo.is_class_or_superclass("{uc_curie}");', file = out)
-    print(f"  }}", file = out)
-    print("", file = out)
-    print(f"  public {uc_name} as_{uc_name}(CSUserObject cs_uo) {{", file = out)
-    print(f'      if (!cs_uo.uo.is_class_or_superclass("{uc_curie}")) {{', file = out)
-    print(f'         throw new Exception("not {uc_name}");', file = out)
-    print(f"      }}", file = out)
-    print(f"      return new {uc_name}(cs_uo.uo);", file = out)
-    print(f"  }}", file = out)
     print(f"", file = out)
 
 def gen_Factory_load_user_object(out, g:KGMGraph):
@@ -63,12 +67,12 @@ def gen_Factory_load_user_object(out, g:KGMGraph):
         uc_curie = collapse_prefix(uc.uc_uri, g.db.w_prefixes)
         uc_name = get_py_m_name(uc.uc_uri)
         print(f'      {"if" if is_first_loop else "else if"} (uo.is_class("{uc_curie}")) {{', file = out)
-        print(f'         ret = new {uc_name}(uo);', file = out)
+        print(f'         ret = {uc_name}.new_{uc_name}(uo);', file = out)
         print(f'      }}', file = out)
         is_first_loop = False
         #print(f"    {uc_curie} {uc_name}", file = out)
     print(f"      else {{", file = out)
-    print(f'         throw new Exception("unknown type");', file = out)
+    print(f'         throw new Exception($"unknown user class {{this.g.to_turtle(uo.uc.uc_uri)}}");', file = out)
     print(f"      }}", file = out)
     print(f"", file = out)
     print(f"      return ret;", file = out)
@@ -77,8 +81,11 @@ def gen_Factory_load_user_object(out, g:KGMGraph):
 def gen_UserClass_adapter_code(out, g:KGMGraph, uc:"UserClass"):
     uc_name = get_py_m_name(uc.uc_uri)
     print(f" public class {uc_name} : CSUserObject {{", file = out)
-    print(f"   public {uc_name}(UserObject uo) {{", file = out)
-    print(f"      this.uo = uo;", file = out)
+    print(f"   private {uc_name}(UserObject uo) : base(uo) {{", file = out)
+    print(f"   }}", file = out)
+    print(f"", file = out)
+    print(f"   public static {uc_name} new_{uc_name}(UserObject uo) {{", file = out)
+    print(f"     return new {uc_name}(uo);", file = out)
     print(f"   }}", file = out)
     print(f"", file = out)
     
@@ -105,35 +112,45 @@ def gen_UserClass_adapter_code(out, g:KGMGraph, uc:"UserClass"):
         if uc_m.is_class == False:
             uc_m_cs_type, uc_m_cs_dflt, uc_m_cs_nullable_type = datatype_cs_dets[uc_m.m_type_uri]
             if uc_m.min_c == 0 and uc_m.max_c == 1:
-                print(f"   public {uc_m_cs_nullable_type} {uc_m_name} {{", file = out)
-                print(f'     get {{ return uo.get_member_editor("{uc_m_name}").svalue_get() as {uc_m_cs_nullable_type}; }}', file = out)
-                print(f'     set {{ uo.get_member_editor("{uc_m_name}").svalue_set(value); }}', file = out)
+                print(f"   public {uc_m_cs_nullable_type} {uc_m_name} {{ // sh:datatype 01", file = out)
+                print(f'     get {{ return this.get_user_object__().get_member_editor("{uc_m_name}").svalue_get() as {uc_m_cs_nullable_type}; }}', file = out)
+                print(f'     set {{ this.get_user_object__().get_member_editor("{uc_m_name}").svalue_set(value); }}', file = out)
                 print(f"   }}", file = out)
             elif uc_m.min_c == 1 and uc_m.max_c == 1:
-                print(f"   public {uc_m_cs_type} {uc_m_name} {{", file = out)
-                print(f'     get {{ return ({uc_m_cs_type})uo.get_member_editor("{uc_m_name}").svalue_get(); }}', file = out)
-                print(f'     set {{ uo.get_member_editor("{uc_m_name}").svalue_set(value); }}', file = out)
+                print(f"   public {uc_m_cs_type} {uc_m_name} {{ // sh:datatype 11", file = out)
+                print(f'     get {{ return ({uc_m_cs_type})this.get_user_object__().get_member_editor("{uc_m_name}").svalue_get(); }}', file = out)
+                print(f'     set {{ this.get_user_object__().get_member_editor("{uc_m_name}").svalue_set(value); }}', file = out)
                 print(f"   }}", file = out)                
             else:
-                print(f'   public CSUserObjectListStruct<{uc_m_cs_type}> {uc_m_name} {{', file = out)
-                print(f'       get {{ return new CSUserObjectListStruct<{uc_m_cs_type}>(uo.get_member_editor("{uc_m_name}")); }}', file = out)
+                print(f'   public CSUserObjectListStruct<{uc_m_cs_type}> {uc_m_name} {{ // sh:datatype many', file = out)
+                print(f'       get {{ return new CSUserObjectListStruct<{uc_m_cs_type}>(this.get_user_object__().get_member_editor("{uc_m_name}")); }}', file = out)
                 print(f"   }}", file = out)
         else:
             uc_m_cs_type = get_py_m_name(uc_m.m_type_uri)
-            if is_scalar:
-                print(f"   public {uc_m_cs_type} {uc_m_name} {{", file = out)
+            if uc_m.min_c == 0 and uc_m.max_c == 1:
+                print(f"   public {uc_m_cs_type} {uc_m_name} {{ // sh:class 01", file = out)
                 print(f'     get {{', file = out)
-                print(f'         UserObject member_uo = uo.get_member_editor("{uc_m_name}").svalue_get() as UserObject;', file = out)
+                print(f'         UserObject member_uo = this.get_user_object__().get_member_editor("{uc_m_name}").svalue_get() as UserObject;', file = out)
+                print(f'         return member_uo == null ? null : member_uo.cs_uo as {uc_m_cs_type};', file = out)
+                print(f'     }}', file = out)
+                print(f'     set {{', file = out)
+                print(f'         this.get_user_object__().get_member_editor("{uc_m_name}").svalue_set(value == null ? null : value.get_user_object__());', file = out)
+                print(f'     }}', file = out)
+                print(f"   }}", file = out)                
+            elif uc_m.min_c == 1 and uc_m.max_c == 1:
+                print(f"   public {uc_m_cs_type} {uc_m_name} {{ // sh:class 11", file = out)
+                print(f'     get {{', file = out)
+                print(f'         UserObject member_uo = this.get_user_object__().get_member_editor("{uc_m_name}").svalue_get() as UserObject;', file = out)
                 print(f'         return member_uo.cs_uo as {uc_m_cs_type};', file = out)
                 print(f'     }}', file = out)
                 print(f'     set {{', file = out)
-                print(f'         uo.get_member_editor("{uc_m_name}").svalue_set(value.uo);', file = out)
+                print(f'         this.get_user_object__().get_member_editor("{uc_m_name}").svalue_set(value.get_user_object__());', file = out)
                 print(f'     }}', file = out)
                 print(f"   }}", file = out)
             else:
-                print(f"   public CSUserObjectListClass<{uc_m_cs_type}> {uc_m_name} {{", file = out)
+                print(f"   public CSUserObjectListClass<{uc_m_cs_type}> {uc_m_name} {{ // sh:class many", file = out)
                 print(f'       get {{', file = out)
-                print(f'            var me = uo.get_member_editor("{uc_m_name}");', file = out)
+                print(f'            var me = this.get_user_object__().get_member_editor("{uc_m_name}");', file = out)
                 print(f'            return new CSUserObjectListClass<{uc_m_cs_type}>(me);', file = out)
                 print(f'       }}', file = out)
                 print(f"   }}", file = out)
@@ -148,6 +165,12 @@ def gen_code(g:KGMGraph, cs_namespace:str) -> str:
     print("using kgm;", file = out)
     print("", file = out)
     print(f"namespace {cs_namespace} {{", file = out)
+
+    print(f"  public class DynCast {{", file = out)
+    for uc in g.all_user_classes.values():
+        gen_DynCast_for_class(out, g, uc)
+    print(f"  }} // end of DynCast", file = out)
+    print(f"", file = out)
 
     print(" public class Factory : kgm.CSUserObjectFactory {", file = out)
     print("  public Factory() { this.g = null; }", file = out)
