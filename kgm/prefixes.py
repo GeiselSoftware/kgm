@@ -13,7 +13,7 @@ well_known_prefix_members["xsd:"] = ["string", "boolean", "integer", "float", "d
 well_known_prefixes["sh:"] = "http://www.w3.org/ns/shacl#"
 well_known_prefix_members["sh:"] = ["property", "path", "datatype", "class___", "minCount", "maxCount", "NodeShape"]
 well_known_prefixes["dash:"] = "http://datashapes.org/dash#"
-well_known_prefix_members["dash:"] =  ["closedByType"]
+well_known_prefix_members["dash:"] =  ["closedByTypes"]
 
 if 1:
     for prefix, prefix_uri in well_known_prefixes.items():

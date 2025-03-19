@@ -180,7 +180,7 @@ class KSDParser:
         v = MyVisitor()
         v.visit_topdown(tree)
 
-        for prefix in ["rdf:", "rdfs:", "sh:", "xsd:"]:
+        for prefix in ["rdf:", "rdfs:", "sh:", "dash:", "xsd:"]:
             uri = well_known_prefixes[prefix]
             print(f"@prefix {prefix} <{uri}> .")
             
@@ -195,7 +195,7 @@ class KSDParser:
             print(f"{cls.class_uri} rdf:type rdfs:Class;")
             for c in cls.superclasses:
                 print(f"    rdfs:subClassOf {c};")
-            print("     rdf:type sh:NodeShape; sh:closed true;")
+            print("     rdf:type sh:NodeShape; dash:closedByTypes true;")
             
             for m in cls.members:
                 shacl_m = []

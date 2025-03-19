@@ -129,8 +129,8 @@ def graph_rename(ctx, path, new_path):
         return
     del new_graph_uri
     
-    rq_queries = [f'delete data {{ {to_turtle(graph_uri, db.w_prefixes)} kgm:path "{path}" }}',
-                  f'insert data {{ {to_turtle(graph_uri, db.w_prefixes)} kgm:path "{new_path}" }}']
+    rq_queries = [f'delete data {{ {db.w_prefixes.to_turtle(graph_uri)} kgm:path "{path}" }}',
+                  f'insert data {{ {db.w_prefixes.to_turtle(graph_uri)} kgm:path "{new_path}" }}']
     for rq in rq_queries:
         print(rq)
         db.rq_update(rq)
@@ -263,5 +263,5 @@ def graph_import(ctx, path, ttl_file):
 def do_validate(ctx, shacl_path, path):
     _, w_config = ctx.obj["config"]
     fuseki_url = w_config['backend-url']
-    db = Database(path, fuseki_url)    
+    db = Database(fuseki_url)    
     kgm_validate.do_validate(db, shacl_path, path)

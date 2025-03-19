@@ -5,7 +5,7 @@ from .rdf_terms import URI, Literal, BNode, RDFObject, RDFTriple
 class PrefixManager:
     def __init__(self, empty_prefix):
         self.w_prefixes = {}
-        self.w_prefixes[":"] = well_known_prefixes["kgm:"] + empty_prefix + ":" # must be first, : maps to urn:kgm: with empty namespace
+        self.w_prefixes[":"] = "urn:kgm::" # must be first, : maps to urn:kgm: with empty namespace
         for k, v in well_known_prefixes.items():
             self.w_prefixes[k] = v
 

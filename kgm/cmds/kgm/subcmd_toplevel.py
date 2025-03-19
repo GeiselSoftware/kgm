@@ -17,7 +17,7 @@ def show_uri(ctx, uri):
       {{ 
         bind({uri} as ?s_uo)
         ?uo ?uo_member ?uo_member_value .
-        filter(!(?uo_member in (rdfs:subClassOf, sh:property, sh:path, sh:datatype, sh:class, sh:minCount, sh:maxCount, sh:closed, dash:closedByType)))
+        filter(!(?uo_member in (rdfs:subClassOf, sh:property, sh:path, sh:datatype, sh:class, sh:minCount, sh:maxCount, sh:closed, dash:closedByTypes)))
         filter(!(?uo_member_value in (sh:NodeShape, rdfs:Class)))
         ?s_uo (<>|!<>)* ?uo .        
       }}
