@@ -14,6 +14,7 @@
 #
 
 import ipdb
+import types
 import kgm
 import numpy as np
 import clickhouse_connect
@@ -50,20 +51,22 @@ if __name__ == "__main__":
     if g_uri is None:
         raise Exception(f"can't find kgm path {kgm_path}")
 
-    g = kgm.KGMGraph(db, g_uri)
+    g = kgm.KGMGraph(db, g_uri, [])
 
     ipdb.set_trace()
     #test_uo = g.create_uo(":Test", tdata = g.create_uo(":TestData"), vs = g.create_uo(":Series"))
     test_uo = g.create_user_object(":Test")
     test_uo.tdata = g.create_user_object(":TestData")
     test_uo.vs = g.create_user_object(":Series")
+    test_uo.vs.add_point = types.MethodType(lambda x, y: print("add_point:", y), test_uo.vs)
     test_uo.tdata.testdata = 111.0
-    series_a = SeriesA(test_uo.vs)
+    #series_a = SeriesA(test_uo.vs)
     
     ipdb.set_trace()
     g.save()
     print("test.vs:", test_uo.vs.get_uri())
 
     for i in range(100):
-        series_a.add_point(np.random.rand())
+        #series_a.add_point(np.random.rand())
+        test_uo.vs.add_point(np.random.rand())
 

@@ -2,6 +2,7 @@
 from kgm.rdf_terms import URI, Literal, RDFObject, RDFTriple
 from kgm.rdf_utils import get_py_m_name, get_supported_Literal_python_types, from_python_to_Literal
 from kgm.user_class import UserClass
+import types
 
 class UserObjectMemberEditor:
     def __init__(self, uo, m_path_uri, m_type_uri, min_c, max_c):
@@ -185,7 +186,12 @@ class UserObject:
             super().__setattr__(name, value)
         else:
             if not name in self._storage:
-                raise Exception(f"member {name} was never added")
+                if isinstance(value, types.MethodType):
+                    print("adding new method", name)
+                    super().__setattr__(name, value)
+                    return
+                else:
+                    raise Exception(f"member {name} was never added")
 
             #print("setting value:", value)
 
@@ -234,3 +240,4 @@ class UserObjectList:
 
     def clear(self):
         self.uo_me.mvalue_clear()
+
