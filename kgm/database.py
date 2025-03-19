@@ -1,20 +1,21 @@
 #import ipdb
-from . import gen_nanoid
-from kgm.prefixes import rdf, xsd, kgm, well_known_prefixes
+from kgm.prefixes import rdf, xsd, kgm
 from kgm.rdf_terms import URI, Literal, BNode
 from kgm.rdf_terms import RDFObject, RDFTriple
 from kgm.rdf_utils import make_Literal
+from kgm.prefix_manager import PrefixManager
 import kgm.sparql_utils as sparql_utils
+import nanoid
+
+def gen_nanoid():
+    return nanoid.generate("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ", 20)
+
 
 class Database:
-    def __init__(self, fuseki_url, clickhouse_client = None):
+    def __init__(self, fuseki_url, db_id = "", clickhouse_client = None):
         self.fuseki_url = fuseki_url
+        self.w_prefixes = PrefixManager(empty_prefix = db_id)
         self.clickhouse_client = clickhouse_client
-
-        self.w_prefixes = {}
-        self.w_prefixes[":"] = well_known_prefixes["kgm:"] + ":" # must be first, : maps to urn:kgm: with empty namespace
-        for k, v in well_known_prefixes.items():
-            self.w_prefixes[k] = v
             
     def rq_select(self, query:str):
         raw_rq_res = sparql_utils.rq_select(query, config = {'backend-url': self.fuseki_url}, w_prefixes = self.w_prefixes)

@@ -5,7 +5,6 @@ import rdflib
 from kgm.database import Database
 from kgm.kgm_graph import KGMGraph
 from kgm.rdf_terms import URI, BNode, Literal, RDFTriple
-from kgm.rdf_utils import to_turtle
 from kgm.prefixes import xsd
 
 from . import ksd_parser as mod_ksd_parser
@@ -27,8 +26,7 @@ def graph_ls(ctx, path):
     #ipdb.set_trace()
     query = "select ?kgm_path ?g { ?g rdf:type kgm:Graph; kgm:path ?kgm_path }"
     res = db.rq_select(query)
-    print(pd.DataFrame(res).map(lambda x: to_turtle(x, db.w_prefixes)))
-
+    print(pd.DataFrame(res).map(lambda x: db.w_prefixes.to_turtle(x)))
 
 @graph.command("new", help = "creates new empty graph at given path")
 @click.argument("path", required = True)
@@ -59,8 +57,8 @@ def graph_remove(ctx, path):
         print(f"can't find graph at path {path}")
         return
 
-    rq_queries = [f"drop graph {to_turtle(graph_uri, db.w_prefixes)}",
-                  f'delete {{ ?s ?p ?o }} where {{ bind({to_turtle(graph_uri, db.w_prefixes)} as ?s) {{ ?s ?p ?o }} }}']
+    rq_queries = [f"drop graph {db.w_prefixes.to_turtle(graph_uri)}",
+                  f'delete {{ ?s ?p ?o }} where {{ bind({db.w_prefixes.to_turtle(graph_uri)} as ?s) {{ ?s ?p ?o }} }}']
 
     #ipdb.set_trace()
     for rq in rq_queries:

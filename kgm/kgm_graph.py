@@ -1,12 +1,15 @@
 #import ipdb
 import pandas as pd
-from . import gen_nanoid
 from kgm.rdf_terms import URI, Literal, BNode, RDFTriple
 from kgm.prefixes import rdf, rdfs, xsd, sh, dash, kgm
-from kgm.rdf_utils import from_Literal_to_python, restore_prefix, make_URI_from_parts, to_turtle, get_py_m_name
+from kgm.rdf_utils import from_Literal_to_python, make_URI_from_parts, get_py_m_name
 from kgm.database import Database
 from kgm.user_object import UserObject
 from kgm.user_class import UserClass
+import nanoid
+
+def gen_nanoid():
+    return nanoid.generate("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ", 20)
 
 class KGMGraph:
     def __init__(self, db:Database, g_uri:URI, readonly_g_uris:list[URI]):
@@ -30,7 +33,7 @@ class KGMGraph:
 
     def get_user_class(self, uc_curie:str) -> UserClass:
         assert(isinstance(uc_curie, str))
-        uc_uri = restore_prefix(uc_curie, self.db.w_prefixes)
+        uc_uri = self.db.w_prefixes.restore_prefix(uc_curie)
         if not uc_uri in self.all_user_classes:
             raise Exception(f"no such user class defined: {uc_uri}")
         return self.all_user_classes.get(uc_uri)
@@ -63,9 +66,9 @@ class KGMGraph:
         dels_inss = self.get_dels_inss__()
         if 1:
             for t in dels_inss[0]:
-                print("del: ", to_turtle(t, self.db.w_prefixes))
+                print("del: ", self.db.w_prefixes.to_turtle(t))
             for t in dels_inss[1]:
-                print("ins: ", to_turtle(t, self.db.w_prefixes))
+                print("ins: ", self.db.w_prefixes.to_turtle(t))
 
         self.db.rq_delete_insert(self.g, dels_inss)
 
@@ -183,7 +186,7 @@ class KGMGraph:
         select ?uo ?uo_member ?uo_member_value
         {self.get_from_clause__()}
         where {{
-          bind({to_turtle(req_uo_uri, self.db.w_prefixes)} as ?s_uo)
+          bind({self.db.w_prefixes.to_turtle(req_uo_uri)} as ?s_uo)
           ?uo ?uo_member ?uo_member_value
           filter(!(?uo_member in (rdfs:subClassOf, sh:property, sh:path, sh:datatype, sh:class, sh:minCount, sh:maxCount, sh:closed, dash:closedByType)))
           filter(!(?uo_member_value in (sh:NodeShape, rdfs:Class)))

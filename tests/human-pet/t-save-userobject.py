@@ -4,7 +4,7 @@ from kgm import Database, KGMGraph
 if __name__ == "__main__":
     ipdb.set_trace()
     fuseki_url = "http://localhost:3030/kgm-default-dataset"
-    db = Database(fuseki_url)
+    db = Database(fuseki_url, db_id = "")
     g_uris = db.get_graph_uris(["/human-pet", "/human-pet.shacl"])    
     g = KGMGraph(db, g_uris[0], g_uris[1:])
     ipdb.set_trace()

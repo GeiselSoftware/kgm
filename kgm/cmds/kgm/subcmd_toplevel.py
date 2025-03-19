@@ -3,7 +3,6 @@ import click
 import pandas as pd
 from kgm.database import Database
 from kgm.kgm_graph import KGMGraph
-from kgm.rdf_utils import to_turtle
 
 @click.command("show", help = "shows details about given URI")
 @click.argument("uri", required = True)
@@ -27,4 +26,4 @@ def show_uri(ctx, uri):
     
     #print(rq)
     rq_res = db.rq_select(rq)
-    print(pd.DataFrame(rq_res).map(lambda x: to_turtle(x, db.w_prefixes)))
+    print(pd.DataFrame(rq_res).map(lambda x: db.w_prefixes.to_turtle(x)))

@@ -7,12 +7,13 @@ from SPARQLWrapper import POST, BASIC
 
 from .prefixes import xsd
 from .rdf_terms import URI
-from .rdf_utils import make_rq, to_turtle, make_Literal, make_URI_from_string
+from .prefix_manager import PrefixManager
+from .rdf_utils import make_Literal, make_URI_from_string
 
 # returns dict var => list of URI/BNode/Literal
-def rq_select(rq, *, config, w_prefixes):
+def rq_select(rq, *, config, w_prefixes:PrefixManager):
     #ipdb.set_trace()
-    rq = make_rq(rq, w_prefixes)
+    rq = w_prefixes.make_rq(rq)
     fuseki_query_url = config["backend-url"] + "/query"
     sparql = SPARQLWrapper(fuseki_query_url)
 
@@ -24,8 +25,8 @@ def rq_select(rq, *, config, w_prefixes):
     results = sparql.query().convert()
     return results
 
-def rq_construct(rq, *, config, w_prefixes):
-    rq = make_rq(rq, w_prefixes)
+def rq_construct(rq, *, config, w_prefixes:PrefixManager):
+    rq = w_prefixes.make_rq(rq)
     fuseki_query_url = config["backend-url"] + "/query"
     sparql = SPARQLWrapper(fuseki_query_url)
 
@@ -39,8 +40,8 @@ def rq_construct(rq, *, config, w_prefixes):
 
     return g
 
-def rq_update(rq, *, config, w_prefixes):
-    rq = make_rq(rq, w_prefixes)
+def rq_update(rq, *, config, w_prefixes:PrefixManager):
+    rq = w_prefixes.make_rq(rq)
     fuseki_update_url = config["backend-url"] + "/update"
     sparql = SPARQLWrapper(fuseki_update_url)
 
@@ -75,19 +76,19 @@ def rq_handle_select_result(rq_select_res, w_prefixes):
             res_d[b_k][-1] = res_v
     return res_d
 
-def rq_delete_insert(graph_uri:URI, dels_inss, *, config, w_prefixes):
+def rq_delete_insert(graph_uri:URI, dels_inss, *, config, w_prefixes:PrefixManager):
     if len(dels_inss[0]) == 0 and len(dels_inss[1]) == 0:
         return None
 
     rq = io.StringIO()
-    print(make_rq("", w_prefixes), file = rq)    
+    print(w_prefixes.make_rq(""), file = rq)
     for update_action, triples in zip(['delete', 'insert'], dels_inss):
         if len(triples) > 0:
             print(f"{update_action} {{", file = rq)
             if graph_uri is not None:
-                print(f" graph {to_turtle(graph_uri, w_prefixes)} {{", file = rq)
+                print(f" graph {w_prefixes.to_turtle(graph_uri)} {{", file = rq)
             for t in triples:
-                print(to_turtle(t, w_prefixes), file = rq)
+                print(w_prefixes.to_turtle(t), file = rq)
             if graph_uri is not None:
                 print(" }", file = rq)
             print("}", file = rq)
